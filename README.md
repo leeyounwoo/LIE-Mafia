@@ -65,4 +65,4 @@
   ​
 
 ## Backend Architecture
-![backend-structure](/design/uploads/backend-architecture.PNG)
+![backend-structure](/design/uploads/backend-architecture.png)
