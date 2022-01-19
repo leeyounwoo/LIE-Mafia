@@ -63,3 +63,6 @@
     - SpringBoot
 
   ​
+
+## Backend Architecture
+![backend-structure](/design/uploads/backend-architecture.png)
