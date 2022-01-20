@@ -1,12 +1,11 @@
 import React from "react";
-import Stomp from "webstomp-client";
+import Participant from "../../components/UserCam/Participant";
 
 function Room() {
-  let socket = new WebSocket("wss://3.37.1.251:8443/groupcall");
-  let client = Stomp.over(socket);
-  client.connect({}, function (frame) {
-    console.log("연결 성공", frame);
-  });
+  return (
+    <div>
+      <Participant />
+    </div>
+  );
 }
-
 export default Room;
