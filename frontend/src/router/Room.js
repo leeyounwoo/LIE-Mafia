@@ -1,11 +1,6 @@
 import React from "react";
-import Participant from "../../components/UserCam/Participant";
 
 function Room() {
-  return (
-    <div>
-      <Participant />
-    </div>
-  );
+  return <div>room</div>;
 }
 export default Room;
