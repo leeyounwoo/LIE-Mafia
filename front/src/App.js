@@ -3,6 +3,7 @@ import { Route } from "react-router-dom";
 import Home from "./pages/Home";
 import NickName from "./pages/NickName";
 import Room from "./pages/Room";
+import MyVideo from "./pages/MyVideo";
 
 function App() {
   return (
@@ -15,6 +16,9 @@ function App() {
       </Route>
       <Route path="/room/:roomID/" component={Room}>
         <Room />
+      </Route>
+      <Route path="/myvideo" component={MyVideo}>
+        <MyVideo />
       </Route>
     </div>
   );

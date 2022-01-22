@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 
 function NickName() {
-  const roomId = useParams();
-  // console.log(x);
+  const { roomId } = useParams();
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [nickName, setNickName] = useState("");
 
@@ -23,7 +22,7 @@ function NickName() {
       {isConfirmed ? (
         <div>
           <h3>닉네임: {nickName}</h3>
-          <Link to={`/room/${roomId}`}>입장하기</Link>
+          <Link to={`/myvideo`}>입장하기</Link>
         </div>
       ) : (
         <div>
