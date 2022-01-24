@@ -27,6 +27,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	implementation 'org.springframework:spring-websocket'
+	implementation 'org.kurento:kurento-client:6.16.4'
+
 }
 
 test {
