@@ -27,8 +27,11 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
+	implementation 'io.swagger.core.v3:swagger-core:2.1.12'
 	implementation 'org.springframework:spring-websocket'
 	implementation 'org.kurento:kurento-client:6.16.4'
+	implementation 'org.modelmapper:modelmapper:3.0.0'
+
 
 }
 

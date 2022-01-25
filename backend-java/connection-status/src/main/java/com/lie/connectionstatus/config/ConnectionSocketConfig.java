@@ -16,12 +16,6 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 public class ConnectionSocketConfig implements WebSocketConfigurer {
     public final ConnectionHandler connectionHandler;
 
-    @Bean
-    public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
-        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
-        container.setMaxTextMessageBufferSize(32768);
-        return container;
-    }
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(connectionHandler, "/connect").setAllowedOrigins("*");
