@@ -1,4 +1,4 @@
-package com.lie.connectionstatus;
+package com.lie.connectionstatus.adapter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,11 +35,13 @@ public class ConnectionHandler extends TextWebSocketHandler {
             case "create" :
                 connectionService.createRoom(session,incomingMessage.getUsername());
                 break;
+            case "join" :
+                connectionService.joinRoom(session,incomingMessage.getUsername(),incomingMessage.getRoomId());
+                break;
             default:
                 //response service
                 break;
         }
-
 
     }
 

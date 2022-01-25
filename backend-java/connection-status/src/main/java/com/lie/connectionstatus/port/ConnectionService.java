@@ -8,9 +8,11 @@ import java.io.IOException;
 
 @Service
 public interface ConnectionService {
-    public void createRoom(WebSocketSession session, String username) throws IOException;
+    void createRoom(WebSocketSession session, String username) throws IOException;
 
-    public Room checkIfRommExists(String roomId);
+    void joinRoom(WebSocketSession session, String username, String roomId);
 
-    public Boolean checkIfUsernameExistsInRoom(String roomId, String username);
+    Room checkIfRommExists(String roomId);
+
+    Boolean checkIfUsernameExistsInRoom(String roomId, String username);
 }

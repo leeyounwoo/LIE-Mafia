@@ -2,3 +2,7 @@ spring:
   redis:
     host: 192.168.0.2
     port: 6379
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher

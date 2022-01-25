@@ -29,17 +29,22 @@ public class ConnectionServiceImpl implements ConnectionService{
         room.join(newParticipant);
         room = roomRepository.save(room);
 
+        //adapter level로 올려주기
+        session.sendMessage(new TextMessage(room.getRoomId()));
+    }
 
-        Boolean bool = roomRepository.existsById(room.getId());
-        session.sendMessage(new TextMessage(room.getId()+" "+bool));
+    @Override
+    public void joinRoom(WebSocketSession session, String username, String roomId) {
+        User newParticipant = new User(username, Authority.PLAYER);
+        Room room = roomRepository.findById(roomId).orElseThrow();
+
+        room = room.join(newParticipant);
+        roomRepository.save(room);
     }
 
     @Override
     public Room checkIfRommExists(String roomId) {
-        log.info("1");
         roomRepository.existsById(roomId);
-
-        log.info("2");
         return roomRepository.findById(roomId).orElseThrow();
     }
 
