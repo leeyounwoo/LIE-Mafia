@@ -14,7 +14,7 @@ function App() {
       <Route path="/nickname/:roomID" component={NickName}>
         <NickName />
       </Route>
-      <Route path="/groupcall" component={Room}>
+      <Route path="/groupcall/:roomID" component={Room}>
         <Room />
       </Route>
       <Route path="/myvideo" component={MyVideo}>
