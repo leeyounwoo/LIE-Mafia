@@ -5,6 +5,7 @@ import NickName from "./pages/NickName";
 import Room from "./pages/Room";
 import Error from "./pages/Error";
 import GameResult from "./pages/GameResult";
+import RoomSb from "./pages/RoomSb";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route exact path="/" component={Home} />
         <Route path="/Liemafia/:roomId" component={NickName} />
         <Route path="/groupcall" component={Room} />
+        <Route path="/room" component={RoomSb} />
         <Route path="/gameresult" component={GameResult} />
         <Route component={Error} />
       </Switch>

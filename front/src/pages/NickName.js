@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import styled from "styled-components";
 
@@ -11,42 +11,70 @@ const Box = styled.div`
 
 function NickName() {
   let history = useHistory();
+
+  const socket = new WebSocket("wss://3.37.1.251:8443/groupcall");
+
+  useEffect(() => {
+    // console.log(nickName);
+    socket.onopen = event => {
+      console.log("연결");
+    };
+    return socket.close();
+  }, []);
+
   const [flipped, setFlipped] = useState(false);
-  const { roomId } = useParams();
-  //console.log(roomId);
+  let { roomId } = useParams();
 
   const [nickName, setNickName] = useState("");
 
   const onChangeNickName = event => {
     setNickName(event.target.value);
     //console.log(event.target.value);
-    console.log(nickName);
+    // console.log(nickName);
   };
 
   const onFlip = () => setFlipped(current => !current);
 
   const onClick = () => {
+    socket.send(
+      JSON.stringify({
+        eventType: "connection",
+        actionType: roomId === "0" ? "createRoom" : "joinRoom",
+        roomId: "",
+        username: nickName,
+      })
+    );
+
+    console.log(
+      JSON.stringify({
+        eventType: "connection",
+        actionType: roomId === "0" ? "createRoom" : "joinRoom",
+        roomId: "",
+        username: nickName,
+      })
+    );
+    socket.onmessage = event => {
+      console.log(JSON.parse(event.data));
+    };
     history.push({
       pathname: "/room",
       state: { nickName: nickName },
     });
-    //console.log(nickName);
   };
 
   const onClickCheck = () => {
     // axios 통신으로 닉네임 중복확인 보내기
-    // axios
-    //   .get("")
-    //   .then(response => {
-    //     console.log(response.data);
-    //     response.data.map(obj => (
-    //       <div key={obj.id}>{obj.id !== nickName && onFlip}</div>
-    //     ));
-    //   })
-    //   .catch(error => {
-    //     console.log(error);
-    //   });
-    console.log(nickName);
+    axios
+      .get("url")
+      .then(response => {
+        console.log(response.data);
+        response.data.map(obj => (
+          <div key={obj.id}>{obj.id !== nickName && onFlip}</div>
+        ));
+      })
+      .catch(error => {
+        console.log(error);
+      });
   };
 
   return (

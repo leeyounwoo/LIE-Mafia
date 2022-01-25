@@ -3,14 +3,14 @@ import { useHistory } from "react-router-dom";
 
 function Home() {
   let history = useHistory();
-  const [roomId, setRoomId] = useState(1);
+  // const [roomId, setRoomId] = useState(1);
 
   const onClick = () => {
-    setRoomId(roomId + 1);
+    // setRoomId(roomId + 1);
     //console.log(`/Liemafia/${roomId}`);
     history.push({
-      pathname: `/Liemafia/${roomId}`,
-      state: { roomId: roomId },
+      pathname: "/Liemafia/0",
+      // state: { roomId: roomId },
     });
   };
 
