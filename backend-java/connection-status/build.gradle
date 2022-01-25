@@ -20,6 +20,9 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// https://mvnrepository.com/artifact/redis.clients/jedis
+	implementation 'redis.clients:jedis:4.0.1'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok'
