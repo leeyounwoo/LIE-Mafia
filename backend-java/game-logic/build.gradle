@@ -1,0 +1,44 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.2'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'com.lie'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+jar{
+	enabled = false
+}//jar 파일 추가로 만들어지지 않게 하기
+//자동 빌드에 필요로함
+
+processResources{
+	filteringCharset 'UTF-8'
+}
+
+configurations {
+	all {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket:2.6.2'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter-web:'
+	implementation 'org.springframework.data:spring-data-redis:'
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
