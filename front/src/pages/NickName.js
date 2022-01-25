@@ -10,29 +10,24 @@ const Box = styled.div`
 `;
 
 function NickName() {
-<<<<<<< HEAD
-  const { roomID } = useParams();
-  const [isConfirmed, setIsConfirmed] = useState(false);
-=======
   let history = useHistory();
   const [flipped, setFlipped] = useState(false);
   const { roomId } = useParams();
   //console.log(roomId);
 
->>>>>>> 1cc4f271745299476c5b4072090a0e4a0393faba
   const [nickName, setNickName] = useState("");
 
-  const onChangeNickName = event => {
+  const onChangeNickName = (event) => {
     setNickName(event.target.value);
     //console.log(event.target.value);
     console.log(nickName);
   };
 
-  const onFlip = () => setFlipped(current => !current);
+  const onFlip = () => setFlipped((current) => !current);
 
   const onClick = () => {
     history.push({
-      pathname: "/room",
+      pathname: "/groupcall",
       state: { nickName: nickName },
     });
     //console.log(nickName);
@@ -56,22 +51,10 @@ function NickName() {
 
   return (
     <div>
-<<<<<<< HEAD
-      <h1>NickName</h1>
-      {isConfirmed ? (
-        <div>
-          <h3>닉네임: {nickName}</h3>
-          <Link to={`/groupcall/${roomID}`}>입장하기</Link>
-        </div>
-      ) : (
-        <div>
-          <label htmlFor="nickName" />
-=======
       <img alt="logo" src="../../img/logo.png" />
       <Box>
         <form className="nickname-form">
           <label htmlFor="nickName">닉네임 :</label>
->>>>>>> 1cc4f271745299476c5b4072090a0e4a0393faba
           <input
             value={nickName}
             type="text"
