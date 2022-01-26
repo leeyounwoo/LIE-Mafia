@@ -7,10 +7,27 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://127.0.0.1:8761/eureka
+#  instance:
+#    prefer-ip-address: true
+#    hostname: localhost
 
 spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   application:
     name: apigateway-service
 #  cloud:
 #    gateway:
 #      routes:
+#
+#
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: TRACE
+#    org.springframework.http.server.reactive: DEBUG
+#    org.springframework.web.reactive: DEBUG
+#    reactor.ipc.netty: DEBUG
+#    reactor.netty: DEBUG
+#
+#management.endpoints.web.exposure.include: '*'
