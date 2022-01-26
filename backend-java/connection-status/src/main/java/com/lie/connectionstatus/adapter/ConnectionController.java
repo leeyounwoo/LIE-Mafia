@@ -35,10 +35,14 @@ public class ConnectionController {
     @ApiOperation(value = "방 정보와 유저명 유효체크", notes = "접속 시도하는 방에 중복되는 유저명이 존재하는 지 체크" )
     public ResponseEntity<Boolean> checkIfUsernameExistsInRoom(@PathVariable(value = "room-id") String roomId,
                                               @PathVariable(value = "username") String username){
-        if(connectionService.checkIfUsernameExistsInRoom(roomId,username)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        try{
+            if(connectionService.checkIfUsernameExistsInRoom(roomId,username)){
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -50,11 +50,7 @@ public class ConnectionServiceImpl implements ConnectionService{
 
     @Override
     public Boolean checkIfUsernameExistsInRoom(String roomId, String username) {
-        Room room = roomRepository.findById(roomId).get();
-
-        if(ObjectUtils.isEmpty(room)){
-            return false;
-        }
+        Room room = roomRepository.findById(roomId).orElseThrow();
 
         return room.checkIfUserExists(username);
     }
