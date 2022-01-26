@@ -2,6 +2,7 @@ package com.lie.connectionstatus.domain.room;
 
 import com.lie.connectionstatus.domain.Authority;
 import com.lie.connectionstatus.domain.User;
+import com.lie.connectionstatus.domain.UserConnection;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,14 +10,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.MediaPipeline;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.socket.WebSocketSession;
 
+import javax.print.attribute.standard.Media;
 import java.util.*;
 
+@Slf4j
 @Data
 @RedisHash(value = "room")
 @ApiModel(description = "connection 서버에서 방 정보를 저장하고 관리하는 모델입니다.")
@@ -31,10 +36,16 @@ public class Room {
     @ApiModelProperty(notes = "방의 상태를 나타냅니다. WAITING / STARTING 두 가지가 있습니다.")
     private RoomStatus roomStatus;
 
-    public Room (){
-       this.roomStatus = RoomStatus.WAITING;
+    public Room(){
+        this.roomStatus = RoomStatus.WAITING;
     }
-
+    public Boolean checkIfFull(){
+        if(this.participants.size()>=8){
+            log.info("The Room is Full");
+            return true;
+        }
+        return false;
+    }
     public Boolean checkIfUserExists(String username){
         if(ObjectUtils.isEmpty(participants.get(username))){
             return false;
@@ -43,7 +54,20 @@ public class Room {
     }
 
     public Room join(User participant){
+
+        if(checkIfFull()){
+            //예외처리 - Optional 고려
+            return null;
+        }
+
+        if(checkIfUserExists(participant.getUsername())){
+            //예외처리 - Optional 고려
+            return null;
+        }
+
+        log.info("ROOM {}: participant {} entering", this.roomId, participant.getUsername());
         this.participants.put(participant.getUsername(), participant);
+
         return this;
     }
 }

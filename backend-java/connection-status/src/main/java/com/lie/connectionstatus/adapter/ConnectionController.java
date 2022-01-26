@@ -23,7 +23,7 @@ public class ConnectionController {
     public ResponseEntity<Room> checkIfRoomExists(@PathVariable(value = "room-id") String roomId){
         Room room;
         try{
-            room = connectionService.checkIfRommExists(roomId);
+            room = connectionService.checkIfRoomExists(roomId);
         } catch (Exception e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
