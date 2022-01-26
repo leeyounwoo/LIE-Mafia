@@ -19,7 +19,7 @@ function WaitingFooter(props) {
       <button>{setButton("ready")}</button>
     );
     // 룸id는 상관없고 서버에서 player라고 했는지 방장이라고 했는지로 판단
-  }, []);
+  }, [authority]);
 
   return (
     <StyledFooter>
