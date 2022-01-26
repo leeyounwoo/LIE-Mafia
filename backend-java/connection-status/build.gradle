@@ -20,6 +20,9 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	implementation group: 'io.springfox', name: 'springfox-swagger2', version:  '2.9.2'
+	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version:  '2.9.2'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.kafka:spring-kafka'
 	compileOnly 'org.projectlombok:lombok'
@@ -29,6 +32,8 @@ dependencies {
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	implementation 'org.springframework:spring-websocket'
 	implementation 'org.kurento:kurento-client:6.16.4'
+	implementation 'org.modelmapper:modelmapper:3.0.0'
+
 
 }
 
