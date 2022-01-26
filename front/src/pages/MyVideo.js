@@ -24,7 +24,11 @@ export default function MyVideo() {
   return (
     <div>
       <h1>로컬에 있는 화상 화면은 나와요!</h1>
-      <video ref={videoRef} autoPlay />
+      <video
+        ref={videoRef}
+        poster="https://i1.daumcdn.net/thumb/C480x270/?fname=https://t1.daumcdn.net/cfile/tistory/2513B53E55DB206927"
+        autoPlay
+      />
     </div>
   );
 }

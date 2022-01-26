@@ -6,7 +6,6 @@ import Room from "./pages/Room";
 import Error from "./pages/Error";
 import GameResult from "./pages/GameResult";
 import "bootstrap/dist/css/bootstrap.min.css";
-import RoomGrid from "./pages/RoomGrid";
 
 function App() {
   return (
@@ -16,7 +15,6 @@ function App() {
         <Route path="/Liemafia/:roomId" component={NickName} />
         <Route path="/groupcall" component={Room} />
         <Route path="/gameresult" component={GameResult} />
-        <Route path="/groupcallgrid" component={RoomGrid} />
         <Route component={Error} />
       </Switch>
     </div>
