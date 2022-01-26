@@ -16,69 +16,76 @@ function NickName() {
 
   const [roomNum, setRoomNum] = useState("");
   const [nickName, setNickName] = useState("");
-  const [flipped, setFlipped] = useState(false);
+  const [enter, setEnter] = useState(true);
+  const [authority, setAuthority] = useState("LEADER");
 
-  useEffect(() => {
-    console.log(roomId);
-    socket.onopen = () => {
-      console.log("연결");
-    };
-  }, []);
-
-  useEffect(() => {
-    RoomValidCheck();
-  }, [roomId]);
-
-  const onFlip = () => setFlipped(current => !current);
-
-  const onChangeNickName = event => {
-    setNickName(event.target.value);
-    //console.log(event.target.value);
-    // console.log(nickName);
-  };
-
-  const onClickEnter = () => {
-    // console.log(roomNum);
-    history.push({
-      pathname: roomId === "0" ? `/room/${roomNum}` : `/room/${roomId}`,
-      state: { nickName: nickName },
-    });
-  };
   const RoomValidCheck = () => {
     axios
       .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/`)
       .then(response => {
         console.log(response.data);
+        setAuthority("PLAYER");
       })
       .catch(error => {
         console.log(error);
+        // alert("없는 방 입니다.");
       });
   };
+
+  useEffect(() => {
+    socket.onopen = () => {
+      console.log("연결");
+    };
+    roomId !== "0" && RoomValidCheck();
+  }, []);
+
+  const onChangeNickName = event => {
+    setNickName(event.target.value);
+  };
+
   const NickNameCheck = () => {
-    console.log(nickName);
     axios
       .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/username/${nickName}`)
-      // {
-      //   url: `http://i6c209.p.ssafy.io:8080/room/${roomId}/username/${nickName}`,
-      //   method: "get",
-      //   baseURL: "http://localhost:8080",
-      // }
 
       .then(response => {
         console.log(response.data);
-        // response.data.map(obj => (
-        //   <div key={obj.id}>{obj.id !== nickName && onFlip}</div>
-        // ));
+        setEnter(false);
       })
       .catch(error => {
         console.log(error);
-        console.log("이미 있는 닉네임입니다.");
+        setEnter(true);
+        alert("이미 있는 닉네임입니다.");
       });
+
+    socket.send(
+      JSON.stringify({
+        eventType: "connection",
+        actionType: roomId === "0" ? "create" : "join",
+        roomId: roomId === "0" ? "" : roomId,
+        username: nickName,
+      })
+    );
+    console.log(
+      JSON.stringify({
+        eventType: "connection",
+        actionType: roomId === "0" ? "create" : "join",
+        roomId: roomId === "0" ? "" : roomId,
+        username: nickName,
+      })
+    );
+
+    // actionType : create 일때만 옴
+    // socket.onmessage = event => {
+    //   console.log(event.data);
+    //   setRoomNum(event.data);
+    // };
+
+    console.log(nickName);
   };
 
-  const onClickCheck = event => {
-    event.preventDefault();
-
+  const pass = () => {
+    alert("사용가능한 닉네임입니다.");
+    setEnter(false);
     socket.send(
       JSON.stringify({
         eventType: "connection",
@@ -99,7 +106,26 @@ function NickName() {
       console.log(event.data);
       setRoomNum(event.data);
     };
-    NickNameCheck();
+  };
+
+  const onClickCheck = event => {
+    event.preventDefault();
+
+    roomId === "0"
+      ? nickName === ""
+        ? alert("닉네임을 입력해주세요")
+        : pass()
+      : nickName !== ""
+      ? NickNameCheck()
+      : alert("닉네임을 입력해주세요");
+  };
+
+  const onClickEnter = () => {
+    console.log(authority);
+    history.push({
+      pathname: roomId === "0" ? `/room/${roomNum}` : `/room/${roomId}`,
+      state: { authority: authority },
+    });
   };
 
   return (
@@ -118,7 +144,7 @@ function NickName() {
           <button onClick={onClickCheck}>확인</button>
         </form>
       </Box>
-      <button disabled={false} onClick={onClickEnter}>
+      <button onClick={onClickEnter} disabled={enter}>
         입장하기
       </button>
     </div>
