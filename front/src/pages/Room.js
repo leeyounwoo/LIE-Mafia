@@ -44,7 +44,7 @@ function Room() {
 
       // 영상 태그 만들기 (스타일, video태그의 id, 설정)
       var video = document.createElement("video");
-      video.style.width = 550 + "px";
+      video.style.width = 400 + "px";
       video.id = "video-" + name;
       video.autoplay = true;
       video.controls = false;
@@ -288,7 +288,7 @@ function Room() {
     return function cleanup() {
       ws.close();
     };
-  });
+  }, []);
 
   return (
     <Container fluid>
@@ -298,6 +298,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
@@ -306,6 +307,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
@@ -314,6 +316,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
@@ -339,6 +342,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
@@ -347,6 +351,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
@@ -355,6 +360,7 @@ function Room() {
             <img
               src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
               alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
+              width={400}
             ></img>
           </div>
         </Col>
