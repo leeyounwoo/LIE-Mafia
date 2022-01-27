@@ -13,7 +13,7 @@ function App() {
       <Switch>
         <Route exact path="/" component={Home} />
         <Route path="/Liemafia/:roomId" component={NickName} />
-        <Route path="/groupcall" component={Room} />
+        <Route path="/room/:roomId" component={Room} />
         <Route path="/gameresult" component={GameResult} />
         <Route component={Error} />
       </Switch>
