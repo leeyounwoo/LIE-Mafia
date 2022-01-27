@@ -281,6 +281,10 @@ function Room() {
     ws.onclose = (event) => {
       console.log(event);
     };
+
+    ws.onerror = (error) => {
+      console.log(error);
+    };
     return function cleanup() {
       ws.close();
     };
