@@ -1,117 +1,176 @@
 import React, { useEffect } from "react";
 import kurentoUtils from "kurento-utils";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Container, Row, Col } from "react-bootstrap";
 import styles from "./RoomGrid.module.css";
+import ws from "./websocket";
+const PARTICIPANT_MAIN_CLASS = "participant main";
+// 다른 사용자
+const PARTICIPANT_CLASS = "participant";
+
+function sendMessage(message) {
+  var jsonMessage = JSON.stringify(message);
+
+  console.log("Sending message: " + jsonMessage);
+
+  ws.send(jsonMessage);
+}
+
+function Participant(name, positionID) {
+  console.log(555, name, positionID);
+  this.name = name;
+  // 비디오를 넣을 ID(positionID): 참여자 배열의 길이
+
+  // 비디오를 넣을 div(inputContainer): id가 positionID인 div
+  const inputContainer = document.getElementById(positionID);
+  // 대체 이미지(alterImg): inputConiner 안에 있던 대체 이미지
+  const alterImg = inputContainer.querySelector("img");
+  // 대체 이미지가 있는 경우엔 이미지 삭제하고 영상 추가
+  if (alterImg) {
+    // 대체 이미지 삭제
+    inputContainer.removeChild(alterImg);
+    // container: 사용자 이름과 사용자 영상을 저장하는 div
+    var container = document.createElement("div");
+    // 로컬 사용자의 영상은 class={PARTICIPANT_MAIN_CLASS}
+    container.className = isPresentMainParticipant()
+      ? PARTICIPANT_CLASS
+      : PARTICIPANT_MAIN_CLASS;
+    // 각 container의 id는 닉네임
+    container.id = name;
+
+    // 영상 태그 만들기 (스타일, video태그의 id, 설정)
+    var video = document.createElement("video");
+    video.style.width = 400 + "px";
+    video.id = "video-" + name;
+    video.autoplay = true;
+    video.controls = false;
+    container.appendChild(video);
+
+    var span = document.createElement("span");
+    container.appendChild(span);
+
+    inputContainer.appendChild(container);
+
+    span.appendChild(document.createTextNode(name));
+  }
+
+  this.getElement = function () {
+    return container;
+  };
+
+  this.getVideoElement = function () {
+    return video;
+  };
+
+  function isPresentMainParticipant() {
+    return document.getElementsByClassName(PARTICIPANT_MAIN_CLASS).length !== 0;
+  }
+
+  this.offerToReceiveVideo = function (error, offerSdp, wp) {
+    if (error) return console.error("sdp offer error");
+
+    console.log("Invoking SDP offer callback function");
+
+    var msg = { id: "receiveVideoFrom", sender: name, sdpOffer: offerSdp };
+
+    sendMessage(msg);
+  };
+
+  this.onIceCandidate = function (candidate, wp) {
+    console.log("Local candidate" + JSON.stringify(candidate));
+
+    var message = {
+      id: "onIceCandidate",
+
+      candidate: candidate,
+
+      name: name,
+    };
+
+    sendMessage(message);
+  };
+
+  Object.defineProperty(this, "rtcPeer", { writable: true });
+
+  this.dispose = function () {
+    console.log("Disposing participant " + this.name);
+
+    this.rtcPeer.dispose();
+
+    container.parentNode.removeChild(container);
+  };
+}
 
 function Room() {
-  const ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
+  // const ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
+  // const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   // 자기 자신
-  const PARTICIPANT_MAIN_CLASS = "participant main";
-  // 다른 사용자
-  const PARTICIPANT_CLASS = "participant";
+  let { roomId } = useParams();
   // 사용자 닉네임 저장하는 배열
-  let subscribers_name = [];
-  // 사용자 participant 저장하는 배열
-  let subscribers_video = [];
+  const subscribers_name = [];
+  const subscribers_video = [];
   // 방 번호
-  var room = "";
+  var room = roomId;
   // 닉네임
   const location = useLocation();
   const nickName = location.state.nickName;
   var name = nickName;
+  const authority = location.state.authority;
+  let level = authority;
 
-  function Participant(name) {
-    this.name = name;
-    // 비디오를 넣을 ID(positionID): 참여자 배열의 길이
-    const positionID = subscribers_name.length;
-    // 비디오를 넣을 div(inputContainer): id가 positionID인 div
-    const inputContainer = document.getElementById(positionID);
-    // 대체 이미지(alterImg): inputConiner 안에 있던 대체 이미지
-    const alterImg = inputContainer.querySelector("img");
-    // 대체 이미지가 있는 경우엔 이미지 삭제하고 영상 추가
-    if (alterImg) {
-      // 대체 이미지 삭제
-      inputContainer.removeChild(alterImg);
-      // container: 사용자 이름과 사용자 영상을 저장하는 div
-      var container = document.createElement("div");
-      // 로컬 사용자의 영상은 class={PARTICIPANT_MAIN_CLASS}
-      container.className = isPresentMainParticipant()
-        ? PARTICIPANT_CLASS
-        : PARTICIPANT_MAIN_CLASS;
-      // 각 container의 id는 닉네임
-      container.id = name;
+  ws.onmessage = function (message) {
+    console.log(message);
+    var parsedMessage = JSON.parse(message.data);
 
-      // 영상 태그 만들기 (스타일, video태그의 id, 설정)
-      var video = document.createElement("video");
-      video.style.width = 400 + "px";
-      video.id = "video-" + name;
-      video.autoplay = true;
-      video.controls = false;
-      container.appendChild(video);
+    console.info("Received message: " + message.data);
 
-      var span = document.createElement("span");
-      container.appendChild(span);
+    switch (parsedMessage.id) {
+      // 현재 서버에 연결된 사용자 정보를 가져온다.
+      case "existingParticipants":
+        onExistingParticipants(parsedMessage);
+        break;
 
-      inputContainer.appendChild(container);
+      case "newParticipantArrived":
+        onNewParticipant(parsedMessage);
+        break;
 
-      span.appendChild(document.createTextNode(name));
+      case "participantLeft":
+        onParticipantLeft(parsedMessage);
+        break;
+
+      case "receiveVideoAnswer":
+        receiveVideoResponse(parsedMessage);
+        break;
+
+      case "iceCandidate": {
+        if (parsedMessage.name === nickName) {
+          break;
+        }
+        console.log(parsedMessage, subscribers_video, subscribers_name);
+        subscribers_video[
+          subscribers_name.indexOf(parsedMessage.name)
+        ].rtcPeer.addIceCandidate(parsedMessage.candidate, function (error) {
+          if (error) {
+            console.error("Error adding candidate: " + error);
+            return;
+          }
+        });
+
+        break;
+      }
+      default:
+        console.error("Unrecognized message", parsedMessage);
     }
-
-    this.getElement = function () {
-      return container;
-    };
-
-    this.getVideoElement = function () {
-      return video;
-    };
-
-    function isPresentMainParticipant() {
-      return (
-        document.getElementsByClassName(PARTICIPANT_MAIN_CLASS).length !== 0
-      );
-    }
-
-    this.offerToReceiveVideo = function (error, offerSdp, wp) {
-      if (error) return console.error("sdp offer error");
-
-      console.log("Invoking SDP offer callback function");
-
-      var msg = { id: "receiveVideoFrom", sender: name, sdpOffer: offerSdp };
-
-      sendMessage(msg);
-    };
-
-    this.onIceCandidate = function (candidate, wp) {
-      console.log("Local candidate" + JSON.stringify(candidate));
-
-      var message = {
-        id: "onIceCandidate",
-
-        candidate: candidate,
-
-        name: name,
-      };
-
-      sendMessage(message);
-    };
-
-    Object.defineProperty(this, "rtcPeer", { writable: true });
-
-    this.dispose = function () {
-      console.log("Disposing participant " + this.name);
-
-      this.rtcPeer.dispose();
-
-      container.parentNode.removeChild(container);
-    };
-  }
+  };
 
   function onNewParticipant(request) {
     receiveVideo(request.name);
   }
 
   function receiveVideoResponse(result) {
+    console.log(subscribers_name);
+    console.log(subscribers_video);
+    console.log(result.name);
     subscribers_video[
       subscribers_name.indexOf(result.name)
     ].rtcPeer.processAnswer(
@@ -124,54 +183,58 @@ function Room() {
   }
 
   function onExistingParticipants(msg) {
-    var constraints = {
-      audio: false,
-      video: {
-        mandatory: {
-          maxWidth: 320,
+    if (!subscribers_name.includes(name)) {
+      var constraints = {
+        audio: false,
+        video: {
+          mandatory: {
+            maxWidth: 320,
 
-          maxFrameRate: 15,
+            maxFrameRate: 15,
 
-          minFrameRate: 15,
+            minFrameRate: 15,
+          },
         },
-      },
-    };
-    console.log(msg);
-    console.log(name + " registered in room " + room);
+      };
+      console.log(name + " registered in room " + room);
+      const participant = new Participant(name, subscribers_name.length);
 
-    const participant = new Participant(name);
+      subscribers_name.push(name);
+      subscribers_video.push(participant);
 
-    subscribers_name.push(name);
-    subscribers_video.push(participant);
+      var video = participant.getVideoElement();
 
-    var video = participant.getVideoElement();
+      var options = {
+        localVideo: video,
 
-    var options = {
-      localVideo: video,
+        mediaConstraints: constraints,
+        onicecandidate: participant.onIceCandidate.bind(participant),
+      };
 
-      mediaConstraints: constraints,
-      onicecandidate: participant.onIceCandidate.bind(participant),
-    };
+      participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(
+        options,
 
-    participant.rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerSendonly(
-      options,
-
-      function (error) {
-        if (error) {
-          return console.error(error);
+        function (error) {
+          if (error) {
+            return console.error(error);
+          }
+          this.generateOffer(participant.offerToReceiveVideo.bind(participant));
         }
-        this.generateOffer(participant.offerToReceiveVideo.bind(participant));
-      }
-    );
-
-    msg.data.forEach(receiveVideo);
+      );
+    }
+    Object.keys(msg.data.participants)
+      .filter(a => {
+        return !subscribers_name.includes(a);
+      })
+      .forEach(receiveVideo);
   }
 
   function receiveVideo(sender) {
-    const participant = new Participant(sender);
+    const participant = new Participant(sender, subscribers_name.length);
 
     subscribers_name.push(sender);
     subscribers_video.push(participant);
+    console.log(subscribers_name, subscribers_video);
 
     var video = participant.getVideoElement();
 
@@ -215,77 +278,28 @@ function Room() {
     subscribers_video.slice(requestNameIndex);
   }
 
-  function sendMessage(message) {
-    var jsonMessage = JSON.stringify(message);
-
-    console.log("Sending message: " + jsonMessage);
-
-    ws.send(jsonMessage);
-  }
-
   useEffect(() => {
-    ws.onopen = () => {
-      console.log(nickName);
+    console.log({ nickName });
 
-      var message = {
-        id: "joinRoom",
+    var message = {
+      id: nickName === "leader" ? "create" : "join",
 
-        name: nickName,
+      username: nickName,
 
-        room: "",
-      };
-
-      sendMessage(message);
+      roomId: roomId,
     };
+    // console.log("ㅎㅇ");
+    sendMessage(message);
 
-    ws.onmessage = function (message) {
-      var parsedMessage = JSON.parse(message.data);
-
-      console.info("Received message: " + message.data);
-
-      switch (parsedMessage.id) {
-        // 현재 서버에 연결된 사용자 정보를 가져온다.
-        case "existingParticipants":
-          onExistingParticipants(parsedMessage);
-          break;
-
-        case "newParticipantArrived":
-          onNewParticipant(parsedMessage);
-          break;
-
-        case "participantLeft":
-          onParticipantLeft(parsedMessage);
-          break;
-
-        case "receiveVideoAnswer":
-          receiveVideoResponse(parsedMessage);
-          break;
-
-        case "iceCandidate":
-          subscribers_video[
-            subscribers_name.indexOf(parsedMessage.name)
-          ].rtcPeer.addIceCandidate(parsedMessage.candidate, function (error) {
-            if (error) {
-              console.error("Error adding candidate: " + error);
-              return;
-            }
-          });
-
-          break;
-
-        default:
-          console.error("Unrecognized message", parsedMessage);
-      }
-    };
-
-    ws.onclose = (event) => {
+    ws.onclose = event => {
       console.log(event);
     };
 
-    ws.onerror = (error) => {
+    ws.onerror = error => {
       console.log(error);
     };
     return function cleanup() {
+      console.log(1);
       ws.close();
     };
   }, []);

@@ -5,6 +5,7 @@ import NickName from "./pages/NickName";
 import Room from "./pages/Room";
 import Error from "./pages/Error";
 import GameResult from "./pages/GameResult";
+import MyVideo from "./pages/MyVideo";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/Liemafia/:roomId" component={NickName} />
         <Route path="/room/:roomId" component={Room} />
         <Route path="/gameresult" component={GameResult} />
+        <Route path="/video" component={MyVideo} />
         <Route component={Error} />
       </Switch>
     </div>
