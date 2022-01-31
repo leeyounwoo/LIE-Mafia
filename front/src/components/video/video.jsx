@@ -5,13 +5,13 @@ const Video = ({ keys, participant }) => {
   const videoRef = useRef(null);
   useEffect(() => {
     videoRef.current.srcObject =
-      participant.type === "local"
-        ? participant.rtcPeer.getLocalStream()
-        : participant.rtcPeer.getRemoteStream();
+      participant[1].type === "local"
+        ? participant[1].rtcPeer.getLocalStream()
+        : participant[1].rtcPeer.getRemoteStream();
   });
+
   return (
     <div className={styles.container}>
-      <h1>비디오 컴포넌트</h1>
       <li className={styles.li} key={keys}>
         <video className={styles.video} ref={videoRef} autoPlay></video>
       </li>

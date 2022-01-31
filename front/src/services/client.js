@@ -1,28 +1,19 @@
-import kurentoUtils from "kurento-utils";
+import { WebRtcPeer } from "kurento-utils";
+import { useState } from "react";
 
-function SignalApp({ nickName }) {
-  const ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
-  // 자기 자신
-  const PARTICIPANT_MAIN_CLASS = "participant main";
-  // 다른 사용자
-  const PARTICIPANT_CLASS = "participant";
-  // 사용자 닉네임 저장하는 배열
-  let subscribers_name = [];
-  // 사용자 participant 저장하는 배열
-  let subscribers_video = [];
-  // 방 번호
-  var room = "";
-  // 닉네임
-  var name = nickName;
+function SignalApp({ name, room }) {
+  const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
+  const [subscribers_name, setSubscribers_name] = useState([]);
+  const [subscribers_video, setSubscribers_video] = useState([]);
+  console.log("시작", subscribers_name);
+
   ws.onopen = () => {
-    console.log(nickName);
-
+    console.log("join");
     var message = {
       id: "joinRoom",
-      name: nickName,
+      name: name,
       room: "",
     };
-
     sendMessage(message);
   };
 
@@ -41,9 +32,9 @@ function SignalApp({ nickName }) {
         onNewParticipant(parsedMessage);
         break;
 
-      case "participantLeft":
-        onParticipantLeft(parsedMessage);
-        break;
+      // case "participantLeft":
+      //   onParticipantLeft(parsedMessage);
+      //   break;
 
       case "receiveVideoAnswer":
         receiveVideoResponse(parsedMessage);
@@ -79,4 +70,112 @@ function SignalApp({ nickName }) {
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   }
+
+  function receiveVideo(sender) {
+    let user = {
+      name: name,
+      type: "remote",
+      rtcPeer: null,
+    };
+
+    // setSubscrivers_name()
+    // subscribers_name.push(name);
+    // subscribers_video.push(user);
+    setSubscribers_name([...subscribers_name, name]);
+    setSubscribers_video([...subscribers_video, user]);
+
+    let options = {
+      onicecandidate: (candidate) => {
+        let message = {
+          id: "onIceCandidate",
+          candidate: candidate,
+          name: name,
+        };
+        sendMessage(message);
+      },
+    };
+
+    user.rtcPeer = WebRtcPeer.WebRtcPeerRecvonly(options);
+    user.rtcPeer.generateOffer((err, offerSdp) => {
+      if (err) {
+        console.error(err);
+      }
+      let msg = {
+        id: "receiveVideoForm",
+        sendes: name,
+        sdpOffer: offerSdp,
+      };
+      sendMessage(msg);
+    });
+  }
+
+  function onExistingParticipants(msg) {
+    let user = {
+      name: name,
+      type: "local",
+      rtcPeer: null,
+    };
+
+    // subscribers_name.push(name);
+    // subscribers_video.push(user);
+
+    setSubscribers_name([...subscribers_name, name]);
+    setSubscribers_video([...subscribers_video, user]);
+
+    console.log(msg);
+    console.log(name + " registered in room " + room);
+
+    let options = {
+      onicecandidate: (candidate) => {
+        let message = {
+          id: "onIceCandidate",
+          candidate: candidate,
+          name: name,
+        };
+        sendMessage(message);
+      },
+    };
+
+    user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options);
+    user.rtcPeer.generateOffer((err, offerSdp) => {
+      if (err) {
+        console.error(err);
+      }
+      let msg = {
+        id: "receiveVideoForm",
+        sendes: name,
+        sdpOffer: offerSdp,
+      };
+      sendMessage(msg);
+    });
+
+    msg.data.forEach((existingUser) => {
+      receiveVideo(existingUser.name);
+    });
+  }
+
+  function onNewParticipant(request) {
+    receiveVideo(request.name);
+  }
+
+  function receiveVideoResponse(result) {
+    subscribers_video[
+      subscribers_name.indexOf(result.name)
+    ].rtcPeer.processAnswer(
+      result.sdpAnswer,
+
+      function (error) {
+        if (error) return console.error(error);
+      }
+    );
+  }
+
+  this.subscribers_name = [];
+  this.subscribers_name = subscribers_name;
+  this.subscribers_video = [];
+  this.subscribers_video = subscribers_video;
+  console.log("client1", subscribers_name);
+  console.log("client2", this.subscribers_name);
 }
+
+export default SignalApp;

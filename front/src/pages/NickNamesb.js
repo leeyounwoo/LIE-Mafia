@@ -2,6 +2,7 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import styled from "styled-components";
+import socket from "./websocket";
 
 const Box = styled.div`
   border: 1px solid;
@@ -10,7 +11,7 @@ const Box = styled.div`
 `;
 
 function NickName() {
-  const socket = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
+  // const socket = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   let history = useHistory();
   let { roomId } = useParams();
 
@@ -21,7 +22,7 @@ function NickName() {
 
   const RoomValidCheck = () => {
     axios
-      .get(`http://i6c209.p.ssafy.io:8081/room/${roomId}/`)
+      .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/`)
       .then((response) => {
         console.log(response.data);
         setAuthority("PLAYER");
@@ -33,9 +34,6 @@ function NickName() {
   };
 
   useEffect(() => {
-    socket.onopen = () => {
-      console.log("연결");
-    };
     roomId !== "0" && RoomValidCheck();
   }, []);
 
@@ -45,7 +43,7 @@ function NickName() {
 
   const NickNameCheck = () => {
     axios
-      .get(`http://i6c209.p.ssafy.io:8081/room/${roomId}/username/${nickName}`)
+      .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/username/${nickName}`)
 
       .then((response) => {
         console.log(response.data);
@@ -70,18 +68,11 @@ function NickName() {
   const SocketSend = () => {
     socket.send(
       JSON.stringify({
-        eventType: "connection",
-        id: roomId === "0" ? "create" : "join",
-        roomId: roomId === "0" ? "" : roomId,
+        id: "create",
+
         username: nickName,
-      })
-    );
-    console.log(
-      JSON.stringify({
-        eventType: "connection",
-        id: roomId === "0" ? "create" : "join",
-        roomId: roomId === "0" ? "" : roomId,
-        username: nickName,
+
+        roomid: "",
       })
     );
   };
@@ -89,8 +80,10 @@ function NickName() {
     setEnter(false);
     SocketSend();
     socket.onmessage = (event) => {
-      // console.log(JSON.parse(event.data).data.roomId);
+      console.log(JSON.parse(event.data).data.roomId);
+      console.log(JSON.parse(event.data).data.participants); // 여기
       setRoomNum(JSON.parse(event.data).data.roomId);
+      setAuthority(JSON.parse(event.data).data.participants);
     };
   };
 
@@ -108,7 +101,7 @@ function NickName() {
 
   const onClickEnter = () => {
     console.log(authority);
-    SocketSend();
+    // SocketSend();
     history.push({
       pathname: roomId === "0" ? `/room/${roomNum}` : `/room/${roomId}`,
       state: { nickName: nickName },

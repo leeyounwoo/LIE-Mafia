@@ -4,11 +4,14 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
+import SignalApp from "./services/finalclient";
+
+const signalApp = new SignalApp();
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <App component={signalApp} />
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById("root")
