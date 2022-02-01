@@ -13,6 +13,7 @@ function NickName() {
   const socket = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   let history = useHistory();
   let { roomId } = useParams();
+  console.log("주소", window.location.pathname.split("/").pop());
 
   const [roomNum, setRoomNum] = useState("");
   const [nickName, setNickName] = useState("");

@@ -4,14 +4,17 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
-import SignalApp from "./services/finalclient";
+// import SignalApp from "./services/finalclient";
+// import FinalApp from "./FinalApp";
 
-const signalApp = new SignalApp();
+// const signalApp = new SignalApp();
+// console.log("시그널앱", signalApp);
 
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter>
-      <App component={signalApp} />
+      <App />
+      {/* <FinalApp signalApp={signalApp} /> */}
     </BrowserRouter>
   </React.StrictMode>,
   document.getElementById("root")

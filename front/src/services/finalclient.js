@@ -1,34 +1,61 @@
 import { WebRtcPeer } from "kurento-utils";
 
 class SignalApp {
-  constructor() {
+  constructor(roomId) {
     // const regex = /(^https?):\/\/\w+(:[0-9]*)?\/?/;
     // const lastIdx = regex.exec(window.location.href)[0].length;
     // this._currentLocation = window.location.href.slice(lastIdx - 1);
 
-    this.ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
-    // this.ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
-    this.roomName = 0;
+    // this.ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
+    this.ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
+    // this.roomName = 0;
     this._participants = {};
-    this.userName = `user${Object.keys(this._participants).length}`;
+    this.roomId = roomId;
+    this.userName = `user${this.roomId}`;
     this.user = {};
+    console.log("내부 방번호", this.roomId);
+    console.log("내부 방번호", typeof this.roomId);
 
-    this.ws.onopen = () => {
-      console.log("연결");
-      var message = {
-        id: "joinRoom",
-        name: this.userName,
-        room: this.roomName,
-      };
-
-      this.sendMessage(message);
-    };
+    // console.log(this.temp);
 
     // this.ws.onopen = () => {
     //   console.log("연결");
     //   var message = {
-    //     id: "create",
+    //     id: "joinRoom",
+    //     name: this.userName,
+    //     room: this.roomName,
+    //   };
+
+    //   this.sendMessage(message);
+    // }
+    if (this.roomId === "0") {
+      this.ws.onopen = () => {
+        console.log("연결");
+        var message = {
+          id: "create",
+          username: this.userName,
+        };
+
+        this.sendMessage(message);
+      };
+    } else {
+      this.ws.onopen = () => {
+        console.log("연결");
+        var message = {
+          id: "join",
+          username: this.userName,
+          roomId: this.roomId,
+        };
+
+        this.sendMessage(message);
+      };
+    }
+    // this.ws.onopen = () => {
+    //   console.log("연결");
+    //   var message = {
+    //     id: "join",
     //     username: this.userName,
+    //     roomId: "1",
     //   };
 
     //   this.sendMessage(message);
@@ -66,6 +93,7 @@ class SignalApp {
 
         case "receiveVideoAnswer":
           this.onReceiveVideoAnswer(parsedMessage);
+          console.log(this._participants);
           break;
 
         case "iceCandidate":
@@ -128,12 +156,24 @@ class SignalApp {
 
     let options = {
       onicecandidate: (candidate) => {
+        console.log("Local candidate" + JSON.stringify(candidate));
         let message = {
           id: "onIceCandidate",
           candidate: candidate,
-          name: sender.name,
+          name: user.name,
         };
         this.sendMessage(message);
+      },
+      configuration: {
+        iceServers: [
+          {
+            urls: "turn:3.38.118.187:3478?transport=udp",
+
+            username: "ssafy",
+
+            credential: "1234",
+          },
+        ],
       },
     };
 
@@ -153,18 +193,35 @@ class SignalApp {
 
   async onExistingParticipants(msg) {
     let user = {
-      name: msg.name,
+      name: this.userName,
+      // name: msg.name,
       type: "local",
       rtcPeer: null,
     };
 
-    this._participants[msg.name] = user;
+    this._participants[this.userName] = user;
+    // this._participants[msg.name] = user;
 
     console.log(msg);
-    console.log(msg.name + " registered in room " + msg.room);
+    console.log(this.userName + " registered in room " + msg.room);
+
+    var constraints = {
+      audio: false,
+      video: {
+        mandatory: {
+          maxWidth: 320,
+
+          maxFrameRate: 15,
+
+          minFrameRate: 15,
+        },
+      },
+    };
 
     let options = {
+      mediaConstraints: constraints,
       onicecandidate: (candidate) => {
+        console.log("Local candidate" + JSON.stringify(candidate));
         let message = {
           id: "onIceCandidate",
           candidate: candidate,
@@ -180,28 +237,36 @@ class SignalApp {
         console.error(err);
       }
       let message = {
-        id: "receiveVideoForm",
-        sendes: msg.name,
+        id: "receiveVideoFrom",
+
+        sender: this.userName,
         sdpOffer: offerSdp,
       };
+      console.log(message);
       this.sendMessage(message);
     });
 
-    msg.data.forEach((existingUser) => {
-      this.receiveVideo(existingUser.name);
-    });
+    for (let [username] of Object.entries(msg.data.participants)) {
+      console.log("username", username);
+      if (username !== this.userName) {
+        this.receiveVideo(username);
+      }
+    }
+
+    // msg.data.forEach((existingUser) => {
+    //   this.receiveVideo(existingUser.name);
+    // });
   }
 
   onNewParticipant(msg) {
     this.receiveVideo(msg.name);
   }
 
-  receiveVideoResponse(result) {
-    this._participants[result.name].rtcPeer.processAnswer(result.sdpAnswer);
-  }
-
   onReceiveVideoAnswer(msg) {
+    console.log(msg);
+    // console.log(this._participants);
     this._participants[msg.name].rtcPeer.processAnswer(msg.sdpAnswer);
+    // console.log(this._participants);
   }
 
   onAddIceCandidate(msg) {
