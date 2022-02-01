@@ -9,7 +9,7 @@ import org.springframework.web.reactive.config.CorsRegistry;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
-//@Configuration
+@Configuration
 @EnableWebFlux
 public class CORSFilter implements WebFluxConfigurer {
 
@@ -22,7 +22,7 @@ public class CORSFilter implements WebFluxConfigurer {
                 .allowedMethods("*");
     }
 
-    //@Bean
+    @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowCredentials(true);
