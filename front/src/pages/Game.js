@@ -1,14 +1,14 @@
-import FinalPage from "./FinalPage";
-import SignalApp from "../services/finalclient";
+import Room from "../components/Room/room";
+import SignalApp from "../services/websocket";
 
 const signalApp = new SignalApp(window.location.pathname.split("/").pop());
 console.log("주소", window.location.pathname.split("/").pop());
 
-function Temp() {
+function Game() {
   return (
     <div>
-      <FinalPage signalApp={signalApp} />;<h1>Hello</h1>
+      <Room signalApp={signalApp} />;<h1>Hello</h1>
     </div>
   );
 }
-export default Temp;
+export default Game;

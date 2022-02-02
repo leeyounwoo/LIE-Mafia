@@ -2,13 +2,7 @@ import { WebRtcPeer } from "kurento-utils";
 
 class SignalApp {
   constructor(roomId) {
-    // const regex = /(^https?):\/\/\w+(:[0-9]*)?\/?/;
-    // const lastIdx = regex.exec(window.location.href)[0].length;
-    // this._currentLocation = window.location.href.slice(lastIdx - 1);
-
-    // this.ws = new WebSocket("wss://3.37.1.251:8443/groupcall");
     this.ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
-    // this.roomName = 0;
     this._participants = {};
     this.roomId = roomId;
     this.userName = `user${this.roomId}`;
@@ -16,18 +10,6 @@ class SignalApp {
     console.log("내부 방번호", this.roomId);
     console.log("내부 방번호", typeof this.roomId);
 
-    // console.log(this.temp);
-
-    // this.ws.onopen = () => {
-    //   console.log("연결");
-    //   var message = {
-    //     id: "joinRoom",
-    //     name: this.userName,
-    //     room: this.roomName,
-    //   };
-
-    //   this.sendMessage(message);
-    // }
     if (this.roomId === "0") {
       this.ws.onopen = () => {
         console.log("연결");
@@ -50,39 +32,12 @@ class SignalApp {
         this.sendMessage(message);
       };
     }
-    // this.ws.onopen = () => {
-    //   console.log("연결");
-    //   var message = {
-    //     id: "join",
-    //     username: this.userName,
-    //     roomId: "1",
-    //   };
-
-    //   this.sendMessage(message);
-    // };
-
-    // this.ws.onopen = () => {
-    //   var message = {
-    //     id: "createUser",
-    //     // 서버에서 사용 안함
-    //     // currRoom: this._currentLocation,
-    //   };
-    //   this.sendMessage(message);
-    // };
 
     this.ws.onmessage = (message) => {
       var parsedMessage = JSON.parse(message.data);
       console.info("Received message: " + message.data);
 
       switch (parsedMessage.id) {
-        // case "userCreated":
-        //   this.requestRoom(parsedMessage);
-        //   break;
-
-        // case "roomCreated":
-        //   this.joinRoom(parsedMessage);
-        //   break;
-
         case "existingParticipants":
           this.onExistingParticipants(parsedMessage);
           break;
@@ -120,31 +75,6 @@ class SignalApp {
     console.log("Sending message: " + jsonMessage);
   }
 
-  // requestRoom(msg) {
-  //   const room =
-  //     this._currentLocation.length > 1 ? this._currentLocation.slice(1) : "";
-  //   this.userName = msg.userName;
-
-  //   var message = {
-  //     id: "createRoom",
-  //     room: room,
-  //   };
-
-  //   this.sendMessage(message);
-  // }
-
-  // joinRoom(msg) {
-  //   this.roomName = msg.roomName;
-
-  //   var message = {
-  //     id: "joinRoom",
-  //     userName: this.userName,
-  //     roomName: this.roomName,
-  //   };
-
-  //   this.sendMessage(message);
-  // }
-
   async receiveVideo(sender) {
     let user = {
       name: sender,
@@ -156,11 +86,10 @@ class SignalApp {
 
     let options = {
       onicecandidate: (candidate) => {
-        console.log("Local candidate" + JSON.stringify(candidate));
         let message = {
           id: "onIceCandidate",
           candidate: candidate,
-          name: user.name,
+          name: sender,
         };
         this.sendMessage(message);
       },
@@ -183,8 +112,8 @@ class SignalApp {
         console.error(err);
       }
       let msg = {
-        id: "receiveVideoForm",
-        sendes: sender.name,
+        id: "receiveVideoFrom",
+        sender: sender,
         sdpOffer: offerSdp,
       };
       this.sendMessage(msg);
@@ -221,11 +150,11 @@ class SignalApp {
     let options = {
       mediaConstraints: constraints,
       onicecandidate: (candidate) => {
-        console.log("Local candidate" + JSON.stringify(candidate));
+        // console.log("Local candidate" + JSON.stringify(candidate));
         let message = {
           id: "onIceCandidate",
           candidate: candidate,
-          name: user.name,
+          name: this.userName,
         };
         this.sendMessage(message);
       },
@@ -249,6 +178,7 @@ class SignalApp {
     for (let [username] of Object.entries(msg.data.participants)) {
       console.log("username", username);
       if (username !== this.userName) {
+        console.log("receive", username);
         this.receiveVideo(username);
       }
     }
@@ -264,21 +194,12 @@ class SignalApp {
 
   onReceiveVideoAnswer(msg) {
     console.log(msg);
-    // console.log(this._participants);
     this._participants[msg.name].rtcPeer.processAnswer(msg.sdpAnswer);
-    // console.log(this._participants);
   }
 
   onAddIceCandidate(msg) {
     this._participants[msg.name].rtcPeer.addIceCandidate(msg.candidate);
   }
-
-  // get participants() {
-  //   return this._participants;
-  // }
-  // get currentLocation() {
-  //   return `${window.location.href}${this.roomName}`;
-  // }
 }
 
 export default SignalApp;

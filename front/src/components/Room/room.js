@@ -1,15 +1,12 @@
 import { useState } from "react";
-import "./App.css";
-import VideoRoom from "./components/videoRoom/videoRoom";
-// import VideoRoom from "./"
+import VideoRoom from "../VideoRoom/videoRoom";
 
-function FinalApp({ signalApp }) {
+function Room({ signalApp }) {
   const [name, setName] = useState(true);
   const onBtnClick = (name) => {
     setName(false);
   };
   console.log("앱 시그널앱", signalApp);
-  console.log("주소", window.location.pathname.split("/").pop());
 
   return (
     <div className="App">
@@ -25,4 +22,4 @@ function FinalApp({ signalApp }) {
   );
 }
 
-export default FinalApp;
+export default Room;

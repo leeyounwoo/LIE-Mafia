@@ -2,11 +2,10 @@ import React from "react";
 import { Route, Switch } from "react-router-dom";
 import Home from "./pages/Home";
 import NickName from "./pages/NickName";
-import Room from "./pages/Roomsb";
 import Error from "./pages/Error";
 import GameResult from "./pages/GameResult";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Temp from "./pages/Temp";
+import Game from "./pages/Game";
 
 function App() {
   return (
@@ -16,10 +15,9 @@ function App() {
         <Route path="/Liemafia/:roomId">
           <NickName />
         </Route>
-        <Route path="/final/:roomId">
-          <Temp />
+        <Route path="/room/:roomId">
+          <Game />
         </Route>
-        <Route path="/room/:roomId" component={Room} />
         <Route path="/gameresult" component={GameResult} />
         <Route component={Error} />
       </Switch>

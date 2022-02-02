@@ -1,8 +1,7 @@
 import { useState } from "react";
-import VideoRoom from "../components/videoRoom/videoRoom";
-import { useParams } from "react-router-dom/cjs/react-router-dom.min";
+import VideoRoom from "./videoRoom/videoRoom";
 
-function FinalPage({ signalApp }) {
+function Room({ signalApp }) {
   const [name, setName] = useState(true);
   const onBtnClick = (name) => {
     setName(false);
@@ -23,4 +22,4 @@ function FinalPage({ signalApp }) {
   );
 }
 
-export default FinalPage;
+export default Room;
