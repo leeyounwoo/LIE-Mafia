@@ -7,9 +7,9 @@ class SignalApp {
     this.roomId = roomId;
     this.userName = `user${this.roomId}`;
     this.user = {};
-    console.log("내부 방번호", this.roomId);
-    console.log("내부 방번호", typeof this.roomId);
 
+    // roomId가 0이면 방장, create
+    // roomId가 0이 아니면 참여자, join
     if (this.roomId === "0") {
       this.ws.onopen = () => {
         console.log("연결");
