@@ -1,7 +1,16 @@
 spring:
   redis:
-    host: 192.168.0.26
-    port: 6379
+    local:
+      host: 192.168.0.26
+      port: 6379
+    stage:
+      host: 2k2lc1p.iptime.org
+      port: 6379
+      password: ssafy
+    production:
+      host: i6c209.p.ssafy.io
+      port: 6379
+      password: ssafy
 
   mvc:
     pathmatch:

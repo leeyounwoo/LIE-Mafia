@@ -18,6 +18,9 @@ processResources{
 }
 
 configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 	all {
 		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 	}
@@ -31,13 +34,12 @@ dependencies {
 	implementation group: 'io.springfox', name: 'springfox-swagger2', version:  '2.9.2'
 	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version:  '2.9.2'
 	implementation 'org.springframework.boot:spring-boot-starter'
-
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.springframework.boot:spring-boot-starter-websocket:2.6.2'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
-	implementation 'org.springframework.boot:spring-boot-starter-web:'
-	implementation 'org.springframework.data:spring-data-redis:'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation "org.springframework.boot:spring-boot-starter-data-redis:2.6.2"
 	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	implementation 'org.modelmapper:modelmapper:3.0.0'

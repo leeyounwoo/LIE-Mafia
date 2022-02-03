@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @RequiredArgsConstructor
 @EnableWebSocket
 public class ConnectionSocketConfig implements WebSocketConfigurer {
+
     public final ConnectionHandler connectionHandler;
 
     @Override
