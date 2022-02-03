@@ -1,0 +1,144 @@
+#main-container {
+  height: 100vh;
+}
+#infobox {
+  position: absolute;
+  display: table;
+  width: 45%;
+  height: 103%;
+
+  left: 30%;
+
+  background-color: #535353;
+  opacity: 0.9;
+  border-radius: 40px;
+  border: 6px solid #9b9b9b;
+
+  color: white;
+  font-size: larger;
+  text-align: center;
+  z-index: 1;
+}
+
+.infotextwrap {
+  display: table-row;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.infotext {
+  display: table-cell;
+  vertical-align: middle;
+  line-height: 1.5em;
+  font-size: 1.1em;
+  padding-top: 50px;
+}
+
+.policetextwrap {
+  display: table-row;
+  width: 100%;
+  height: 50%;
+}
+
+.policetext {
+  display: table-cell;
+  width: 100%;
+  height: 100%;
+  color: orange;
+  font-size: 1.1em;
+  text-align: center;
+}
+
+@keyframes cursor {
+  0% {
+    border-right: 1px solid #fff;
+  }
+  50% {
+    border-right: 1px solid #000;
+  }
+  100% {
+    border-right: 1px solid white;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translatey(0px);
+  }
+  70% {
+    transform: translateY(-5px) scaleX(1);
+  }
+  to {
+    transform: translatey(0px);
+  }
+}
+
+.url-copy-box {
+  position: absolute;
+  text-align: center;
+  top: 80%;
+  left: 50%;
+  transform: translateY(-80%);
+  width: 100%;
+  left: 0;
+}
+
+.url-title {
+  display: block;
+  color: salmon;
+  font-size: 1.4em;
+  text-shadow: 2px 1px 1px rgb(153, 65, 65);
+  line-height: 2em;
+  animation: float 1s ease-in infinite;
+}
+
+.url-copy-wrap {
+  width: 100%;
+}
+
+.url-copy-text {
+  font-size: 0.9em;
+  text-shadow: 2px 1px 1px rgb(153, 65, 65);
+}
+
+#url-copy-btn {
+  margin-left: 10px;
+  color: salmon;
+  cursor: pointer;
+  transition: transform 0.2s ease-out;
+  transition: color 0.2s ease-out;
+}
+
+#url-copy-btn:hover {
+  color: green;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+#urlInput {
+  opacity: 0;
+}
+
+.card-box-parent {
+  height: 90vh;
+  /* overflow: scroll; */
+}
+.card-box {
+  position: relative;
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-top: 30px;
+  height: 28%;
+  min-height: 190px;
+}
+
+.start-animation {
+  position: absolute;
+  display: inline-block;
+  font-size: 5em;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  transform: translate(-50%, -50%);
+  color: #87cefa;
+}

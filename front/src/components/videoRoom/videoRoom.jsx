@@ -2,12 +2,12 @@ import React from "react";
 import UserCam from "../UserCam/userCam";
 import styles from "./videoRoom.module.css";
 
-const VideoRoom = ({ signalApp }) => {
+const VideoRoom = ({ participants }) => {
   return (
     <div className={styles.container}>
       <ul>
-        <h1>참가자 수: {Object.keys(signalApp._participants).length}</h1>
-        {Object.entries(signalApp._participants).map((participant) => {
+        <h1>참가자 수: {Object.keys(participants).length}</h1>
+        {Object.entries(participants).map((participant) => {
           return (
             <>
               <UserCam
