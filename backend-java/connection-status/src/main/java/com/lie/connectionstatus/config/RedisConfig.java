@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
@@ -13,11 +15,14 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {
-    @Value("${spring.redis.host}")
+    @Value("${spring.redis.production.host}")
     private String host;
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.redis.production.port}")
     private Integer port;
+
+    @Value("${spring.redis.production.password")
+    private String password;
 
     @Bean
     public RedisTemplate<?, ?> redisTemplate(){
@@ -32,6 +37,9 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory(){
-        return new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, port));
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host, port);
+        redisStandaloneConfiguration.setPassword(RedisPassword.of(password));
+        LettuceClientConfiguration.LettuceClientConfigurationBuilder lettuceClientConfigurationBuilder = LettuceClientConfiguration.builder();
+        return new LettuceConnectionFactory(redisStandaloneConfiguration, lettuceClientConfigurationBuilder.build());
     }
 }

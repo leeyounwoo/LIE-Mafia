@@ -1,8 +1,25 @@
 spring:
   redis:
-    host: 192.168.0.2
-    port: 6379
-
+    local:
+      host: 192.168.0.2
+      port: 6379
+      password: ssafy
+    stage:
+      host: 3.37.1.251
+      port: 6379
+      password: ssafy
+    production:
+      host: i6c209.p.ssafy.io
+      port: 6379
+      password: ssafy
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+
+logging:
+  level:
+    org:
+      springframework: INFO
+      kurento: INFO
+server:
+  port: 8080

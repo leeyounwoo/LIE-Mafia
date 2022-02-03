@@ -20,6 +20,10 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.kurento:kurento-utils-js:6.15.0'
+	// https://mvnrepository.com/artifact/org.webjars.bower/webrtc-adapter.js
+	implementation 'org.webjars.bower:webrtc-adapter.js:0.0.1'
+	implementation 'org.webjars.bower:ekko-lightbox:5.2.0'
 
 	implementation group: 'io.springfox', name: 'springfox-swagger2', version:  '2.9.2'
 	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version:  '2.9.2'
