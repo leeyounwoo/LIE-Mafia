@@ -1,15 +1,8 @@
-package com.lie.connectionstatus.domain;
+package com.lie.connectionstatus.domain.user;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
 import lombok.Data;
-import org.kurento.client.MediaPipeline;
-import org.kurento.client.WebRtcEndpoint;
-import org.springframework.web.socket.WebSocketSession;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 @Data
 @ApiModel(description = "connection 서버에서 user 정보를 저장하고 관리하는 모델입니다.")

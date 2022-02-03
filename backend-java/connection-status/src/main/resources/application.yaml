@@ -11,7 +11,7 @@ spring:
     production:
       host: i6c209.p.ssafy.io
       port: 6379
-      password: ssafy
+      password: $$jae923009$
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher

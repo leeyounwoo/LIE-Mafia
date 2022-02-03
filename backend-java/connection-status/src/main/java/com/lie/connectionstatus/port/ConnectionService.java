@@ -12,6 +12,8 @@ public interface ConnectionService {
 
     void joinRoom(WebSocketSession session, String username, String roomId) throws Exception;
 
+    void leaveRoom(WebSocketSession session) throws Exception;
+
     Room checkIfRoomExists(String roomId);
 
     Boolean checkIfUsernameExistsInRoom(String roomId, String username);

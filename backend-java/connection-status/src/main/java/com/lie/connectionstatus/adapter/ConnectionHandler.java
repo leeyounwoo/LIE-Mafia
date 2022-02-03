@@ -3,9 +3,8 @@ package com.lie.connectionstatus.adapter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import com.lie.connectionstatus.domain.UserConnection;
-import com.lie.connectionstatus.domain.UserConnectionManager;
+import com.lie.connectionstatus.domain.user.UserConnection;
+import com.lie.connectionstatus.domain.user.UserConnectionManager;
 import com.lie.connectionstatus.domain.room.RoomManager;
 import com.lie.connectionstatus.dto.ClientMessageDto;
 import com.lie.connectionstatus.port.ConnectionService;
@@ -14,12 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.IceCandidate;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Slf4j
@@ -66,7 +62,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 final String sdpOffer = jsonMessage.get("sdpOffer").asText();
                 user.receiveVideoFrom(sender, sdpOffer);
             case "leaveRoom" :
-
+                connectionService.leaveRoom(session);
                 break;
 
             case "onIceCandidate" :
@@ -87,8 +83,10 @@ public class ConnectionHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        UserConnection user = userConnectionManager.removeBySession(session);
-
+        log.info(status.getReason());
+        connectionService.leaveRoom(session);
+        userConnectionManager.getUsersBySessionId().values().stream().map(userConnection -> userConnection.getUsername()).forEach(System.out::println);
+        roomManager.roomsPipeline.values().stream().forEach(System.out::println);
         //connection service에서 leave 하게 해주세요 (방)
     }
 

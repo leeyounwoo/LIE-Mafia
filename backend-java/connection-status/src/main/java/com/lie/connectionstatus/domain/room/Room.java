@@ -1,24 +1,16 @@
 package com.lie.connectionstatus.domain.room;
 
-import com.lie.connectionstatus.domain.Authority;
-import com.lie.connectionstatus.domain.User;
-import com.lie.connectionstatus.domain.UserConnection;
-import io.swagger.annotations.Api;
+import com.lie.connectionstatus.domain.user.Authority;
+import com.lie.connectionstatus.domain.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.kurento.client.MediaPipeline;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.socket.WebSocketSession;
 
-import javax.print.attribute.standard.Media;
 import java.util.*;
 
 @Slf4j
@@ -53,10 +45,31 @@ public class Room {
         return true;
     }
     public Room join(User participant){
-
         log.info("ROOM {}: participant {} entering", this.roomId, participant.getUsername());
         this.participants.put(participant.getUsername(), participant);
 
         return this;
     }
+    public Boolean checkIfLeader(String username){
+        if(participants.get(username).getAuthority().equals(Authority.LEADER)){
+            return true;
+        }
+        return false;
+    }
+    public Boolean checkIfEmpty(){
+        if(participants.isEmpty()){
+            return true;
+        }
+        return false;
+    }
+    public void leave(String username){
+        log.info("ROOM {}: participant {} entering", this.roomId, username);
+        this.participants.remove(username);
+    }
+    public void close(){
+        log.info("Room {} : closing", this.getRoomId());
+        this.participants.clear();
+    }
+
+
 }

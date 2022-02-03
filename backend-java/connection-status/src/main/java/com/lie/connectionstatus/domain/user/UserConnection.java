@@ -1,8 +1,7 @@
-package com.lie.connectionstatus.domain;
+package com.lie.connectionstatus.domain.user;
 
 import com.google.gson.JsonObject;
 import lombok.Data;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
