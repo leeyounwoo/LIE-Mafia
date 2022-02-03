@@ -8,9 +8,11 @@ services:
     volumes:
       - /redis/data:/var/lib/redis
       - /redis/log:/var/log/redis
+
   connection-status-app:
     build: .
     ports:
       - "8080:8080"
     depends_on:
-      -   redis
+      - redis
+      - kafka

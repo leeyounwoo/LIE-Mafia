@@ -10,8 +10,10 @@ import com.lie.connectionstatus.dto.ClientMessageDto;
 import com.lie.connectionstatus.port.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.kurento.client.IceCandidate;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -27,7 +29,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
     private final ConnectionService connectionService;
     private final UserConnectionManager userConnectionManager;
     private final RoomManager roomManager;
-
+    private final KafkaTemplate<String, String> kafkaTemplate;
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         final JsonNode jsonMessage = objectMapper.readTree(message.getPayload());
@@ -39,8 +41,12 @@ public class ConnectionHandler extends TextWebSocketHandler {
         log.info(session.getId());
 
         switch(jsonMessage.get("id").asText()){
+            case "testKafka":
+                break;
             //create로 바꾸기
             case "create" :
+                kafkaTemplate.send(jsonMessage.get("id").asText(), message.getPayload());
+
                 try{
                     connectionService.createRoom(session,
                             jsonMessage.get("username").asText());
@@ -50,6 +56,8 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 }
                 break;
             case "join" :
+                kafkaTemplate.send(jsonMessage.get("id").asText(), message.getPayload());
+
                 connectionService.joinRoom(session,
                         jsonMessage.get("username").asText(),
                         jsonMessage.get("roomId").asText());
@@ -85,9 +93,6 @@ public class ConnectionHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.info(status.getReason());
         connectionService.leaveRoom(session);
-        userConnectionManager.getUsersBySessionId().values().stream().map(userConnection -> userConnection.getUsername()).forEach(System.out::println);
-        roomManager.roomsPipeline.values().stream().forEach(System.out::println);
-        //connection service에서 leave 하게 해주세요 (방)
     }
 
 
