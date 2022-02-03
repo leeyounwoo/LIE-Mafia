@@ -42,8 +42,6 @@ public class ConnectionServiceImpl implements ConnectionService{
         log.info(roomId);
 
         UserConnection userConnection = roomManager.joinRoom(roomId, newParticipant, session);
-
-
         log.info(userConnection.toString());
     }
 

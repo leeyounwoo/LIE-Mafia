@@ -52,18 +52,7 @@ public class Room {
         }
         return true;
     }
-
     public Room join(User participant){
-
-        if(checkIfFull()){
-            //예외처리 - Optional 고려
-            return null;
-        }
-
-        if(checkIfUserExists(participant.getUsername())){
-            //예외처리 - Optional 고려
-            return null;
-        }
 
         log.info("ROOM {}: participant {} entering", this.roomId, participant.getUsername());
         this.participants.put(participant.getUsername(), participant);

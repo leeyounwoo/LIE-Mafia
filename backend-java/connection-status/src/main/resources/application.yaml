@@ -20,4 +20,6 @@ logging:
   level:
     org:
       springframework: INFO
-      kurento: DEBUG
+      kurento: INFO
+server:
+  port: 8080

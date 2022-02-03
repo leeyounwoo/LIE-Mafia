@@ -65,6 +65,9 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 final UserConnection sender = userConnectionManager.getByUsername(senderName);
                 final String sdpOffer = jsonMessage.get("sdpOffer").asText();
                 user.receiveVideoFrom(sender, sdpOffer);
+            case "leaveRoom" :
+
+                break;
 
             case "onIceCandidate" :
                 JsonNode clientCandidate = jsonMessage.get("candidate");
@@ -78,9 +81,6 @@ public class ConnectionHandler extends TextWebSocketHandler {
                     user.addCandidate(candidate, jsonMessage.get("name").asText());
                 }
                 break;
-            default:
-                //response service
-                break;
         }
 
     }
@@ -88,6 +88,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         UserConnection user = userConnectionManager.removeBySession(session);
+
         //connection service에서 leave 하게 해주세요 (방)
     }
 
