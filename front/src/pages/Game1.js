@@ -41,7 +41,7 @@ function Game() {
           onExistingParticipants(parsedMessage);
           break;
 
-        case "newParticipantArrived":
+        case "newParticipant":
           onNewParticipant(parsedMessage);
           break;
 
@@ -128,7 +128,6 @@ function Game() {
 
     setParticipantsName((participantsName) => [...participantsName, username]);
     setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
-
     console.log(username + " registered in room " + msg.data.roomId);
 
     var constraints = {

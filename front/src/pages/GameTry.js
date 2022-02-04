@@ -1,28 +1,30 @@
 import { useEffect, useState } from "react";
 import VideoRoom from "../components/VideoRoom/videoRoomTry";
 import { WebRtcPeer } from "kurento-utils";
-// import { useParams } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+// import { useLocation } from "react-router-dom";
 
 function Game() {
   const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
+  // 참여자가 변화할 때마다 리렌더링
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
-  // const roomId = useParams("roomId")
-  const roomId = window.location.pathname.split("/").pop();
-  const location = useLocation();
-  const nickName = location.state.nickName;
-  const username = nickName;
+  let roomId = window.location.pathname.split("/").pop();
+  // const location = useLocation();
+  // const nickName = location.state.nickName;
+  const username = `user${roomId}`;
 
+  // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
     ws.onopen = () => {
       console.log("연결");
       let message = "";
+      // 방장일 땐 create 메세지
       if (roomId === "0") {
         message = {
           id: "create",
           username: username,
         };
+        // 참여자일 땐 join 메세지
       } else {
         message = {
           id: "join",
@@ -40,18 +42,24 @@ function Game() {
       console.info("Received message: " + message.data);
 
       switch (parsedMessage.id) {
+        // 새로 방에 참여한 사용자에게 오는 메세지
+        // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
         case "existingParticipants":
           onExistingParticipants(parsedMessage);
           break;
 
-        case "newParticipantArrived":
+        // 기존에 있던 사용자에게 오는 메세지
+        // 새로 참여한 사용자 정보
+        case "newParticipant":
           onNewParticipant(parsedMessage);
           break;
 
+        // receive 함수에서 보낸 receiveVideoFrom 메세지에 대한 대답
         case "receiveVideoAnswer":
           onReceiveVideoAnswer(parsedMessage);
           break;
 
+        // onIceCandidate 메세지에 대한 대답
         case "iceCandidate":
           onAddIceCandidate(parsedMessage);
           break;
@@ -63,12 +71,19 @@ function Game() {
 
     ws.onerror = (error) => {
       console.log(error);
+      alert(error);
     };
 
     ws.onclose = (event) => {
       console.log(event);
     };
+
+    // 컴포넌트가 파괴될 때 웹소켓 통신 닫음
+    return function cleanup() {
+      ws.close();
+    };
   }, []);
+  // 서버쪽으로 메세지를 보내는 함수
 
   const sendMessage = (message) => {
     const jsonMessage = JSON.stringify(message);
@@ -76,14 +91,20 @@ function Game() {
     console.log("Sending message: " + jsonMessage);
   };
 
-  const receiveVideo = (sender) => {
+  const receiveVideo = (participant) => {
     let user = {
-      name: sender,
+      name: participant.username,
+      sessionId: participant.sessionId,
+      ready: participant.ready,
+      authority: participant.authority,
       type: "remote",
       rtcPeer: null,
     };
 
-    setParticipantsName((participantsName) => [...participantsName, sender]);
+    setParticipantsName((participantsName) => [
+      ...participantsName,
+      participant.username,
+    ]);
     setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
 
     let options = {
@@ -91,7 +112,7 @@ function Game() {
         let message = {
           id: "onIceCandidate",
           candidate: candidate,
-          name: sender,
+          name: participant.username,
         };
         sendMessage(message);
       },
@@ -115,7 +136,7 @@ function Game() {
       }
       let msg = {
         id: "receiveVideoFrom",
-        sender: sender,
+        sender: participant.username,
         sdpOffer: offerSdp,
       };
       sendMessage(msg);
@@ -123,25 +144,30 @@ function Game() {
   };
 
   const onExistingParticipants = (msg) => {
+    console.log(msg);
     let user = {
-      name: msg.username,
+      name: msg.user.username,
+      sessionId: msg.user.sessionId,
+      ready: msg.user.ready,
+      authority: msg.user.authority,
       type: "local",
       rtcPeer: null,
     };
 
-    setParticipantsName((participantsName) => [...participantsName, username]);
-    setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
-
-    console.log(msg.username + " registered in room " + msg.roomId);
+    console.log("before", participantsVideo);
+    setParticipantsName([...participantsName, msg.user.username]);
+    setParticipantsVideo([...participantsVideo, user]);
+    console.log("user", user);
+    console.log("after", participantsVideo);
+    roomId = msg.data.roomId;
+    console.log(msg.user.username + " registered in room " + roomId);
 
     var constraints = {
       audio: false,
       video: {
         mandatory: {
           maxWidth: 320,
-
           maxFrameRate: 15,
-
           minFrameRate: 15,
         },
       },
@@ -167,27 +193,27 @@ function Game() {
       }
       let message = {
         id: "receiveVideoFrom",
-
-        sender: msg.username,
+        sender: msg.user.username,
         sdpOffer: offerSdp,
       };
       sendMessage(message);
     });
 
-    for (let [msgUserName] of Object.entries(msg.data.participants)) {
-      if (msgUserName !== username) {
-        console.log("receive", msgUserName);
-        receiveVideo(msgUserName);
+    Object.entries(msg.data.participants).forEach(
+      ([msgUserName, participant]) => {
+        receiveVideo(participant);
       }
-    }
+    );
   };
 
   const onNewParticipant = (msg) => {
-    receiveVideo(msg.name);
+    receiveVideo(Object.values(msg.data)[0]);
   };
+  // console.log("아무거나");
 
   const onReceiveVideoAnswer = (msg) => {
     console.log(msg);
+    console.log(participantsVideo);
     participantsVideo[participantsName.indexOf(msg.name)].rtcPeer.processAnswer(
       msg.sdpAnswer
     );
