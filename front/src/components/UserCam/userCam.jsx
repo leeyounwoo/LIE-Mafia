@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import styles from "./video.module.css";
+import styles from "./userCam.module.css";
 
 const UserCam = ({ keys, participant }) => {
   const videoRef = useRef(null);
