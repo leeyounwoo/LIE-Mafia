@@ -17,7 +17,7 @@ function WaitingNav(props) {
   return (
     <StyledNav>
       <span>Lie, Mafia</span>
-      <span>초대링크 : localhost:3000/Liemafia/{roomId} </span>
+      <span>초대링크 : localhost:3000/room/{roomId} </span>
       <button
         onClick={() => {
           history.push("/");
