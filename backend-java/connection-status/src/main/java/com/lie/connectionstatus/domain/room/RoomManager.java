@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.connectionstatus.domain.user.User;
 import com.lie.connectionstatus.domain.user.UserConnection;
 import com.lie.connectionstatus.domain.user.UserConnectionManager;
-import com.lie.connectionstatus.dto.CloseMessageDto;
-import com.lie.connectionstatus.dto.ExistingParticipantMessageDto;
-import com.lie.connectionstatus.dto.ExitParticipantMessageDto;
-import com.lie.connectionstatus.dto.NewParticipantMessageDto;
+import com.lie.connectionstatus.dto.*;
 import com.lie.connectionstatus.port.MessageInterface;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 @RequiredArgsConstructor
 public class RoomManager {
     private final KurentoClient kurentoClient;
-    public final ConcurrentMap<String, MediaPipeline> roomsPipeline = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, MediaPipeline> roomsPipeline = new ConcurrentHashMap<>();
     private final UserConnectionManager userConnectionManager;
     private final MessageInterface messageInterface;
     private final ObjectMapper objectMapper;
@@ -83,7 +80,6 @@ public class RoomManager {
 
         //room안에 join 할 수 있는지 없는지 조건 체크 안에서하기
         room = room.join(participant);
-
 
         //이부분 서버에서 지정해준대로 변경? 현재 포맷 유지?
 

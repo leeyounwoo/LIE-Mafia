@@ -17,7 +17,7 @@ spring:
 
   environment:
     local:
-      host: 192.168.0.2
+      host: 192.168.3.136
       port: 6379
       password: ssafy
     stage:
@@ -28,6 +28,10 @@ spring:
       host: i6c209.p.ssafy.io
       port: 6379
       password: $$jae923009$
+    redis:
+      host: 13.125.149.219
+      port: 6379
+      password: ssafy
 
   mvc:
     pathmatch:

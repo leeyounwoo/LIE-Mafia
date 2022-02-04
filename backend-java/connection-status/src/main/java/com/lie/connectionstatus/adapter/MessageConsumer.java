@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableKafka
 public class MessageConsumer {
     // press ready -> connectionservice
-
+/*
     @KafkaListener(topics={"create"}, groupId = "connection-group")
     public void createConsume(String message){
         log.info(message);
@@ -29,5 +29,5 @@ public class MessageConsumer {
     @KafkaListener(topics = {"join"}, groupId = "connection-group")
     public void joinConsume(String message){
         log.info(message);
-    }
+    }*/
 }

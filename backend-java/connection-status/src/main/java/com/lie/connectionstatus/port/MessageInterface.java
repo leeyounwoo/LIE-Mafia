@@ -6,6 +6,7 @@ import com.lie.connectionstatus.domain.user.UserConnectionManager;
 import com.lie.connectionstatus.domain.room.Room;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 
@@ -17,6 +18,11 @@ import java.io.IOException;
 public class MessageInterface {
     private final UserConnectionManager userConnectionManager;
     private final ObjectMapper objectMapper;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public void publishEventToKafka(String topic, String message){
+        kafkaTemplate.send(topic, message);
+    }
 
     public void broadcastToExistingParticipants(Room room, String message){
         room.getParticipants().values().stream()

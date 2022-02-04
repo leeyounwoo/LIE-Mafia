@@ -41,12 +41,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
         log.info(session.getId());
 
         switch(jsonMessage.get("id").asText()){
-            case "testKafka":
-                break;
-            //create로 바꾸기
             case "create" :
-                kafkaTemplate.send(jsonMessage.get("id").asText(), message.getPayload());
-
                 try{
                     connectionService.createRoom(session,
                             jsonMessage.get("username").asText());
@@ -56,12 +51,11 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 }
                 break;
             case "join" :
-                kafkaTemplate.send(jsonMessage.get("id").asText(), message.getPayload());
-
                 connectionService.joinRoom(session,
                         jsonMessage.get("username").asText(),
                         jsonMessage.get("roomId").asText());
                 break;
+
             case "receiveVideoFrom":
                 //sender -> sessionId로 보내면 좋을 듯
                 final String senderName = jsonMessage.get("sender").asText();
@@ -69,6 +63,8 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 final UserConnection sender = userConnectionManager.getByUsername(senderName);
                 final String sdpOffer = jsonMessage.get("sdpOffer").asText();
                 user.receiveVideoFrom(sender, sdpOffer);
+                break;
+
             case "leaveRoom" :
                 connectionService.leaveRoom(session);
                 break;
