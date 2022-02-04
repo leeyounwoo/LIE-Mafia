@@ -13,6 +13,7 @@ function NickName() {
   const socket = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   let history = useHistory();
   let { roomId } = useParams();
+  console.log("주소", window.location.pathname.split("/").pop());
 
   const [roomNum, setRoomNum] = useState("");
   const [nickName, setNickName] = useState("");
@@ -21,12 +22,12 @@ function NickName() {
 
   const RoomValidCheck = () => {
     axios
-      .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/`)
-      .then(response => {
+      .get(`http://i6c209.p.ssafy.io:8081/room/${roomId}/`)
+      .then((response) => {
         console.log(response.data);
         setAuthority("PLAYER");
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error);
         // alert("없는 방 입니다.");
       });
@@ -39,20 +40,20 @@ function NickName() {
     roomId !== "0" && RoomValidCheck();
   }, []);
 
-  const onChangeNickName = event => {
+  const onChangeNickName = (event) => {
     setNickName(event.target.value);
   };
 
   const NickNameCheck = () => {
     axios
-      .get(`http://i6c209.p.ssafy.io:8080/room/${roomId}/username/${nickName}`)
+      .get(`http://i6c209.p.ssafy.io:8081/room/${roomId}/username/${nickName}`)
 
-      .then(response => {
+      .then((response) => {
         console.log(response.data);
         setEnter(false);
         alert("사용가능한 닉네임입니다.");
       })
-      .catch(error => {
+      .catch((error) => {
         console.log(error);
         setEnter(true);
         alert("이미 있는 닉네임입니다.");
@@ -71,7 +72,7 @@ function NickName() {
     socket.send(
       JSON.stringify({
         eventType: "connection",
-        actionType: roomId === "0" ? "create" : "join",
+        id: roomId === "0" ? "create" : "join",
         roomId: roomId === "0" ? "" : roomId,
         username: nickName,
       })
@@ -79,7 +80,7 @@ function NickName() {
     console.log(
       JSON.stringify({
         eventType: "connection",
-        actionType: roomId === "0" ? "create" : "join",
+        id: roomId === "0" ? "create" : "join",
         roomId: roomId === "0" ? "" : roomId,
         username: nickName,
       })
@@ -88,13 +89,13 @@ function NickName() {
   const pass = () => {
     setEnter(false);
     SocketSend();
-    socket.onmessage = event => {
-      console.log(event.data);
-      setRoomNum(event.data);
+    socket.onmessage = (event) => {
+      // console.log(JSON.parse(event.data).data.roomId);
+      setRoomNum(JSON.parse(event.data).data.roomId);
     };
   };
 
-  const onClickCheck = event => {
+  const onClickCheck = (event) => {
     event.preventDefault();
 
     roomId === "0"
