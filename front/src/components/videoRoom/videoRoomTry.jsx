@@ -11,7 +11,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
       <Row>
         <Col>
           <div id="0">
-            {!participantCnt < 1 && (
+            {!(participantCnt >= 1) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
@@ -28,7 +28,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
         </Col>
         <Col>
           <div id="1">
-            {!participantCnt < 2 && (
+            {!(participantCnt >= 2) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
@@ -45,7 +45,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
         </Col>
         <Col>
           <div id="2">
-            {!participantCnt < 3 && (
+            {!(participantCnt >= 3) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
@@ -79,7 +79,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
       <Row>
         <Col>
           <div id="3">
-            {!participantCnt < 4 && (
+            {!(participantCnt >= 4) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
@@ -96,7 +96,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
         </Col>
         <Col>
           <div id="4">
-            {!participantCnt < 5 && (
+            {!(participantCnt >= 5) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
@@ -113,7 +113,7 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
         </Col>
         <Col>
           <div id="5">
-            {!participantCnt < 6 && (
+            {!(participantCnt >= 6) && (
               <img
                 src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
                 alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
