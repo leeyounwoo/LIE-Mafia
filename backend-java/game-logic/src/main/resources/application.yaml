@@ -1,0 +1,38 @@
+spring:
+
+  application:
+    name: gameservice
+  kafka:
+    bootstrap-servers: ${spring.environment.production.host}:9092
+
+    consumer:
+      group-id: game-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  environment:
+    local:
+      host: 192.168.0.2
+      port: 6379
+    stage:
+      host: 2k2lc1p.iptime.org
+      port: 6379
+      password: ssafy
+    production:
+      host: i6c209.p.ssafy.io
+      port: 6379
+      password: ssafy
+
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fatch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka

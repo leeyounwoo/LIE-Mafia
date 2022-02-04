@@ -1,47 +1,75 @@
 package com.lie.gamelogic.port;
 
-import com.lie.gamelogic.domain.User.Job;
-import com.lie.gamelogic.domain.User.User;
+import com.lie.gamelogic.domain.Room;
+import com.lie.gamelogic.domain.User;
+import com.lie.gamelogic.dto.JoinGameRoomDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 
+//service 롤백의 개념 transcation 처리
+@Service
+@Slf4j
+@RequiredArgsConstructor
 public class GameServiceImpl implements GameService{
+
+    private final MessageInterface messageInterface;
+    private final RoomRepository roomRepository;
+
     @Override
-    public void GetJobs(WebSocketSession session) throws IOException {
+    public void createGameRoom(Room room) {
+        roomRepository.save(room);
+    }
+
+    @Override
+    public void joinGameRoom(JoinGameRoomDto joinGameRoomDto) {
+        Room room = roomRepository.findById(joinGameRoomDto.getRoomId()).orElseThrow();
+        room = room.join(joinGameRoomDto.getUser());
+        roomRepository.save(room);
 
     }
 
     @Override
-    public boolean GameStart(WebSocketSession session ,String roomId) {
+    public void pressStart(WebSocketSession session, String roomId, String username) throws IOException {
+        Room room = roomRepository.findById(roomId).orElseThrow();
 
-        if(1==1) //
-            return true;
-        else return false;
-    }
+        room = room.pressStart(username);
 
-    @Override
-    public void phaseturn(WebSocketSession session) {
-
-    }
-
-    @Override
-    public boolean GameEnd(List<User> userList) {
-
-        HashMap<String, User> participants = new HashMap<>();
-        int citizenCount = 0;//시민 숫자
-        int mapiaCount =0; //마피아 숫자
-        for(User user : participants.values()){
-            Job job = user.getJob();
-            if(job.equals(Job.Citizen)) citizenCount++;
-            else if(job.equals(Job.Doctor)) citizenCount++;
-            else mapiaCount++;
+        if(ObjectUtils.isEmpty(room)){
+            log.info("Error");
+            session.sendMessage(new TextMessage("Start failed"));
+            return;
         }
 
-        if(mapiaCount >= citizenCount) return true;
+        messageInterface.publishStartEvent("start", roomId);
 
-        return false;
+        roomRepository.save(room);
+        //message produce
+
+    }
+
+    @Override
+    public void pressReady(WebSocketSession session, String roomId, String username) {
+        Room room = roomRepository.findById(roomId).orElseThrow();
+
+        if(!room.checkIfUserExists(username)){
+            log.info("User {} doesn't exist in Room {}",username, roomId);
+            return;
+        }
+        if(room.checkIfUserIsLeader(username)){
+            log.info("User {} is a leader");
+            return;
+        }
+        room = room.pressReady(username);
+        User user = room.getUserByUsername(username);
+        messageInterface.publishReadyEvent("ready", user, roomId);
+        roomRepository.save(room);
+        //produce ready
+        return;
     }
 }
