@@ -1,10 +1,12 @@
 package com.lie.gamelogic.adapter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.User;
 import com.lie.gamelogic.dto.CreateGameRoomDto;
+import com.lie.gamelogic.dto.JoinGameRoomDto;
 import com.lie.gamelogic.port.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,5 +44,15 @@ public class MessageConsumer {
     @KafkaListener(topics = {"join"}, groupId = "game-group")
     public void joinConsume(String message){
         log.info(message);
+        try {
+            JsonNode jsonNode = objectMapper.readTree(message);
+            JoinGameRoomDto joinGameRoomDto = objectMapper.convertValue(jsonNode,JoinGameRoomDto.class);
+            log.info(joinGameRoomDto.toString());
+            gameService.joinGameRoom(joinGameRoomDto);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }

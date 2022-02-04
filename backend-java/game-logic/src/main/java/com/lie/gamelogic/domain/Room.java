@@ -19,4 +19,8 @@ public class Room {
     Integer day;
     LocalDateTime endTime;
 
+    public Room userSave(User user){
+        this.participants.put(user.getUsername(), user);
+        return this;
+    }
 }
