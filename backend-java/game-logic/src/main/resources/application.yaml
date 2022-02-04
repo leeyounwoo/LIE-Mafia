@@ -1,4 +1,7 @@
 spring:
+
+  application:
+    name: gameservice
   kafka:
     bootstrap-servers: ${spring.environment.production.host}:9092
 
@@ -14,7 +17,7 @@ spring:
 
   environment:
     local:
-      host: 192.168.0.26
+      host: 192.168.0.2
       port: 6379
     stage:
       host: 2k2lc1p.iptime.org
@@ -25,6 +28,11 @@ spring:
       port: 6379
       password: ssafy
 
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fatch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka

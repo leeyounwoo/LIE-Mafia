@@ -12,4 +12,14 @@ public class User {
     private Job job;
     private Boolean alive;
 
+    public User pressReady(){
+
+        if(this.ready){
+            this.ready = false;
+            return this;
+        }
+
+        this.ready = true;
+        return this;
+    }
 }

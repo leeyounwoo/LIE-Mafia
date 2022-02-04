@@ -23,7 +23,6 @@ import java.io.IOException;
 @EnableKafka
 @RequiredArgsConstructor
 public class MessageConsumer {
-    private final ModelMapper modelMapper;
     private final ObjectMapper objectMapper;
     private final GameService gameService;
     // press ready -> connectionservice
@@ -52,7 +51,29 @@ public class MessageConsumer {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-
-
     }
+
+    @KafkaListener(topics = {"leave"}, groupId = "game-group")
+    public void leaveConsume(String message){
+        log.info(message);
+    }
+
+    @KafkaListener(topics = {"close"}, groupId = "game-group")
+    public void closeConsume(String message){
+        log.info(message);
+    }
+
+    @KafkaListener(topics = {"ready"}, groupId = "game-group")
+    public void readyConsume(String message){
+        log.info(message);
+    }
+
+    @KafkaListener(topics = {"start"}, groupId = "game-group")
+    public void startConsume(String message){
+        log.info(message);
+    }
+
+
+
+
 }
