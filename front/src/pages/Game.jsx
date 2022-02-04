@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import VideoRoom from "../components/VideoRoom/videoRoomTry";
-import WaitingNav from "../components/Navbar/WaitingNav";
-import WaitingFooter from "../components/Footer/WaitingFooter";
-import Chat from "../components/Chat/Chat";
+import VideoRoom from "../components/VideoRoom/videoRoom";
+import WaitingNav from "../components/Navbar/navbar";
+import WaitingFooter from "../components/Footer/footer";
+// import Chat from "../components/Chat/chat";
 import { WebRtcPeer } from "kurento-utils";
-// import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 const StyledContainer = styled.div`
@@ -19,13 +18,10 @@ function Game() {
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
-  // const location = useLocation();
-  // const nickName = location.state.nickName;
   const username = `user${Math.random().toString(36).substr(2, 11)}`;
   let authority = "";
 
   // 서버쪽으로 메세지를 보내는 함수
-
   const sendMessage = (message) => {
     const jsonMessage = JSON.stringify(message);
     ws.send(jsonMessage);
@@ -96,14 +92,14 @@ function Game() {
     };
 
     authority = msg.user.authority;
-    console.log("before name", participantsName);
-    console.log("before video", participantsVideo);
-    await setParticipantsName([...participantsName, msg.user.username]);
-    console.log("mid name", participantsName);
-    console.log("mid video", participantsVideo);
-    await setParticipantsVideo([...participantsVideo, user]);
-    console.log("after name", participantsName);
-    console.log("after video", participantsVideo);
+    await setParticipantsName((participantsName) => [
+      ...participantsName,
+      msg.user.username,
+    ]);
+    await setParticipantsVideo((participantsVideo) => [
+      ...participantsVideo,
+      user,
+    ]);
 
     setRoomId(msg.data.roomId);
 
@@ -170,6 +166,7 @@ function Game() {
       participantsName.indexOf(msg.name)
     ].rtcPeer.addIceCandidate(msg.candidate);
   };
+
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
     ws.onopen = () => {
@@ -185,7 +182,7 @@ function Game() {
       } else {
         message = {
           id: "join",
-          username: "",
+          username: username,
           roomId: roomId,
         };
       }
@@ -245,25 +242,33 @@ function Game() {
   const onBtnClick = (name) => {
     setName(false);
   };
-  console.log("참가자 수", participantsVideo.length);
 
   return (
     <StyledContainer>
-      <WaitingNav roomId={roomId} />
-      <header className="App-header">
-        {name && <button onClick={onBtnClick}></button>}
-        {!name && (
-          <>
-            <h1>참가자 수: {participantsVideo.length}</h1>
-            <VideoRoom
-              participantsVideo={participantsVideo}
-              participantsName={participantsName}
-            ></VideoRoom>
-          </>
-        )}
-      </header>
-      {/* <Chat /> */}
-      <WaitingFooter authority={authority} />
+      {name && (
+        <div>
+          <img alt="logo" src="	http://localhost:3000/img/logo.png" />
+          <button onClick={onBtnClick}>방 만들기</button>
+        </div>
+      )}
+      {!name && (
+        <div>
+          <WaitingNav roomId={roomId} />
+          <header className="App-header">
+            {!name && (
+              <>
+                <h1>참가자 수: {participantsVideo.length}</h1>
+                <VideoRoom
+                  participantsVideo={participantsVideo}
+                  participantsName={participantsName}
+                ></VideoRoom>
+              </>
+            )}
+          </header>
+          {/* <Chat /> */}
+          <WaitingFooter authority={authority} />
+        </div>
+      )}
     </StyledContainer>
   );
 }

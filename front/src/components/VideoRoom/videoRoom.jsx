@@ -1,7 +1,7 @@
 import React from "react";
 import UserCam from "../UserCam/userCam";
 import { Container, Row, Col } from "react-bootstrap";
-import styles from "./RoomGrid.module.css";
+import styles from "./videoRoom.module.css";
 
 const VideoRoom = ({ participantsVideo, participantsName }) => {
   let participantCnt = participantsVideo.length;
