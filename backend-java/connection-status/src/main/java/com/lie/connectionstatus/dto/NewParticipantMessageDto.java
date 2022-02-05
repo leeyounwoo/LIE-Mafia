@@ -1,8 +1,7 @@
 package com.lie.connectionstatus.dto;
 
-import com.lie.connectionstatus.domain.User;
+import com.lie.connectionstatus.domain.user.User;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 import java.util.HashMap;

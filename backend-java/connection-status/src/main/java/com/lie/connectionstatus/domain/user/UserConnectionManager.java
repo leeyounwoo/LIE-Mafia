@@ -1,10 +1,10 @@
-package com.lie.connectionstatus.domain;
+package com.lie.connectionstatus.domain.user;
 
 import lombok.Getter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.awt.desktop.UserSessionEvent;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -23,11 +23,23 @@ public class UserConnectionManager {
     public UserConnection getByUsername(String username){ return usersByUsername.get(username); }
     public UserConnection getBySession(WebSocketSession session){ return usersBySessionId.get(session.getId()); }
 
+    public Boolean checkIfUserDoesNotExists(WebSocketSession session){
+        if(ObjectUtils.isEmpty(getBySession(session))){
+            return true;
+        }
+        return false;
+    }
+
     //ip 확인 가능할까? Origin ip 확인
     //WebRTCEndpoint 이미 존재하면?
     //그거에 대한 check 필요
 
     public UserConnection removeBySession(WebSocketSession session){
+
+        if (checkIfUserDoesNotExists(session)) {
+            return null;
+        }
+
         final UserConnection user = getBySession(session);
         usersByUsername.remove(user.getUsername());
         usersBySessionId.remove(session.getId());

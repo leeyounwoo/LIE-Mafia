@@ -2,16 +2,15 @@ package com.lie.connectionstatus.domain.room;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lie.connectionstatus.domain.User;
-import com.lie.connectionstatus.domain.UserConnection;
-import com.lie.connectionstatus.domain.UserConnectionManager;
-import com.lie.connectionstatus.dto.ExistingParticipantMessageDto;
-import com.lie.connectionstatus.dto.NewParticipantMessageDto;
+import com.lie.connectionstatus.domain.user.User;
+import com.lie.connectionstatus.domain.user.UserConnection;
+import com.lie.connectionstatus.domain.user.UserConnectionManager;
+import com.lie.connectionstatus.dto.*;
 import com.lie.connectionstatus.port.MessageInterface;
-import com.lie.connectionstatus.port.RoomRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.kurento.client.Continuation;
 import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.springframework.stereotype.Component;
@@ -29,23 +28,20 @@ public class RoomManager {
     private final KurentoClient kurentoClient;
     private final ConcurrentMap<String, MediaPipeline> roomsPipeline = new ConcurrentHashMap<>();
     private final UserConnectionManager userConnectionManager;
-    private final RoomRepository roomRepository;
     private final MessageInterface messageInterface;
     private final ObjectMapper objectMapper;
 
     public Room createRoom(){
         log.info("New Room is creating now");
-        Room room = new Room();;
-        room = roomRepository.save(room);
-        createMediaPipeline(room.getRoomId());
+        Room room = new Room();
         return room;
     }
-    public void createMediaPipeline(String roomId){
-        if(roomsPipeline.containsKey(roomId)){
-            log.debug("Room {} already has pipeline", roomId);
+    public void createMediaPipeline(Room room){
+        if(roomsPipeline.containsKey(room.getRoomId())){
+            log.debug("Room {} already has pipeline", room.getRoomId());
             return;
         }
-        roomsPipeline.put(roomId, kurentoClient.createMediaPipeline());
+        roomsPipeline.put(room.getRoomId(), kurentoClient.createMediaPipeline());
     }
     public Boolean checkIfRoomIsNotAvailable(Room room, User participant){
         if(checkIfUsernameExists(participant.getUsername())){
@@ -59,10 +55,9 @@ public class RoomManager {
         }
         return false;
     }
-    public UserConnection joinRoom(String roomId, User participant, WebSocketSession session) throws JsonProcessingException {
-        log.debug("Looking for Room {}", roomId);
-        Room room = roomRepository.findById(roomId).orElseThrow();
-        log.info("PARTICIPANT {} : trying to join room {}", participant, roomId);
+    public Room joinRoom(Room room, User participant, WebSocketSession session) throws JsonProcessingException {
+
+        log.info("PARTICIPANT {} : trying to join room {}", participant, room);
 
         if(checkIfRoomIsNotAvailable(room, participant)){
             return null;
@@ -70,7 +65,7 @@ public class RoomManager {
 
         //username, session 바탕으로 userconnection 만들어주기 mediapipeline 형성
         final UserConnection userConnection =
-                new UserConnection(participant.getUsername(), session, roomId, roomsPipeline.get(roomId));
+                new UserConnection(participant.getUsername(), session, room.getRoomId(), roomsPipeline.get(room.getRoomId()));
 
         //connection 만들어진 것 저장해주기
         userConnectionManager.connectUser(userConnection);
@@ -86,11 +81,9 @@ public class RoomManager {
         //room안에 join 할 수 있는지 없는지 조건 체크 안에서하기
         room = room.join(participant);
 
-        roomRepository.save(room);
-
         //이부분 서버에서 지정해준대로 변경? 현재 포맷 유지?
 
-        return userConnection;
+        return room;
 
     }
     public Boolean checkIfUsernameExists(String username){
@@ -108,8 +101,66 @@ public class RoomManager {
         return roomsPipeline.get(roomId);
     }
 
+    public Room leave(UserConnection participant, Room room) throws Exception{
+        log.debug("PARTICIPANT {}: Leaving room {}", participant.getUsername(), room.getRoomId());
+
+        //player leave
+        room.leave(participant.getUsername());
+        ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", participant.getUsername());
+        messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(exitMessage));
+
+        userConnectionManager.removeBySession(participant.getSession());
+        participant.close();
+        return room;
+    }
+
+    public void close(Room room) throws JsonProcessingException {
+        log.debug("ROOM {}: Closing Room", room.getRoomId());
+
+        CloseMessageDto closeMessageDto = new CloseMessageDto("close",room.getRoomId()+"will closed");
+        messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(closeMessageDto));
+
+        room.getParticipants().values().stream()
+                .map(user -> userConnectionManager.getUsersBySessionId().get(user.getSessionId()))
+                .peek(userConnection -> userConnectionManager.removeBySession(userConnection.getSession()))
+                .peek(userConnection -> {
+                    try{
+                        userConnection.close();
+                    }catch (Exception e){
+
+                    }
+                })
+                .forEach(userConnection -> {
+                    try{
+                        userConnection.getSession().close();
+                    }catch (Exception e){
+
+                    }
+                });
+
+        room.close();
+        //close Room
+        removeRoomPipeline(room);
+    }
+
     public void removeRoomPipeline(Room room){
+        //release pipeline
+        this.roomsPipeline.get(room.getRoomId()).release(new Continuation<Void>() {
+
+            @Override
+            public void onSuccess(Void result) throws Exception {
+                log.trace("ROOM {}: Released Pipeline", room.getRoomId());
+            }
+
+            @Override
+            public void onError(Throwable cause) throws Exception {
+                log.warn("PARTICIPANT {}: Could not release Pipeline", room.getRoomId());
+            }
+        });
+
+        //remove from list
         this.roomsPipeline.remove(room.getRoomId());
+
         //room domain =>close 필요
         log.info("Room {} is closed", room.getRoomId());
     }

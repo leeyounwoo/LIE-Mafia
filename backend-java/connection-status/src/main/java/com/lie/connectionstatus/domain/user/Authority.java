@@ -1,4 +1,4 @@
-package com.lie.connectionstatus.domain;
+package com.lie.connectionstatus.domain.user;
 
 public enum Authority {
     LEADER,

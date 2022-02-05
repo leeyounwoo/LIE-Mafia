@@ -1,7 +1,23 @@
 spring:
-  redis:
+  application:
+    name: connection-server
+
+  kafka:
+    bootstrap-servers: ${spring.environment.production.host}:9092
+
+    consumer:
+      group-id: connection-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  environment:
     local:
-      host: 192.168.0.2
+      host: 192.168.3.136
       port: 6379
       password: ssafy
     stage:
@@ -11,7 +27,12 @@ spring:
     production:
       host: i6c209.p.ssafy.io
       port: 6379
+      password: $$jae923009$
+    redis:
+      host: 13.125.149.219
+      port: 6379
       password: ssafy
+
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -21,5 +42,6 @@ logging:
     org:
       springframework: INFO
       kurento: INFO
+
 server:
   port: 8080

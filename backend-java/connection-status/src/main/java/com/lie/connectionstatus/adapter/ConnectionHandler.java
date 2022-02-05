@@ -3,23 +3,21 @@ package com.lie.connectionstatus.adapter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import com.lie.connectionstatus.domain.UserConnection;
-import com.lie.connectionstatus.domain.UserConnectionManager;
+import com.lie.connectionstatus.domain.user.UserConnection;
+import com.lie.connectionstatus.domain.user.UserConnectionManager;
 import com.lie.connectionstatus.domain.room.RoomManager;
 import com.lie.connectionstatus.dto.ClientMessageDto;
 import com.lie.connectionstatus.port.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
 import org.kurento.client.IceCandidate;
 import org.modelmapper.ModelMapper;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 @Slf4j
@@ -31,7 +29,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
     private final ConnectionService connectionService;
     private final UserConnectionManager userConnectionManager;
     private final RoomManager roomManager;
-
+    private final KafkaTemplate<String, String> kafkaTemplate;
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         final JsonNode jsonMessage = objectMapper.readTree(message.getPayload());
@@ -43,7 +41,6 @@ public class ConnectionHandler extends TextWebSocketHandler {
         log.info(session.getId());
 
         switch(jsonMessage.get("id").asText()){
-            //create로 바꾸기
             case "create" :
                 try{
                     connectionService.createRoom(session,
@@ -58,6 +55,7 @@ public class ConnectionHandler extends TextWebSocketHandler {
                         jsonMessage.get("username").asText(),
                         jsonMessage.get("roomId").asText());
                 break;
+
             case "receiveVideoFrom":
                 //sender -> sessionId로 보내면 좋을 듯
                 final String senderName = jsonMessage.get("sender").asText();
@@ -65,8 +63,10 @@ public class ConnectionHandler extends TextWebSocketHandler {
                 final UserConnection sender = userConnectionManager.getByUsername(senderName);
                 final String sdpOffer = jsonMessage.get("sdpOffer").asText();
                 user.receiveVideoFrom(sender, sdpOffer);
-            case "leaveRoom" :
+                break;
 
+            case "leaveRoom" :
+                connectionService.leaveRoom(session);
                 break;
 
             case "onIceCandidate" :
@@ -87,9 +87,8 @@ public class ConnectionHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        UserConnection user = userConnectionManager.removeBySession(session);
-
-        //connection service에서 leave 하게 해주세요 (방)
+        log.info(status.getReason());
+        connectionService.leaveRoom(session);
     }
 
 
