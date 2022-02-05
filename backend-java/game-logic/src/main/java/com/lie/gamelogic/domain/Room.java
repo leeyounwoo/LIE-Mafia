@@ -1,6 +1,7 @@
 package com.lie.gamelogic.domain;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.stereotype.Indexed;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Indexed;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 
+@Slf4j
 @Data
 @RedisHash(value = "room")
 public class Room {
@@ -22,6 +24,15 @@ public class Room {
     public Room join(User user){
         this.participants.put(user.getUsername(), user);
         return this;
+    }
+    public Room leave(String username){
+        this.participants.remove(username);
+        return this;
+    }
+
+    public void close(){
+        log.info("Room {} : closing", this.getRoomId());
+        this.participants.clear();
     }
     public Room pressStart(String username){
 
@@ -61,7 +72,6 @@ public class Room {
         }
         return false;
     }
-
     //방 id 내에 username 이 존재하는가
     public Boolean checkIfUserExists(String username){
         if(participants.containsKey(username)){
@@ -75,5 +85,4 @@ public class Room {
         }
         return null;
     }
-
 }

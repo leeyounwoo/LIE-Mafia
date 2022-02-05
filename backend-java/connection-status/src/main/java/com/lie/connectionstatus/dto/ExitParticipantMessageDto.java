@@ -1,5 +1,6 @@
 package com.lie.connectionstatus.dto;
 
+import com.lie.connectionstatus.domain.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -9,6 +10,6 @@ import java.util.HashMap;
 @AllArgsConstructor
 public class ExitParticipantMessageDto {
     private String id;
-    private String data;
-
+    private String roomId;
+    private String username;
 }
