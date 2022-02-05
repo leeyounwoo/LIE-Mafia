@@ -9,6 +9,6 @@ import java.util.HashMap;
 @AllArgsConstructor
 public class ExitParticipantMessageDto {
     private String id;
-    private String data;
-
+    private String username;
+    private String sessionId;
 }

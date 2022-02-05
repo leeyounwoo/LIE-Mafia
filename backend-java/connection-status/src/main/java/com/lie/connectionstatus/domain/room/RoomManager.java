@@ -106,9 +106,9 @@ public class RoomManager {
 
         //player leave
         room.leave(participant.getUsername());
-        ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", participant.getUsername());
+        ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", participant.getUsername(), participant.getSession().getId());
         messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(exitMessage));
-
+        messageInterface.publishEventToKafka("leave", objectMapper.writeValueAsString(exitMessage));
         userConnectionManager.removeBySession(participant.getSession());
         participant.close();
         return room;
@@ -117,8 +117,9 @@ public class RoomManager {
     public void close(Room room) throws JsonProcessingException {
         log.debug("ROOM {}: Closing Room", room.getRoomId());
 
-        CloseMessageDto closeMessageDto = new CloseMessageDto("close",room.getRoomId()+"will closed");
+        CloseMessageDto closeMessageDto = new CloseMessageDto("close",room.getRoomId());
         messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(closeMessageDto));
+        messageInterface.publishEventToKafka("close", objectMapper.writeValueAsString(closeMessageDto));
 
         room.getParticipants().values().stream()
                 .map(user -> userConnectionManager.getUsersBySessionId().get(user.getSessionId()))
