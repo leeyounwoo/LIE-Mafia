@@ -35,6 +35,22 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
+    public void leaveGameRoom(String username, String roomId) {
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        room = room.leave(username);
+        roomRepository.save(room);
+
+    }
+
+    @Override
+    public void closeGameRoom(String roomId) {
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        room.close();
+        roomRepository.deleteById(roomId);
+
+    }
+
+    @Override
     public void pressStart(WebSocketSession session, String roomId, String username) throws IOException {
         Room room = roomRepository.findById(roomId).orElseThrow();
 

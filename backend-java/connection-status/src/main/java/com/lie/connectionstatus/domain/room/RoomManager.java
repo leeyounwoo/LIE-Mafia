@@ -103,10 +103,9 @@ public class RoomManager {
 
     public Room leave(UserConnection participant, Room room) throws Exception{
         log.debug("PARTICIPANT {}: Leaving room {}", participant.getUsername(), room.getRoomId());
-
         //player leave
         room.leave(participant.getUsername());
-        ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", participant.getUsername(), participant.getSession().getId());
+        ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", room.getRoomId(), participant.getUsername());
         messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(exitMessage));
         messageInterface.publishEventToKafka("leave", objectMapper.writeValueAsString(exitMessage));
         userConnectionManager.removeBySession(participant.getSession());

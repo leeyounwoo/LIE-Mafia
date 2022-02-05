@@ -56,11 +56,25 @@ public class MessageConsumer {
     @KafkaListener(topics = {"leave"}, groupId = "game-group")
     public void leaveConsume(String message){
         log.info(message);
+        try{
+            JsonNode jsonNode = objectMapper.readTree(message);
+            log.info(jsonNode.toString());
+            gameService.leaveGameRoom(jsonNode.get("username").asText(), jsonNode.get("roomId").asText());
+        } catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
     }
 
     @KafkaListener(topics = {"close"}, groupId = "game-group")
     public void closeConsume(String message){
         log.info(message);
+        try{
+            JsonNode jsonNode = objectMapper.readTree(message);
+            log.info(jsonNode.get("data").toString());
+            gameService.closeGameRoom(jsonNode.get("data").asText());
+        } catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
     }
 
     @KafkaListener(topics = {"ready"}, groupId = "game-group")

@@ -25,8 +25,7 @@ public class GameHandler extends TextWebSocketHandler{
 
         //session 관리는 이후 api gateway에서 작업할 예정이지만, 테스트를 위해
 
-        switch (jsonMessage.get("actionType").asText()){
-
+        switch (jsonMessage.get("id").asText()){
             case "ready":
                 gameService.pressReady(session,
                         jsonMessage.get("roomId").asText(),
