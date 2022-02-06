@@ -21,8 +21,6 @@ function Game() {
   const username = `user${Math.random().toString(36).substr(2, 11)}`;
   let authority = "";
 
-  let participantsCnt = 0;
-
   // 서버쪽으로 메세지를 보내는 함수
   const sendMessage = (message) => {
     const jsonMessage = JSON.stringify(message);
@@ -30,8 +28,7 @@ function Game() {
     console.log("Sending message: " + jsonMessage);
   };
 
-  const receiveVideo = (participant) => {
-    participantsCnt = participantsCnt + 1;
+  const receiveVideo = async (participant) => {
     let user = {
       name: participant.username,
       sessionId: participant.sessionId,
@@ -75,7 +72,6 @@ function Game() {
       };
       sendMessage(msg);
     });
-
     setParticipantsName((participantsName) => [
       ...participantsName,
       participant.username,
@@ -83,8 +79,7 @@ function Game() {
     setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
   };
 
-  const onExistingParticipants = (msg) => {
-    participantsCnt = participantsCnt + 1;
+  const onExistingParticipants = async (msg) => {
     let user = {
       name: msg.user.username,
       sessionId: msg.user.sessionId,
@@ -123,6 +118,12 @@ function Game() {
     };
 
     user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options);
+    setParticipantsName((participantsName) => [
+      ...participantsName,
+      msg.user.username,
+    ]);
+    setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
+    setRoomId(msg.data.roomId);
     user.rtcPeer.generateOffer((err, offerSdp) => {
       if (err) {
         console.error(err);
@@ -134,13 +135,6 @@ function Game() {
       };
       sendMessage(message);
     });
-
-    setParticipantsName((participantsName) => [
-      ...participantsName,
-      msg.user.username,
-    ]);
-    setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
-    setRoomId(msg.data.roomId);
 
     Object.entries(msg.data.participants).forEach(
       ([msgUserName, participant]) => {
@@ -154,33 +148,18 @@ function Game() {
   };
 
   const onReceiveVideoAnswer = (msg) => {
-    waitForParticipantAdd(participantsVideo, function () {
-      participantsVideo[
-        participantsName.indexOf(msg.name)
-      ].rtcPeer.processAnswer(msg.sdpAnswer);
-    });
+    console.log(msg);
+    console.log(participantsVideo);
+    participantsVideo[participantsName.indexOf(msg.name)].rtcPeer.processAnswer(
+      msg.sdpAnswer
+    );
   };
 
   const onAddIceCandidate = (msg) => {
-    waitForParticipantAdd(participantsVideo, function () {
-      participantsVideo[
-        participantsName.indexOf(msg.name)
-      ].rtcPeer.addIceCandidate(msg.candidate);
-    });
+    participantsVideo[
+      participantsName.indexOf(msg.name)
+    ].rtcPeer.addIceCandidate(msg.candidate);
   };
-
-  function waitForParticipantAdd(participantsVideo, callback) {
-    setTimeout(function () {
-      if (participantsVideo.length === participantsCnt) {
-        if (callback !== undefined) {
-          callback();
-        }
-        return;
-      } else {
-        waitForParticipantAdd(participantsVideo, callback);
-      }
-    }, 5);
-  }
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
@@ -253,30 +232,32 @@ function Game() {
     // };
   }, []);
 
-  const [join, setJoin] = useState(false);
+  const [name, setName] = useState(true);
   const onBtnClick = (name) => {
-    setJoin(true);
+    setName(false);
   };
 
   return (
     <StyledContainer>
-      {!join && (
+      {name && (
         <div>
           <img alt="logo" src="	http://localhost:3000/img/logo.png" />
           <button onClick={onBtnClick}>방 만들기</button>
         </div>
       )}
-      {join && (
+      {!name && (
         <div>
           <WaitingNav roomId={roomId} />
           <header className="App-header">
-            <>
-              <h1>참가자 수: {participantsVideo.length}</h1>
-              <VideoRoom
-                participantsVideo={participantsVideo}
-                participantsName={participantsName}
-              ></VideoRoom>
-            </>
+            {!name && (
+              <>
+                <h1>참가자 수: {participantsVideo.length}</h1>
+                <VideoRoom
+                  participantsVideo={participantsVideo}
+                  participantsName={participantsName}
+                ></VideoRoom>
+              </>
+            )}
           </header>
           {/* <Chat /> */}
           <WaitingFooter authority={authority} />
