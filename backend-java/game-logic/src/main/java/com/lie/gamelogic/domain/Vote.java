@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Slf4j
 @Data
@@ -28,5 +30,13 @@ public class Vote {
 
     public void putUserVote(String username,UserVote userVote) {
         this.votes.put(username,userVote);
+    }
+
+    public List<String> selectList(){
+        List<String> selectList=new ArrayList<>();
+        for(UserVote userVote:votes.values()){
+            selectList.add(userVote.getSelect());
+        }
+        return selectList;
     }
 }

@@ -13,6 +13,10 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //service 롤백의 개념 transcation 처리
 @Service
@@ -125,5 +129,34 @@ public class GameServiceImpl implements GameService{
         voteRepository.save(vote);
 
         log.info(vote.toString());
+    }
+
+    @Override
+    public void resultMornigVote(String roomId) {
+        Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
+        List<String> list= new ArrayList(vote.selectList()); //투표 내용 가져오기
+        Map<String,Integer> voteResult=new HashMap<>();
+        log.info(list.toString());
+
+        String username="";
+        int max=1;
+        for(String select:list){
+            if(!voteResult.containsKey(select)){
+                voteResult.put(select,1);
+            }else{
+                voteResult.put(select,voteResult.get(select)+1);
+            }
+
+            if(voteResult.get(select)+1>=max){
+                username=select;
+            }
+        };
+
+        Room room=roomRepository.findById(roomId).orElseThrow();
+        room.setResult(username);
+
+        roomRepository.save(room);
+
+        log.info(room.toString());
     }
 }

@@ -23,6 +23,7 @@ public class Room {
     RoomPhase roomPhase;
     Integer day;
     LocalDateTime endTime;
+    String result;
 
     public Room join(User user){
         this.participants.put(user.getUsername(), user);

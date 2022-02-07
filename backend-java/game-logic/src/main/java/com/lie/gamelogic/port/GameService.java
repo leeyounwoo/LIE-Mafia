@@ -21,4 +21,5 @@ public interface GameService {
     void roleAssign(String roomId);
     void createVote(String roomId);
     void selectVote(WebSocketSession session,String roomId,String username,String select);
+    void resultMornigVote(String roomId);
 }
