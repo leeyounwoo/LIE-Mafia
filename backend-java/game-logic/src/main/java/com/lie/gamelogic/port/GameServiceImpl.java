@@ -159,4 +159,10 @@ public class GameServiceImpl implements GameService{
 
         log.info(room.toString());
     }
+
+    @Override
+    public void deleteVote(String roomId) {
+        Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
+        voteRepository.delete(vote);
+    }
 }
