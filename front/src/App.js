@@ -3,7 +3,7 @@ import { Route, Switch } from "react-router-dom";
 import Error from "./pages/Error";
 import GameResult from "./pages/GameResult";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Game from "./pages/Game";
+import Game from "./pages/Game1";
 
 function App() {
   return (

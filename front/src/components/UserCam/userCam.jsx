@@ -4,12 +4,25 @@ import styles from "./userCam.module.css";
 const UserCam = ({ keys, participant }) => {
   const videoRef = useRef(null);
   useEffect(() => {
-    videoRef.current.srcObject =
-      participant.type === "local"
-        ? participant.rtcPeer.getLocalStream()
-        : participant.rtcPeer.getRemoteStream();
+    waitForParticipantAdd(videoRef.current.srcObject, function () {});
   });
-  console.log(participant.rtcPeer);
+
+  function waitForParticipantAdd(srcObject, callback) {
+    setTimeout(function () {
+      if (videoRef.current.srcObject !== null) {
+        if (callback !== undefined) {
+          callback();
+        }
+        return;
+      } else {
+        videoRef.current.srcObject =
+          participant.type === "local"
+            ? participant.rtcPeer.getLocalStream()
+            : participant.rtcPeer.getRemoteStream();
+        waitForParticipantAdd(srcObject, callback);
+      }
+    }, 5);
+  }
 
   return (
     <div className={styles.container}>
