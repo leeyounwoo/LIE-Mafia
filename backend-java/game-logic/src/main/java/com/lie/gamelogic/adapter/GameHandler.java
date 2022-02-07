@@ -35,13 +35,14 @@ public class GameHandler extends TextWebSocketHandler{
                 gameService.pressStart(session,
                         jsonMessage.get("roomId").asText(),
                         jsonMessage.get("username").asText());
-                // 직업 배정 테스트, 메소드 호출
-                gameService.roleAssign(jsonMessage.get("roomId").asText());
-                //session response
-
-                //createvote 테스트
-                gameService.createVote(jsonMessage.get("roomId").asText());
                 break;
+            case "citizenVote":
+                gameService.selectVote(session
+                        ,jsonMessage.get("roomId").asText()
+                        ,jsonMessage.get("username").asText()
+                        ,jsonMessage.get("select").asText());
+                break;
+
         }
         return;
     }

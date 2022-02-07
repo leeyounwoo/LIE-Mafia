@@ -15,14 +15,16 @@ import java.util.List;
 public class Vote {
 
     @Id
+    String voteId;
     String roomId;
     RoomPhase roomPhase;
-    HashMap<String,UserVote> votes;
+    HashMap<String,UserVote> votes=new HashMap<String, UserVote>();;
+
 
     public Vote createVote(String roomId,RoomPhase roomPhase){
         this.roomId=roomId;
+        this.voteId="vote"+roomId;
         this.roomPhase=roomPhase;
-        votes=new HashMap<String, UserVote>();
         return this;
     }
 
@@ -37,6 +39,4 @@ public class Vote {
         }
         return selectList;
     }
-
-
 }

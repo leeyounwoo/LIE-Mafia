@@ -23,7 +23,7 @@ public class Room {
     RoomPhase roomPhase;
     Integer day;
     LocalDateTime endTime;
-    String Result;
+    String result;
 
     public Room join(User user){
         this.participants.put(user.getUsername(), user);
@@ -62,7 +62,7 @@ public class Room {
             user.setAlive(true);
         });
 
-        this.roomPhase = RoomPhase.ROLEASSIGN;
+        this.roomPhase = RoomPhase.MORNING;
         this.day = 1;
 
         return this;

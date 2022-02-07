@@ -44,7 +44,7 @@ public class GameTurnImpl implements GameTurn{
         save_time.put(RoomPhase.ROLEASSIGN,15);
         save_time.put(RoomPhase.NIGHTVOTE,20);
         save_time.put(RoomPhase.MORNING,20);
-        save_time.put(RoomPhase.MORNINGVOTE,20);
+        save_time.put(RoomPhase.MORNINGVOTE,50);
         save_time.put(RoomPhase.FINALSPEECH,20);
         save_time.put(RoomPhase.EXECUTIONVOTE,20);
 
@@ -75,6 +75,7 @@ public class GameTurnImpl implements GameTurn{
         roomRepository.save(room);
 
 
+        //endTime 사용함
         switch(room.getRoomPhase()){
             case ROLEASSIGN: timer.schedule(new RoleAssignTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
             case NIGHTVOTE:  timer.schedule(new NightVoteTask(roomRepository, this,gameService),TimeUtils.convertToDate(endTime)); break;
@@ -93,9 +94,7 @@ public class GameTurnImpl implements GameTurn{
             }
         };
 
-        //endTime이 끝나면
-
-        //새롭게 시작함
+        //endTime이 끝나면새롭게 시작함
         timer.schedule(timerTask2,TimeUtils.convertToDate(startTime));
     }
 

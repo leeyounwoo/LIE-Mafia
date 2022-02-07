@@ -26,9 +26,9 @@ public class MorningVoteTask extends TimerTask {
         room = gameTurn.getRoom();
 
         //투표 결과를 저장 하는것
-//        gameService.resultMornigVote(room.getRoomId());
-//        //저장한 결과값을 불려와주어야 한다.
-//        room = roomRepository.findById(room.getRoomId()).orElseThrow();
+        gameService.resultMornigVote(room.getRoomId());
+        //저장한 결과값을 불려와주어야 한다.
+        room = roomRepository.findById(room.getRoomId()).orElseThrow();
 
         room.setDay(room.getDay());
         room.setRoomPhase(gameTurn.getNextPhase());
@@ -38,7 +38,8 @@ public class MorningVoteTask extends TimerTask {
 
         //log.info(room);
         roomRepository.save(room);
-
+        //결과를 체크 하기 위해서 사용함
+        System.out.println(room.getResult());
         log.info(roomRepository.findById(gameTurn.getRoomId()));
     }
 }

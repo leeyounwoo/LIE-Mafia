@@ -23,13 +23,18 @@ public class MorningTask extends TimerTask {
 
     @Override
     public void run() {
-        room = gameTurn.getRoom();
-        room.setDay(room.getDay());
-        room.setRoomPhase(gameTurn.getNextPhase());
+        //밤이 끝나면 처리 하도록 넣어줌
 
+        room = gameTurn.getRoom();
+        //날짜 변환
+        room.setDay(room.getDay());
+        //페이즈 변환
+        room.setRoomPhase(gameTurn.getNextPhase());
         //log.info(room);
         roomRepository.save(room);
 
+        //vote를 만들어준다.
+        gameService.createVote(room.getRoomId());
         log.info(roomRepository.findById(gameTurn.getRoomId()));
     }
 }
