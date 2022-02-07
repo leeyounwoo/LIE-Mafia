@@ -148,6 +148,7 @@ public class GameServiceImpl implements GameService{
             }
 
             if(voteResult.get(select)+1>=max){
+                max=voteResult.get(select)+1;
                 username=select;
             }
         };
