@@ -15,13 +15,15 @@ function Game() {
   // 참여자가 변화할 때마다 리렌더링
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
+  const tempParticipantsName = participantsName;
+  const tempParticipantsVideo = participantsVideo;
+
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
+
   const username = `user${Math.random().toString(36).substr(2, 11)}`;
   let authority = "";
-
-  let participantsCnt = 0;
 
   // 서버쪽으로 메세지를 보내는 함수
   const sendMessage = (message) => {
@@ -31,7 +33,6 @@ function Game() {
   };
 
   const receiveVideo = (participant) => {
-    participantsCnt = participantsCnt + 1;
     let user = {
       name: participant.username,
       sessionId: participant.sessionId,
@@ -40,6 +41,8 @@ function Game() {
       type: "remote",
       rtcPeer: null,
     };
+    tempParticipantsName.push(participant.username);
+    tempParticipantsVideo.push(user);
 
     let options = {
       onicecandidate: (candidate) => {
@@ -75,16 +78,9 @@ function Game() {
       };
       sendMessage(msg);
     });
-
-    setParticipantsName((participantsName) => [
-      ...participantsName,
-      participant.username,
-    ]);
-    setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
   };
 
   const onExistingParticipants = (msg) => {
-    participantsCnt = participantsCnt + 1;
     let user = {
       name: msg.user.username,
       sessionId: msg.user.sessionId,
@@ -95,6 +91,9 @@ function Game() {
     };
 
     authority = msg.user.authority;
+    tempParticipantsName.push(msg.user.username);
+    tempParticipantsVideo.push(user);
+    setRoomId(msg.data.roomId);
 
     console.log(msg.user.username + " registered in room " + roomId);
 
@@ -135,13 +134,6 @@ function Game() {
       sendMessage(message);
     });
 
-    setParticipantsName((participantsName) => [
-      ...participantsName,
-      msg.user.username,
-    ]);
-    setParticipantsVideo((participantsVideo) => [...participantsVideo, user]);
-    setRoomId(msg.data.roomId);
-
     Object.entries(msg.data.participants).forEach(
       ([msgUserName, participant]) => {
         receiveVideo(participant);
@@ -151,36 +143,31 @@ function Game() {
 
   const onNewParticipant = (msg) => {
     receiveVideo(Object.values(msg.data)[0]);
+    updateParticipants();
   };
 
   const onReceiveVideoAnswer = (msg) => {
-    waitForParticipantAdd(participantsVideo, function () {
-      participantsVideo[
-        participantsName.indexOf(msg.name)
-      ].rtcPeer.processAnswer(msg.sdpAnswer);
-    });
+    tempParticipantsVideo[
+      tempParticipantsName.indexOf(msg.name)
+    ].rtcPeer.processAnswer(msg.sdpAnswer);
   };
 
   const onAddIceCandidate = (msg) => {
-    waitForParticipantAdd(participantsVideo, function () {
-      participantsVideo[
-        participantsName.indexOf(msg.name)
-      ].rtcPeer.addIceCandidate(msg.candidate);
-    });
+    tempParticipantsVideo[
+      tempParticipantsName.indexOf(msg.name)
+    ].rtcPeer.addIceCandidate(msg.candidate);
   };
 
-  function waitForParticipantAdd(participantsVideo, callback) {
-    setTimeout(function () {
-      if (participantsVideo.length === participantsCnt) {
-        if (callback !== undefined) {
-          callback();
-        }
-        return;
-      } else {
-        waitForParticipantAdd(participantsVideo, callback);
-      }
-    }, 5);
-  }
+  const updateParticipants = () => {
+    setParticipantsName([]);
+    setParticipantsVideo([]);
+    setParticipantsName((participantsName) => tempParticipantsName);
+    setParticipantsVideo((participantsVideo) => tempParticipantsVideo);
+  };
+
+  useEffect(() => {
+    updateParticipants();
+  });
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
