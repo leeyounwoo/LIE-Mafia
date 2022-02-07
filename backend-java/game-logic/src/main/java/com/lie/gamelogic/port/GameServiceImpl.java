@@ -1,9 +1,6 @@
 package com.lie.gamelogic.port;
 
-import com.lie.gamelogic.domain.Room;
-import com.lie.gamelogic.domain.User;
-import com.lie.gamelogic.domain.UserVote;
-import com.lie.gamelogic.domain.Vote;
+import com.lie.gamelogic.domain.*;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +23,7 @@ public class GameServiceImpl implements GameService{
 
     private final MessageInterface messageInterface;
     private final RoomRepository roomRepository;
+    private final ExecutionVoteRepository executionVoteRepository;
     private final VoteRepository voteRepository;
 
     @Override
@@ -104,13 +102,22 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
-    public void createVote(String roomId) {
-        Vote vote=new Vote();
+    public void createVote(String roomId, RoomPhase phase) {
 
-        Room room = roomRepository.findById(roomId).orElseThrow();
-        voteRepository.save(vote.createVote(roomId,room.getRoomPhase()));
-        vote=vote.createVote(roomId,room.getRoomPhase());
-        log.info(vote.toString());
+        switch (phase){
+            case EXECUTIONVOTE :
+                ExecutionVote executionVote=new ExecutionVote();
+                executionVoteRepository.save(executionVote.createVote(roomId,phase));
+                log.info(executionVote.toString());
+                break;
+            default:
+                Vote vote=new Vote();
+                voteRepository.save(vote.createVote(roomId,phase));
+                vote=vote.createVote(roomId,phase);
+                log.info(vote.toString());
+                break;
+        }
+
     }
 
     @Override
@@ -127,6 +134,39 @@ public class GameServiceImpl implements GameService{
 
         vote.putUserVote(username,userVote);
         voteRepository.save(vote);
+
+        log.info(vote.toString());
+    }
+
+    @Override
+    public void selectExecutionVote(WebSocketSession session, String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
+        Room room =roomRepository.findById(roomId).orElseThrow();
+        User user=room.getUserByUsername(username);
+        if(!user.getAlive()){ //살아있는 user만 select
+            log.info("User {} died in Room {}", username, roomId);
+            return;
+        }
+
+        if(username==select){ //선택받은 사용자가 투표시 return
+            log.info("User {} select user in Room {}", username, roomId);
+            return;
+        }
+
+        if(room.getResult()!=select){ //의심자가 아닌 사용자를 선택한 경우 return
+            log.info("User {} is not selected user in Room {}", username, roomId);
+            return;
+        }
+
+        ExecutionVote vote=executionVoteRepository.findById("executionvote"+roomId).orElseThrow();
+
+        UserExecutionVote userExecutionVote=vote.getVotes().get(username);
+        if(userExecutionVote==null){
+            userExecutionVote=new UserExecutionVote(username,user.getSessionId(),select,agree,false);
+            vote.putUserVote(username,userExecutionVote);
+        }
+
+       vote=vote.pressVoted(username,agree);
+        executionVoteRepository.save(vote);
 
         log.info(vote.toString());
     }

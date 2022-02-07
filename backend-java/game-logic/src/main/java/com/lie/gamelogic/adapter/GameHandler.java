@@ -2,6 +2,7 @@ package com.lie.gamelogic.adapter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lie.gamelogic.domain.RoomPhase;
 import com.lie.gamelogic.port.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,15 +41,25 @@ public class GameHandler extends TextWebSocketHandler{
                 //session response
 
                 //createvote 테스트
-                gameService.createVote(jsonMessage.get("roomId").asText());
+                gameService.createVote(jsonMessage.get("roomId").asText(), RoomPhase.EXECUTIONVOTE);
                 break;
             case "madeVote":
-                gameService.selectVote(session
-                        ,jsonMessage.get("roomId").asText()
-                        ,jsonMessage.get("username").asText()
-                        ,jsonMessage.get("select").asText());
-
-                gameService.resultMornigVote(jsonMessage.get("roomId").asText());
+                if(jsonMessage.get("phase").asText().equals("citizenVote")){
+                    gameService.selectExecutionVote(session
+                            ,jsonMessage.get("roomId").asText()
+                            ,jsonMessage.get("username").asText()
+                            ,jsonMessage.get("select").asText()
+                            ,RoomPhase.EXECUTIONVOTE
+                            ,jsonMessage.get("agreeToDead").asBoolean()
+                    );
+                }else {
+                    gameService.selectVote(session
+                            , jsonMessage.get("roomId").asText()
+                            , jsonMessage.get("username").asText()
+                            , jsonMessage.get("select").asText()
+                    );
+                }
+                //gameService.resultMornigVote(jsonMessage.get("roomId").asText());
                 break;
 
             case "delete":
