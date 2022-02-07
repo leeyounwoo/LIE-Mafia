@@ -39,7 +39,12 @@ public class MorningVoteTask extends TimerTask {
         //log.info(room);
         roomRepository.save(room);
         //결과를 체크 하기 위해서 사용함
-        System.out.println(room.getResult());
+        if(room.getResult() !=null) {
+            log.info("Go to ExectuionVote is {} ", room.getResult());
+        }
+        else
+            log.info("no One is Dead");
         log.info(roomRepository.findById(gameTurn.getRoomId()));
+
     }
 }

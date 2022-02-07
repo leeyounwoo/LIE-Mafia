@@ -30,6 +30,9 @@ public class FinalSpeechTask extends TimerTask {
         //log.info(room);
         roomRepository.save(room);
 
+        //Vote를 만들어준다.
+        gameService.createVote(room.getRoomId());
+
         log.info(roomRepository.findById(gameTurn.getRoomId()));
     }
 }

@@ -170,4 +170,35 @@ public class GameServiceImpl implements GameService{
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         voteRepository.delete(vote);
     }
+
+    @Override
+    public void dead(String roomId, String username) {
+        //room 정보를 가져옴
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        //user에서 찾아봄
+        //없을시
+        if(!room.checkIfUserExists(username)){
+            log.info("User {} doesn't exist in Room {}",username, roomId);
+            return;
+        }
+        User user = room.getParticipants().get(username);
+        //이미 죽어 있을 시
+        if(!user.getAlive()){
+            log.info("User {} is already dead ", username);
+            return;
+        }
+        user.setAlive(false);
+
+        messageInterface.publishDeadEvent("dead",user,roomId);
+
+        roomRepository.save(room);
+
+    }
+
+    @Override
+    public void gameEnd(String roomId) {
+
+    }
+
+
 }

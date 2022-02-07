@@ -23,4 +23,7 @@ public interface GameService {
     void selectVote(WebSocketSession session,String roomId,String username,String select);
     void resultMornigVote(String roomId);
     void deleteVote(String roomId);
+    void dead(String roomId,String person);
+    void gameEnd(String roomId);
+
 }
