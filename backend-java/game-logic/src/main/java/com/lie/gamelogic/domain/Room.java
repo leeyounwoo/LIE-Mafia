@@ -39,17 +39,17 @@ public class Room {
         if(!checkIfUserIsLeader(username)){
             return null;
         }
-        if(participants.size()<4){
+        if(participants.size()<3){
             return null;
         }
-        for(User participant : participants.values()){
-            if(participant.getUsername().equals(username)){
-                continue;
-            }
-            if(!participant.getReady()){
-                return null;
-            }
-        }
+//        for(User participant : participants.values()){
+//            if(participant.getUsername().equals(username)){
+//                continue;
+//            }
+//            if(!participant.getReady()){
+//                return null;
+//            }
+//        }
 
         this.roomStatus = RoomStatus.START;
 

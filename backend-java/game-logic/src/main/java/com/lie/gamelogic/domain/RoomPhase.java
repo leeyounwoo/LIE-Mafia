@@ -1,9 +1,10 @@
 package com.lie.gamelogic.domain;
 
 public enum RoomPhase {
+    ROLEASSIGN,
     MORNING,
-    MORNING_VOTE,
+    MORNINGVOTE,
     FINALSPEECH,
     EXECUTIONVOTE,
-    NIGHT
+    NIGHTVOTE
 }

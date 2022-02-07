@@ -3,14 +3,16 @@ package com.lie.gamelogic.port;
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.User;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
+import com.lie.gamelogic.port.Phase.GameTurn;
+import com.lie.gamelogic.port.Phase.GameTurnImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.concurrent.ConcurrentHashMap;
 
 //service 롤백의 개념 transcation 처리
 @Service
@@ -20,6 +22,8 @@ public class GameServiceImpl implements GameService{
 
     private final MessageInterface messageInterface;
     private final RoomRepository roomRepository;
+
+    private ConcurrentHashMap<String, Timer> timerMap = new ConcurrentHashMap<>();
 
     @Override
     public void createGameRoom(Room room) {
@@ -52,21 +56,26 @@ public class GameServiceImpl implements GameService{
 
     @Override
     public void pressStart(WebSocketSession session, String roomId, String username) throws IOException {
+
         Room room = roomRepository.findById(roomId).orElseThrow();
 
-        room = room.pressStart(username);
+//        room = room.pressStart(username);
+//
+//        if(ObjectUtils.isEmpty(room)){
+//            log.info("Error");
+//            session.sendMessage(new TextMessage("Start failed"));
+//            return;
+//        }
 
-        if(ObjectUtils.isEmpty(room)){
-            log.info("Error");
-            session.sendMessage(new TextMessage("Start failed"));
-            return;
-        }
-
-        messageInterface.publishStartEvent("start", roomId);
+        //messageInterface.publishStartEvent("start", roomId);
 
         roomRepository.save(room);
         //message produce
 
+        timerMap.put(roomId,new Timer());
+
+        GameTurn gameTurn = new GameTurnImpl(roomRepository,this);
+        gameTurn.setnextWork(roomId,timerMap.get(roomId));
     }
 
     @Override
