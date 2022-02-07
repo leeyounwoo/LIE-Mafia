@@ -7,7 +7,10 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.stereotype.Indexed;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @Data
@@ -20,6 +23,7 @@ public class Room {
     RoomPhase roomPhase;
     Integer day;
     LocalDateTime endTime;
+    String Result;
 
     public Room join(User user){
         this.participants.put(user.getUsername(), user);
@@ -39,7 +43,7 @@ public class Room {
         if(!checkIfUserIsLeader(username)){
             return null;
         }
-        if(participants.size()<3){
+        if(participants.size()<4){
             return null;
         }
 //        for(User participant : participants.values()){
@@ -54,7 +58,11 @@ public class Room {
         this.roomStatus = RoomStatus.START;
 
         //start 후 로직은 추가적으로 짜주세요
-        this.roomPhase = RoomPhase.MORNING;
+        participants.forEach((player,user)->{
+            user.setAlive(true);
+        });
+
+        this.roomPhase = RoomPhase.ROLEASSIGN;
         this.day = 1;
 
         return this;
@@ -84,5 +92,49 @@ public class Room {
             return this.participants.get(username);
         }
         return null;
+    }
+
+    public Room initStartGame() {
+
+
+        //직업배정
+        List<String> players=new ArrayList<>(participants.keySet());
+
+        Random random = new Random(); //랜덤 객체 생성(디폴트 시드값 : 현재시간)
+        random.setSeed(System.currentTimeMillis());
+        int participant_number = participants.size(); // 참여한 사람 수
+
+        int Mafia_number = 1;
+        int doctor_number = 1;
+        if(participant_number >= 6){
+            Mafia_number = 2;
+        }
+        int citizen_number = participant_number - (Mafia_number + doctor_number);
+
+        //HashMap으로 중복 처리
+        HashMap<Job,Integer> JobNum = new HashMap<>();
+        JobNum.put(Job.MAFIA,Mafia_number);
+        JobNum.put(Job.DOCTOR,doctor_number);
+        JobNum.put(Job.CITIZEN,citizen_number);
+
+
+        boolean[] isRole = new boolean[participants.size()];
+
+        JobNum.forEach((Job,num) ->{
+            while (num-- > 0) {
+                int idx = -1;
+                do{
+                    idx = (int) (random.nextInt(participants.size() * 100) % participants.size());
+                }while(isRole[idx]);
+
+                User player = participants.get(players.get(idx));
+                isRole[idx] = true;
+
+                player.setJob(Job);
+            }
+        });
+
+
+        return this;
     }
 }
