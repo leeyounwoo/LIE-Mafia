@@ -2,6 +2,7 @@ package com.lie.gamelogic.port;
 
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.User;
+import com.lie.gamelogic.domain.Vote;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class GameServiceImpl implements GameService{
 
     private final MessageInterface messageInterface;
     private final RoomRepository roomRepository;
+    private final VoteRepository voteRepository;
 
     @Override
     public void createGameRoom(Room room) {
@@ -94,5 +96,15 @@ public class GameServiceImpl implements GameService{
         Room room=roomRepository.findById(roomId).orElseThrow();
         room=room.initStartGame(); //alive true, 직업배정
         roomRepository.save(room);
+    }
+
+    @Override
+    public void createVote(String roomId) {
+        Vote vote=new Vote();
+
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        voteRepository.save(vote.createVote(roomId,room.getRoomPhase()));
+        vote=vote.createVote(roomId,room.getRoomPhase());
+        log.info(vote.toString());
     }
 }

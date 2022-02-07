@@ -45,14 +45,14 @@ public class Room {
         if(participants.size()<4){
             return null;
         }
-        for(User participant : participants.values()){
-            if(participant.getUsername().equals(username)){
-                continue;
-            }
-            if(!participant.getReady()){
-                return null;
-            }
-        }
+//        for(User participant : participants.values()){
+//            if(participant.getUsername().equals(username)){
+//                continue;
+//            }
+//            if(!participant.getReady()){
+//                return null;
+//            }
+//        }
 
         this.roomStatus = RoomStatus.START;
 

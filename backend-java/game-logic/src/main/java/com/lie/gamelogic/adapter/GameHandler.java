@@ -38,6 +38,9 @@ public class GameHandler extends TextWebSocketHandler{
                 // 직업 배정 테스트, 메소드 호출
                 gameService.roleAssign(jsonMessage.get("roomId").asText());
                 //session response
+
+                //createvote 테스트
+                gameService.createVote(jsonMessage.get("roomId").asText());
                 break;
         }
         return;
