@@ -42,6 +42,12 @@ public class GameHandler extends TextWebSocketHandler{
                 //createvote 테스트
                 gameService.createVote(jsonMessage.get("roomId").asText());
                 break;
+            case "madeVote":
+                gameService.selectVote(session
+                        ,jsonMessage.get("roomId").asText()
+                        ,jsonMessage.get("username").asText()
+                        ,jsonMessage.get("select").asText());
+                break;
         }
         return;
     }

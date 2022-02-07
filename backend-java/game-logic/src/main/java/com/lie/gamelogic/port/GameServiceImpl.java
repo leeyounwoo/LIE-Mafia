@@ -2,6 +2,7 @@ package com.lie.gamelogic.port;
 
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.User;
+import com.lie.gamelogic.domain.UserVote;
 import com.lie.gamelogic.domain.Vote;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
 import lombok.RequiredArgsConstructor;
@@ -105,6 +106,24 @@ public class GameServiceImpl implements GameService{
         Room room = roomRepository.findById(roomId).orElseThrow();
         voteRepository.save(vote.createVote(roomId,room.getRoomPhase()));
         vote=vote.createVote(roomId,room.getRoomPhase());
+        log.info(vote.toString());
+    }
+
+    @Override
+    public void selectVote(WebSocketSession session, String roomId, String username, String select) {
+        Room room =roomRepository.findById(roomId).orElseThrow();
+        User user=room.getUserByUsername(username);
+        if(!user.getAlive()){ //살아있는 user만 select
+            log.info("User {} died in Room {}", username, roomId);
+            return;
+        }
+
+        Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
+        UserVote userVote=new UserVote(username,user.getSessionId(),user.getJob(),select);
+
+        vote.putUserVote(username,userVote);
+        voteRepository.save(vote);
+
         log.info(vote.toString());
     }
 }

@@ -20,4 +20,5 @@ public interface GameService {
     void pressStart(WebSocketSession session, String roomId, String username) throws IOException;
     void roleAssign(String roomId);
     void createVote(String roomId);
+    void selectVote(WebSocketSession session,String roomId,String username,String select);
 }
