@@ -88,4 +88,11 @@ public class GameServiceImpl implements GameService{
         //produce ready
         return;
     }
+
+    @Override
+    public void roleAssign(String roomId) {
+        Room room=roomRepository.findById(roomId).orElseThrow();
+        room=room.initStartGame(); //alive true, 직업배정
+        roomRepository.save(room);
+    }
 }
