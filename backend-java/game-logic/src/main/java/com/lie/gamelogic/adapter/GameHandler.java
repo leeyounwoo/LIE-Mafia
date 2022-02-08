@@ -59,11 +59,13 @@ public class GameHandler extends TextWebSocketHandler{
                             , jsonMessage.get("select").asText()
                     );
                 }
-                //gameService.resultMornigVote(jsonMessage.get("roomId").asText());
+
+
+                gameService.resultExecutionVote(jsonMessage.get("roomId").asText());
                 break;
 
             case "delete":
-                gameService.deleteVote(jsonMessage.get("roomId").asText());
+                gameService.deleteExecutionVote(jsonMessage.get("roomId").asText());
         }
         return;
     }

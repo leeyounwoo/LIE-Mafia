@@ -10,10 +10,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 //service 롤백의 개념 transcation 처리
 @Service
@@ -141,18 +138,21 @@ public class GameServiceImpl implements GameService{
     @Override
     public void selectExecutionVote(WebSocketSession session, String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
         Room room =roomRepository.findById(roomId).orElseThrow();
+
+        room.setResult("dlrjsxptmxmfmfdnl111111111111111gksdkd");
+        roomRepository.save(room);
         User user=room.getUserByUsername(username);
         if(!user.getAlive()){ //살아있는 user만 select
             log.info("User {} died in Room {}", username, roomId);
             return;
         }
 
-        if(username==select){ //선택받은 사용자가 투표시 return
+        if(username.equals(select)){ //선택받은 사용자가 투표시 return
             log.info("User {} select user in Room {}", username, roomId);
             return;
         }
 
-        if(room.getResult()!=select){ //의심자가 아닌 사용자를 선택한 경우 return
+        if(!room.getResult().equals(select)){ //의심자가 아닌 사용자를 선택한 경우 return
             log.info("User {} is not selected user in Room {}", username, roomId);
             return;
         }
@@ -173,6 +173,7 @@ public class GameServiceImpl implements GameService{
 
     @Override
     public void resultMornigVote(String roomId) {
+        Room room=roomRepository.findById(roomId).orElseThrow();
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         List<String> list= new ArrayList(vote.selectList()); //투표 내용 가져오기
         Map<String,Integer> voteResult=new HashMap<>();
@@ -193,7 +194,7 @@ public class GameServiceImpl implements GameService{
             }
         };
 
-        Room room=roomRepository.findById(roomId).orElseThrow();
+
         room.setResult(username);
 
         roomRepository.save(room);
@@ -202,8 +203,24 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
+    public void resultExecutionVote(String roomId) {
+        ExecutionVote vote=executionVoteRepository.findById("executionvote"+roomId).orElseThrow();
+        Room room=roomRepository.findById(roomId).orElseThrow();
+        if(vote.getAgreeDie()*2<=vote.getVotes().size()){
+            room.setResult(null);
+        }
+        roomRepository.save(room);
+    }
+
+    @Override
     public void deleteVote(String roomId) {
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         voteRepository.delete(vote);
+    }
+
+    @Override
+    public void deleteExecutionVote(String roomId) {
+        ExecutionVote vote=executionVoteRepository.findById("executionvote"+roomId).orElseThrow();
+        executionVoteRepository.delete(vote);
     }
 }

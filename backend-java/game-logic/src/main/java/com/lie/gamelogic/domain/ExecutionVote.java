@@ -17,7 +17,7 @@ public class ExecutionVote {
     String voteId;
     String roomId;
     RoomPhase roomPhase;
-    HashMap<String,UserExecutionVote> votes=new HashMap<String, UserExecutionVote>();;
+    HashMap<String,UserExecutionVote> votes=new HashMap<String, UserExecutionVote>();
     Integer agreeDie;
     Integer agreeAlive;
 
