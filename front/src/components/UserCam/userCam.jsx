@@ -4,7 +4,10 @@ import styles from "./userCam.module.css";
 const UserCam = ({ keys, participant }) => {
   const videoRef = useRef(null);
   useEffect(() => {
-    waitForParticipantAdd(videoRef.current.srcObject, function () {});
+    waitForParticipantAdd(videoRef.current.srcObject, function () {
+      console.log(participant.type);
+      console.log(videoRef.current.srcObject);
+    });
   });
 
   function waitForParticipantAdd(srcObject, callback) {
