@@ -138,9 +138,10 @@ public class GameServiceImpl implements GameService{
     @Override
     public void selectExecutionVote(WebSocketSession session, String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
         Room room =roomRepository.findById(roomId).orElseThrow();
-
+    //test
         room.setResult("dlrjsxptmxmfmfdnl111111111111111gksdkd");
         roomRepository.save(room);
+        //
         User user=room.getUserByUsername(username);
         if(!user.getAlive()){ //살아있는 user만 select
             log.info("User {} died in Room {}", username, roomId);
@@ -194,9 +195,7 @@ public class GameServiceImpl implements GameService{
             }
         };
 
-
         room.setResult(username);
-
         roomRepository.save(room);
 
         log.info(room.toString());
@@ -210,6 +209,45 @@ public class GameServiceImpl implements GameService{
             room.setResult(null);
         }
         roomRepository.save(room);
+    }
+
+    @Override
+    public void resultNightVote(String roomId) {
+        Room room=roomRepository.findById(roomId).orElseThrow();
+        Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
+
+        //test
+        room.setResult("himynameishjhahahohi");
+        roomRepository.save(room);
+        //test
+        HashMap<String,UserVote> voteMap=vote.getVotes();
+        Set<String> mafiaSelect=new HashSet<>();
+        String doctorSelect="";
+
+        for (UserVote jobVote: voteMap.values()){
+            if(jobVote.getJob().equals(Job.MAFIA)){
+                mafiaSelect.add(jobVote.getSelect());
+            }else if(jobVote.getJob().equals(Job.DOCTOR)){
+                doctorSelect=jobVote.getSelect();
+            }
+        }
+
+        if (mafiaSelect.size()==1){ //죽일사람
+            for(String selectName:mafiaSelect){
+                if(!selectName.equals(doctorSelect)){
+                    room.setResult(selectName);
+                    roomRepository.save(room);
+                    log.info(room.getResult());
+                    return;
+                }
+            }
+
+        } //사망자는 마피아가 죽일사람을 선택했을때, 의사가 못살리면 세팅
+
+        room.setResult(null); //그 외는 죽은 사람이 없다.
+        log.info(room.getResult());
+        roomRepository.save(room);
+
     }
 
     @Override

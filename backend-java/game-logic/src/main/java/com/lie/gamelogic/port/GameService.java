@@ -25,6 +25,7 @@ public interface GameService {
     void selectExecutionVote(WebSocketSession session,String roomId,String username,String select,RoomPhase roomPhase,boolean agree);
     void resultMornigVote(String roomId);
     void resultExecutionVote(String roomId);
+    void resultNightVote(String roomId);
     void deleteVote(String roomId);
     void deleteExecutionVote(String roomId);
 

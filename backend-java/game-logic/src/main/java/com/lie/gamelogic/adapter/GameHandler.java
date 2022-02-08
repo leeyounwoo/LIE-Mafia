@@ -41,10 +41,10 @@ public class GameHandler extends TextWebSocketHandler{
                 //session response
 
                 //createvote 테스트
-                gameService.createVote(jsonMessage.get("roomId").asText(), RoomPhase.EXECUTIONVOTE);
+                gameService.createVote(jsonMessage.get("roomId").asText(), RoomPhase.NIGHT);
                 break;
             case "madeVote":
-                if(jsonMessage.get("phase").asText().equals("citizenVote")){
+                if(jsonMessage.hasNonNull("phase") && "citizenVote".equals(jsonMessage.get("phase").asText())){
                     gameService.selectExecutionVote(session
                             ,jsonMessage.get("roomId").asText()
                             ,jsonMessage.get("username").asText()
@@ -61,11 +61,11 @@ public class GameHandler extends TextWebSocketHandler{
                 }
 
 
-                gameService.resultExecutionVote(jsonMessage.get("roomId").asText());
+                gameService.resultNightVote(jsonMessage.get("roomId").asText());
                 break;
 
             case "delete":
-                gameService.deleteExecutionVote(jsonMessage.get("roomId").asText());
+                gameService.deleteVote(jsonMessage.get("roomId").asText());
         }
         return;
     }
