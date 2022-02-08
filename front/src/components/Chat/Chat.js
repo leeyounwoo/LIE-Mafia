@@ -3,9 +3,8 @@ import styled from "styled-components";
 
 const StyledChat = styled.div`
   border: 1px solid;
-
-  width: 25%;
   box-sizing: border-box;
+  width: 100%;
 `;
 
 function Chat() {
