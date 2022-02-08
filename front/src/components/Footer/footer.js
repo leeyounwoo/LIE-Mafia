@@ -29,13 +29,13 @@ function WaitingFooter(props) {
         console.log("게임");
         setSocketConnect(true);
       };
-      ws.current.onclose = error => {
+      ws.current.onclose = (error) => {
         console.log("disconnect", error);
       };
-      ws.current.onerror = error => {
+      ws.current.onerror = (error) => {
         console.log("error", error);
       };
-      ws.current.onmessage = e => {
+      ws.current.onmessage = (e) => {
         console.log(JSON.parse(e.data));
       };
     }
@@ -44,7 +44,7 @@ function WaitingFooter(props) {
   useEffect(() => {
     if (sendMsg === true) {
       console.log(sendMsg);
-      history.push(`/start/${props.num}`);
+      history.push(`/start/${props.roomId}`);
     }
   }, [sendMsg]);
 
@@ -53,18 +53,18 @@ function WaitingFooter(props) {
       ws.current.send(
         JSON.stringify({
           id: "ready",
-          roomId: props.num,
+          roomId: props.roomId,
           username: props.username,
         })
       );
       console.log(
         JSON.stringify({
           id: "ready",
-          roomId: props.num,
+          roomId: props.roomId,
           username: props.username,
         })
       );
-      ws.current.onmessage = e => {
+      ws.current.onmessage = (e) => {
         console.log(JSON.parse(e.data));
       };
     }
@@ -75,7 +75,7 @@ function WaitingFooter(props) {
       ws.current.send(
         JSON.stringify({
           id: "start",
-          roomId: props.num,
+          roomId: props.roomId,
           username: props.username,
         })
       );
@@ -83,11 +83,11 @@ function WaitingFooter(props) {
       console.log(
         JSON.stringify({
           id: "start",
-          roomId: props.num,
+          roomId: props.roomId,
           username: props.username,
         })
       );
-      ws.current.onmessage = e => {
+      ws.current.onmessage = (e) => {
         // console.log(JSON.parse(e.data));
         console.log(e.data);
       };
@@ -96,6 +96,7 @@ function WaitingFooter(props) {
 
   return (
     <StyledFooter>
+      <h1>{props.authority}</h1>
       {props.authority === "LEADER" ? (
         <Button onClick={onClickStart}>Start</Button>
       ) : (

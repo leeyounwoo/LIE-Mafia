@@ -14,7 +14,6 @@ const StyledNav = styled.div`
 
 function WaitingNav(props) {
   let history = useHistory();
-  const roomId = props.num;
 
   return (
     <StyledNav>
@@ -22,7 +21,7 @@ function WaitingNav(props) {
         <h3>Lie, Mafia</h3>
       </div>
       <div>
-        <h4>초대링크 : localhost:3000/game/{roomId}</h4>
+        <h4>초대링크 : localhost:3000/room/{props.roomId}</h4>
       </div>
       <div style={{ paddingRight: "2vw" }}>
         <Button

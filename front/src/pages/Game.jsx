@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import VideoRoom from "../components/VideoRoom/videoRoom";
 import WaitingNav from "../components/Navbar/navbar";
-import WaitingFooter from "../components/Footer/footer";
+import Footer from "../components/Footer/footer";
 // import Chat from "../components/Chat/chat";
 import { WebRtcPeer } from "kurento-utils";
 import styled from "styled-components";
+import Home from "../components/Home/home";
+import Chat from "../components/Chat/Chat";
 
 const StyledContainer = styled.div`
   height: 100vh;
+`;
+
+const Main = styled.div`
+  display: flex;
+  flex-wrap: nowrap;
 `;
 
 function Game() {
@@ -242,37 +249,30 @@ function Game() {
   }, []);
 
   const [join, setJoin] = useState(false);
-  const onBtnClick = (name) => {
+  const onBtnClick = () => {
     setJoin(true);
   };
-  console.log("아무거나");
 
   return (
     <StyledContainer>
-      {!join && (
-        <div>
-          <img alt="logo" src="/img/logo.png" />
-          {window.location.pathname.split("/").pop() === "0" ? (
-            <button onClick={onBtnClick}>방 만들기</button>
-          ) : (
-            <button onClick={onBtnClick}>방 입장하기</button>
-          )}
-        </div>
-      )}
+      {!join && <Home onBtnClick={onBtnClick} />}
       {join && (
         <div>
           <WaitingNav roomId={roomId} />
-          <header className="App-header">
-            <>
-              <h1>참가자 수: {participantsVideo.length}</h1>
-              <VideoRoom
-                participantsVideo={participantsVideo}
-                participantsName={participantsName}
-              ></VideoRoom>
-            </>
-          </header>
+          <Main>
+            <header className="App-header">
+              <>
+                <h1>참가자 수: {participantsVideo.length}</h1>
+                <VideoRoom
+                  participantsVideo={participantsVideo}
+                  participantsName={participantsName}
+                ></VideoRoom>
+              </>
+            </header>
+            <Chat />
+          </Main>
           {/* <Chat /> */}
-          <WaitingFooter authority={authority} />
+          <Footer authority={authority} roomId={roomId} username={username} />
         </div>
       )}
     </StyledContainer>
