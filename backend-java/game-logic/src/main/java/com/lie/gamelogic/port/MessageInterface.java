@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.gamelogic.adapter.MessageConsumer;
 import com.lie.gamelogic.adapter.MessageProducer;
 import com.lie.gamelogic.domain.User;
-import com.lie.gamelogic.dto.DeadPersonDto;
 import com.lie.gamelogic.dto.PressReadyResponseDto;
 import com.lie.gamelogic.dto.StartGameDto;
 import lombok.RequiredArgsConstructor;
@@ -34,15 +33,6 @@ public class MessageInterface {
         StartGameDto startGame = new StartGameDto(roomId);
         try{
             messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(startGame));
-        }catch (JsonProcessingException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void publishDeadEvent(String topic, User user, String roomId){
-        DeadPersonDto deadPerson = new DeadPersonDto(roomId,user);
-        try{
-            messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(deadPerson));
         }catch (JsonProcessingException e){
             e.printStackTrace();
         }

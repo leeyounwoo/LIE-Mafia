@@ -252,6 +252,7 @@ public class GameServiceImpl implements GameService{
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         voteRepository.delete(vote);
     }
+<<<<<<< HEAD
 
     @Override
     public void dead(String roomId, String username) {
@@ -342,4 +343,6 @@ public class GameServiceImpl implements GameService{
         executionVoteRepository.delete(vote);
     }
 >>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
+=======
+>>>>>>> parent of 05bcdef (Feat: dead 이벤트 구현, Kafka에 구현)
 }

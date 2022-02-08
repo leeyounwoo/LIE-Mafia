@@ -64,7 +64,6 @@ public class GameTurnImpl implements GameTurn{
         //log.info(room);
 
         setTimer(save_time.get(room.getRoomPhase()));
-        //RoomPhase를 변환 시켜줌
         if(roomPhases.indexOf(room.getRoomPhase()) == roomPhases.size()-1){
             setNextPhase(roomPhases.get(1));
         }

@@ -23,23 +23,11 @@ public class ExecutionVoteTask extends TimerTask {
     @Override
     public void run() {
         room = gameTurn.getRoom();
-
-        //투표 결과를 처리하는 것
-        gameService.resultMornigVote(room.getRoomId());
-        //저장한 결과값을 불려와주어야 한다.
-        room = roomRepository.findById(room.getRoomId()).orElseThrow();
-
         room.setDay(room.getDay());
         room.setRoomPhase(gameTurn.getNextPhase());
 
         //log.info(room);
-
-        //투표 결과를 삭제
-        gameService.deleteVote(room.getRoomId());
         roomRepository.save(room);
-
-        //이제 밤투표 시작 해주어야 함
-        gameService.createVote(room.getRoomId());
 
         log.info(roomRepository.findById(gameTurn.getRoomId()));
     }

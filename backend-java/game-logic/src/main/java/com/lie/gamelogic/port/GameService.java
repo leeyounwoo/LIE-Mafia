@@ -25,6 +25,7 @@ public interface GameService {
     void selectVote(WebSocketSession session,String roomId,String username,String select);
     void resultMornigVote(String roomId);
     void deleteVote(String roomId);
+<<<<<<< HEAD
     void dead(String roomId,String person);
     void gameEnd(String roomId);
 =======
@@ -38,4 +39,6 @@ public interface GameService {
     void deleteExecutionVote(String roomId);
 >>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
 
+=======
+>>>>>>> parent of 05bcdef (Feat: dead 이벤트 구현, Kafka에 구현)
 }
