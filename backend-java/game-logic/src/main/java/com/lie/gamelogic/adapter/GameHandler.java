@@ -2,6 +2,7 @@ package com.lie.gamelogic.adapter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lie.gamelogic.domain.RoomPhase;
 import com.lie.gamelogic.port.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,14 @@ public class GameHandler extends TextWebSocketHandler{
                 gameService.pressStart(session,
                         jsonMessage.get("roomId").asText(),
                         jsonMessage.get("username").asText());
+                // 직업 배정 테스트, 메소드 호출
+                gameService.roleAssign(jsonMessage.get("roomId").asText());
+                //session response
+
+                //createvote 테스트
+                gameService.createVote(jsonMessage.get("roomId").asText(), RoomPhase.NIGHT);
                 break;
+<<<<<<< HEAD
             case "citizenVote":
                 gameService.selectVote(session
                         ,jsonMessage.get("roomId").asText()
@@ -43,6 +51,31 @@ public class GameHandler extends TextWebSocketHandler{
                         ,jsonMessage.get("select").asText());
                 break;
 
+=======
+            case "madeVote":
+                if(jsonMessage.hasNonNull("phase") && "citizenVote".equals(jsonMessage.get("phase").asText())){
+                    gameService.selectExecutionVote(session
+                            ,jsonMessage.get("roomId").asText()
+                            ,jsonMessage.get("username").asText()
+                            ,jsonMessage.get("select").asText()
+                            ,RoomPhase.EXECUTIONVOTE
+                            ,jsonMessage.get("agreeToDead").asBoolean()
+                    );
+                }else {
+                    gameService.selectVote(session
+                            , jsonMessage.get("roomId").asText()
+                            , jsonMessage.get("username").asText()
+                            , jsonMessage.get("select").asText()
+                    );
+                }
+
+
+                gameService.resultNightVote(jsonMessage.get("roomId").asText());
+                break;
+
+            case "delete":
+                gameService.deleteVote(jsonMessage.get("roomId").asText());
+>>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
         }
         return;
     }

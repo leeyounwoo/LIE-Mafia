@@ -87,7 +87,7 @@ public class MessageConsumer {
         log.info(message);
     }
 
-    @KafkaListener(topics = {"dead"}, groupId = "game-group")
-    public void deadConsume(String message) {log.info(message); }
+
+
 
 }
