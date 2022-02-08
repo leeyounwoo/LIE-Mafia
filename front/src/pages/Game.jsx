@@ -163,6 +163,7 @@ function Game() {
     setParticipantsVideo([]);
     setParticipantsName((participantsName) => tempParticipantsName);
     setParticipantsVideo((participantsVideo) => tempParticipantsVideo);
+    console.log("update", participantsName, participantsVideo);
   };
 
   useEffect(() => {
@@ -244,13 +245,18 @@ function Game() {
   const onBtnClick = (name) => {
     setJoin(true);
   };
+  console.log("아무거나");
 
   return (
     <StyledContainer>
       {!join && (
         <div>
-          <img alt="logo" src="	http://localhost:3000/img/logo.png" />
-          <button onClick={onBtnClick}>방 만들기</button>
+          <img alt="logo" src="/img/logo.png" />
+          {window.location.pathname.split("/").pop() === "0" ? (
+            <button onClick={onBtnClick}>방 만들기</button>
+          ) : (
+            <button onClick={onBtnClick}>방 입장하기</button>
+          )}
         </div>
       )}
       {join && (
