@@ -22,6 +22,8 @@ function Game() {
   // 참여자가 변화할 때마다 리렌더링
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
+  const username = `user${Math.random().toString(36).substr(2, 11)}`;
+  const [authority, setAuthority] = useState([]);
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
 
@@ -29,14 +31,11 @@ function Game() {
     window.location.pathname.split("/").pop()
   );
 
-  const username = `user${Math.random().toString(36).substr(2, 11)}`;
-  let authority = "";
-
   // 서버쪽으로 메세지를 보내는 함수
   const sendMessage = (message) => {
     const jsonMessage = JSON.stringify(message);
-    ws.send(jsonMessage);
     console.log("Sending message: " + jsonMessage);
+    ws.send(jsonMessage);
   };
 
   const receiveVideo = (participant) => {
@@ -48,12 +47,19 @@ function Game() {
       type: "remote",
       rtcPeer: null,
     };
+
     tempParticipantsName.push(participant.username);
     tempParticipantsVideo.push(user);
 
-    let options = {
+    var video = document.getElementById(
+      `video-${tempParticipantsVideo.length - 1}`
+    );
+
+    const options = {
+      remoteVideo: video,
       onicecandidate: (candidate) => {
-        let message = {
+        console.log("Remote candidate" + JSON.stringify(candidate));
+        const message = {
           id: "onIceCandidate",
           candidate: candidate,
           name: participant.username,
@@ -64,46 +70,31 @@ function Game() {
         iceServers: [
           {
             urls: "turn:3.38.118.187:3478?transport=udp",
-
             username: "ssafy",
-
             credential: "1234",
           },
         ],
       },
     };
 
-    user.rtcPeer = WebRtcPeer.WebRtcPeerRecvonly(options);
-    user.rtcPeer.generateOffer((err, offerSdp) => {
-      if (err) {
-        console.error(err);
+    user.rtcPeer = WebRtcPeer.WebRtcPeerRecvonly(options, function (error) {
+      if (error) {
+        return console.log(error);
       }
-      let msg = {
-        id: "receiveVideoFrom",
-        sender: participant.username,
-        sdpOffer: offerSdp,
-      };
-      sendMessage(msg);
+      this.generateOffer((err, offerSdp, wq) => {
+        if (err) return console.err("sdp offer error");
+        console.log("Invoking SDP offer callback function");
+        let msg = {
+          id: "receiveVideoFrom",
+          sender: participant.username,
+          sdpOffer: offerSdp,
+        };
+        sendMessage(msg);
+      });
     });
   };
 
   const onExistingParticipants = (msg) => {
-    let user = {
-      name: msg.user.username,
-      sessionId: msg.user.sessionId,
-      ready: msg.user.ready,
-      authority: msg.user.authority,
-      type: "local",
-      rtcPeer: null,
-    };
-
-    authority = msg.user.authority;
-    tempParticipantsName.push(msg.user.username);
-    tempParticipantsVideo.push(user);
-    setRoomId(msg.data.roomId);
-
-    console.log(msg.user.username + " registered in room " + roomId);
-
     var constraints = {
       audio: false,
       video: {
@@ -115,30 +106,54 @@ function Game() {
       },
     };
 
-    let options = {
+    let user = {
+      name: msg.user.username,
+      sessionId: msg.user.sessionId,
+      ready: msg.user.ready,
+      authority: msg.user.authority,
+      type: "local",
+      rtcPeer: null,
+    };
+
+    setAuthority(msg.user.authority);
+    tempParticipantsName.push(msg.user.username);
+    tempParticipantsVideo.push(user);
+    setRoomId(msg.data.roomId);
+
+    console.log(msg.user.username + " registered in room " + roomId);
+
+    var video = document.getElementById(
+      `video-${tempParticipantsVideo.length - 1}`
+    );
+
+    const options = {
+      localVideo: video,
       mediaConstraints: constraints,
       onicecandidate: (candidate) => {
         console.log("Local candidate" + JSON.stringify(candidate));
-        let message = {
+        const message = {
           id: "onIceCandidate",
           candidate: candidate,
-          name: msg.username,
+          name: msg.user.username,
         };
         sendMessage(message);
       },
     };
 
-    user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options);
-    user.rtcPeer.generateOffer((err, offerSdp) => {
-      if (err) {
-        console.error(err);
+    user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
+      if (error) {
+        return console.log(error);
       }
-      let message = {
-        id: "receiveVideoFrom",
-        sender: msg.user.username,
-        sdpOffer: offerSdp,
-      };
-      sendMessage(message);
+      this.generateOffer((err, offerSdp, wq) => {
+        if (err) return console.err("sdp offer error");
+        console.log("Invoking SDP offer callback function");
+        let message = {
+          id: "receiveVideoFrom",
+          sender: msg.user.username,
+          sdpOffer: offerSdp,
+        };
+        sendMessage(message);
+      });
     });
 
     Object.entries(msg.data.participants).forEach(
@@ -168,9 +183,8 @@ function Game() {
   const updateParticipants = () => {
     setParticipantsName([]);
     setParticipantsVideo([]);
-    setParticipantsName((participantsName) => tempParticipantsName);
-    setParticipantsVideo((participantsVideo) => tempParticipantsVideo);
-    console.log("update", participantsName, participantsVideo);
+    setParticipantsName(tempParticipantsName);
+    setParticipantsVideo(tempParticipantsVideo);
   };
 
   useEffect(() => {
@@ -243,9 +257,9 @@ function Game() {
     };
 
     // 컴포넌트가 파괴될 때 웹소켓 통신 닫음
-    // return function cleanup() {
-    //   ws.close();
-    // };
+    return function cleanup() {
+      ws.close();
+    };
   }, []);
 
   const [join, setJoin] = useState(false);

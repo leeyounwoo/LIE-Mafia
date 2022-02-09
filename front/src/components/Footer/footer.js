@@ -96,7 +96,6 @@ function WaitingFooter(props) {
 
   return (
     <StyledFooter>
-      <h1>{props.authority}</h1>
       {props.authority === "LEADER" ? (
         <Button onClick={onClickStart}>Start</Button>
       ) : (

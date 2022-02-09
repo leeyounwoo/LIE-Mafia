@@ -22,7 +22,11 @@ function Home({ join, onBtnClick }) {
     <Container>
       <img alt="logo" src="/img/logo.png" />
       <StyledBtn>
-        <Button onClick={onNewBtnClick}>방 만들기</Button>
+        {window.location.pathname.split("/").pop() === "0" ? (
+          <Button onClick={onNewBtnClick}>방 만들기</Button>
+        ) : (
+          <Button onClick={onNewBtnClick}>방 입장하기</Button>
+        )}
       </StyledBtn>
     </Container>
   );
