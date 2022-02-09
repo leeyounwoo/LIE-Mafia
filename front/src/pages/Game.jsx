@@ -26,7 +26,6 @@ function Game() {
   const [authority, setAuthority] = useState([]);
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
-
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
@@ -267,6 +266,16 @@ function Game() {
     setJoin(true);
   };
 
+  const onClickCamera = () => {
+    participantsVideo[0].rtcPeer.videoEnabled =
+      !participantsVideo[0].rtcPeer.videoEnabled;
+  };
+
+  const onClickMute = () => {
+    participantsVideo[0].rtcPeer.audioEnabled =
+      !participantsVideo[0].rtcPeer.audioEnabled;
+  };
+
   return (
     <StyledContainer>
       {!join && <Home onBtnClick={onBtnClick} />}
@@ -283,10 +292,17 @@ function Game() {
                 ></VideoRoom>
               </>
             </header>
-            <Chat />
+            {/* <Chat /> */}
           </Main>
           {/* <Chat /> */}
-          <Footer authority={authority} roomId={roomId} username={username} />
+          <Footer
+            authority={authority}
+            roomId={roomId}
+            username={username}
+            localUserVideo={participantsVideo[0]}
+            onClickCamera={onClickCamera}
+            onClickMute={onClickMute}
+          />
         </div>
       )}
     </StyledContainer>
