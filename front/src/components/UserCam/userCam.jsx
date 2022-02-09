@@ -1,7 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./userCam.module.css";
+import styled from "styled-components";
 
-const UserCam = ({ keys, participant }) => {
+const User = styled.div`
+  box-sizing: border-box;
+  width: 24vw;
+  height: 30vh;
+  border: 1px solid black;
+`;
+
+const UserCam = ({ key, participant, index }) => {
   const videoRef = useRef(null);
   useEffect(() => {
     waitForParticipantAdd(videoRef.current.srcObject, function () {});
@@ -25,12 +33,18 @@ const UserCam = ({ keys, participant }) => {
   }
 
   return (
-    <div className={styles.container}>
-      <li className={styles.li} key={keys}>
+    <User>
+      <li className={styles.li} key={key}>
         <h1>{participant.name}</h1>
-        <video className={styles.video} ref={videoRef} autoPlay></video>
+        <video
+          className={styles.video}
+          id={index}
+          ref={videoRef}
+          autoPlay
+          width={420}
+        ></video>
       </li>
-    </div>
+    </User>
   );
 };
 
