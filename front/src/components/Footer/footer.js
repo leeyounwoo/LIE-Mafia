@@ -94,8 +94,28 @@ function WaitingFooter(props) {
     }
   };
 
+  const [localCamera, setLocalCamera] = useState(true);
+  const [localMute, setLocalMute] = useState(true);
+
+  const handleCameraClick = () => {
+    console.log(localCamera ? "로컬 화면 끄기" : "로컬 화면 켜기");
+    props.onClickCamera();
+    setLocalCamera(!localCamera);
+  };
+
+  const handleMuteClick = () => {
+    console.log(localMute ? "음성 끄기" : "음성 켜기");
+    props.onClickMute();
+    setLocalMute(!localMute);
+  };
   return (
     <StyledFooter>
+      <button onClick={handleCameraClick}>
+        {localCamera ? "화면 끄기" : "화면 켜기"}
+      </button>
+      <button onClick={handleMuteClick}>
+        {localMute ? "음성 끄기" : "음성 켜기"}
+      </button>
       {props.authority === "LEADER" ? (
         <Button onClick={onClickStart}>Start</Button>
       ) : (
