@@ -15,8 +15,10 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -55,28 +57,34 @@ public class RoomManager {
         }
         return false;
     }
-    public Room joinRoom(Room room, User participant, WebSocketSession session) throws JsonProcessingException {
+    public Room joinRoom(Room room, User participant, WebSocketSession session) throws IOException {
 
         log.info("PARTICIPANT {} : trying to join room {}", participant, room);
+        String sessionId = participant.getSessionId();
 
         if(checkIfRoomIsNotAvailable(room, participant)){
             return null;
         }
 
         //username, session 바탕으로 userconnection 만들어주기 mediapipeline 형성
-        final UserConnection userConnection =
-                new UserConnection(participant.getUsername(), session, room.getRoomId(), roomsPipeline.get(room.getRoomId()));
 
+        //Userconnection sessionId String으로 바뀜
+        final UserConnection userConnection =
+                new UserConnection(participant.getUsername(), session, room.getRoomId(),
+                        roomsPipeline.get(room.getRoomId()), participant.getSessionId(),messageInterface);
         //connection 만들어진 것 저장해주기
         userConnectionManager.connectUser(userConnection);
 
+        //session 보냄
+        messageInterface.broadCastToClient(session, sessionId, objectMapper.writeValueAsString(new ExistingParticipantMessageDto("existingParticipants",participant,room)));
         //이거 여기서 빼야함
-        ExistingParticipantMessageDto existingParticipantsMessage = new ExistingParticipantMessageDto("existingParticipants",participant,room);
-        messageInterface.broadcastToNewParticipants(userConnection,objectMapper.writeValueAsString(existingParticipantsMessage));
+
+
 
         //이거 여기서 빼야함
         NewParticipantMessageDto newParticipantMessage = new NewParticipantMessageDto("newParticipant", participant);
-        messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(newParticipantMessage));
+        messageInterface.broadCastToClient(session,room.getParticipants(), objectMapper.writeValueAsString(newParticipantMessage));
+
 
         //room안에 join 할 수 있는지 없는지 조건 체크 안에서하기
         room = room.join(participant);
@@ -101,42 +109,49 @@ public class RoomManager {
         return roomsPipeline.get(roomId);
     }
 
-    public Room leave(UserConnection participant, Room room) throws Exception{
-        log.debug("PARTICIPANT {}: Leaving room {}", participant.getUsername(), room.getRoomId());
+    public Room leave(WebSocketSession interfaceSession, UserConnection participant, Room room) throws Exception{
+        log.info("PARTICIPANT {}: Leaving room {}", participant.getUsername(), room.getRoomId());
+        String senderSessionId = participant.getSessionId();
+
         //player leave
         room.leave(participant.getUsername());
         ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", room.getRoomId(), participant.getUsername());
-        messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(exitMessage));
+
+        messageInterface.broadCastToClient(interfaceSession, room.getParticipants(), objectMapper.writeValueAsString(exitMessage ));
+
         messageInterface.publishEventToKafka("leave", objectMapper.writeValueAsString(exitMessage));
-        userConnectionManager.removeBySession(participant.getSession());
+        userConnectionManager.removeBySession(senderSessionId);
         participant.close();
         return room;
     }
 
-    public void close(Room room) throws JsonProcessingException {
-        log.debug("ROOM {}: Closing Room", room.getRoomId());
+    public void close(WebSocketSession interfaceSession, Room room) throws JsonProcessingException {
+        log.info("ROOM {}: Closing Room", room.getRoomId());
 
         CloseMessageDto closeMessageDto = new CloseMessageDto("close",room.getRoomId());
-        messageInterface.broadcastToExistingParticipants(room, objectMapper.writeValueAsString(closeMessageDto));
+
+        messageInterface.broadCastToClient(interfaceSession, room.getParticipants(), objectMapper.writeValueAsString(closeMessageDto));
         messageInterface.publishEventToKafka("close", objectMapper.writeValueAsString(closeMessageDto));
 
-        room.getParticipants().values().stream()
-                .map(user -> userConnectionManager.getUsersBySessionId().get(user.getSessionId()))
-                .peek(userConnection -> userConnectionManager.removeBySession(userConnection.getSession()))
-                .peek(userConnection -> {
-                    try{
-                        userConnection.close();
-                    }catch (Exception e){
 
-                    }
-                })
-                .forEach(userConnection -> {
-                    try{
-                        userConnection.getSession().close();
-                    }catch (Exception e){
-
-                    }
-                });
+        //close 작업 socket interface에서 해주기
+//        room.getParticipants().values().stream()
+//                .map(user -> userConnectionManager.getUsersBySessionId().get(user.getSessionId()))
+//                .peek(userConnection -> userConnectionManager.removeBySession(userConnection.getSession().getId()))
+//                .peek(userConnection -> {
+//                    try{
+//                        userConnection.close();
+//                    }catch (Exception e){
+//
+//                    }
+//                })
+//                .forEach(userConnection -> {
+//                    try{
+//                        userConnection.getSession().close();
+//                    }catch (Exception e){
+//
+//                    }
+//                });
 
         room.close();
         //close Room

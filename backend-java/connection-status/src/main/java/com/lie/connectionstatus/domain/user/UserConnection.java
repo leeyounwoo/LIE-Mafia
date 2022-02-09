@@ -1,10 +1,14 @@
 package com.lie.connectionstatus.domain.user;
 
 import com.google.gson.JsonObject;
+import com.lie.connectionstatus.adapter.MessageProducer;
+import com.lie.connectionstatus.port.MessageInterface;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -18,22 +22,26 @@ import java.util.concurrent.ConcurrentMap;
 public class UserConnection implements Closeable {
     private String username;
     private String roomId;
-    private final WebSocketSession session;
+
+    private final String sessionId;
 
     private final MediaPipeline mediaPipeline;
 
     private final WebRtcEndpoint outgoingMedia;
     private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
 
+    private final MessageInterface messageInterface;
+
     public UserConnection(final String username, final WebSocketSession session, final String roomId,
-                          final MediaPipeline mediaPipeline){
+                          final MediaPipeline mediaPipeline, final String sessionId, final MessageInterface messageInterface){
 
         this.mediaPipeline = mediaPipeline;
         this.username = username;
-        this.session = session;
+        this.sessionId = sessionId;
         this.roomId = roomId;
-        this.outgoingMedia = new WebRtcEndpoint.Builder(mediaPipeline).build();
+        this.messageInterface = messageInterface;
 
+        this.outgoingMedia = new WebRtcEndpoint.Builder(mediaPipeline).build();
         this.outgoingMedia.addIceCandidateFoundListener(new EventListener<IceCandidateFoundEvent>() {
 
             @Override
@@ -42,35 +50,33 @@ public class UserConnection implements Closeable {
                 response.addProperty("id", "iceCandidate");
                 response.addProperty("name", username);
                 response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-                try {
-                    synchronized (session) {
-                        session.sendMessage(new TextMessage(response.toString()));
-                    }
-                } catch (IOException e) {
-                    log.debug(e.getMessage());
+                synchronized (messageInterface) {
+                    messageInterface.broadCastToClient(session, sessionId,response.toString());
                 }
+
             }
         });
     }
-    public void receiveVideoFrom(UserConnection sender, String sdpOffer) throws IOException{
+    public void receiveVideoFrom(WebSocketSession session, UserConnection sender, String sdpOffer) throws IOException{
         log.info("USER {} : connecting with {} ", this.username, sender.getUsername());
 
-        log.trace("USER {} : SdpOffer for {} is {}", this.username, sender.getUsername(), sdpOffer);
+        log.debug("USER {} : SdpOffer for {} is {}", this.username, sender.getUsername(), sdpOffer);
 
-        final String ipSdpAnswer = this.getEndpointForUser(sender).processOffer(sdpOffer);
+        final String ipSdpAnswer = this.getEndpointForUser(session, sender).processOffer(sdpOffer);
         final JsonObject scParams = new JsonObject();
         scParams.addProperty("id", "receiveVideoAnswer");
         //username
         scParams.addProperty("name", sender.getUsername());
         scParams.addProperty("sdpAnswer", ipSdpAnswer);
 
-        log.trace("USER {}: SdpAnswer for {} is {}", this.username, sender.getUsername(), ipSdpAnswer);
-        this.sendMessage(scParams);
+        log.debug("USER {}: SdpAnswer for {} is {}", this.username, sender.getUsername(), ipSdpAnswer);
+
+        this.sendMessage(session, scParams);
         log.debug("gather candidates");
-        this.getEndpointForUser(sender).gatherCandidates();
+        this.getEndpointForUser(session, sender).gatherCandidates();
     }
     
-    private WebRtcEndpoint getEndpointForUser(final UserConnection sender){
+    private WebRtcEndpoint getEndpointForUser(final WebSocketSession session, final UserConnection sender){
         if (sender.getUsername().equals(username)){
             log.debug("PARTICIPANT {}: cofiguring loopback", this.username);
             return outgoingMedia;
@@ -90,16 +96,11 @@ public class UserConnection implements Closeable {
                     response.addProperty("id", "iceCandidate");
                     response.addProperty("name", sender.getUsername());
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-                    try {
-                        synchronized (session) {
-                            session.sendMessage(new TextMessage(response.toString()));
-                        }
-                    } catch (IOException e) {
-                        log.debug(e.getMessage());
+                    synchronized (messageInterface) {
+                        messageInterface.broadCastToClient(session, sessionId, response.toString());
                     }
                 }
             });
-
             incomingMedia.put(sender.getUsername(), incoming);
         }
 
@@ -108,10 +109,10 @@ public class UserConnection implements Closeable {
 
         return incoming;
     }
-    public void sendMessage(JsonObject message) throws IOException {
+    public void sendMessage(WebSocketSession session, JsonObject message) throws IOException {
         log.debug("USER {}: Sending message {}", username, message);
-        synchronized (session) {
-            session.sendMessage(new TextMessage(message.toString()));
+        synchronized (messageInterface) {
+            messageInterface.broadCastToClient(session, sessionId, message.toString());
         }
     }
 

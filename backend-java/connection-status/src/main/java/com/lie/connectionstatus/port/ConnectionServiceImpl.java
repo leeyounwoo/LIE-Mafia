@@ -27,15 +27,15 @@ public class ConnectionServiceImpl implements ConnectionService{
     private final ObjectMapper objectMapper;
 
     @Override
-    public void createRoom(WebSocketSession session, String username) throws Exception{
+    public void createRoom(WebSocketSession session, String senderSession, String username) throws Exception{
         //닉네임 랜덤 배정 시 checkUsername 지워도됨
-        if(userConnectionManager.checkIfUserDoesNotExists(session) && !roomManager.checkIfUsernameExists(username)){
+        if(!roomManager.checkIfUsernameExists(username)){
             Room room = roomManager.createRoom();
 
             roomRepository.save(room);
             roomManager.createMediaPipeline(room);
 
-            User newParticipant = new User(username,session.getId(), Authority.LEADER);
+            User newParticipant = new User(username,senderSession, Authority.LEADER);
 
             //user에게 pipeline 주고, 시스템에 저장해주기
             room = roomManager.joinRoom(room, newParticipant, session);
@@ -43,7 +43,6 @@ public class ConnectionServiceImpl implements ConnectionService{
             room = roomRepository.save(room);
 
             CreateEventDto createEventDto = new CreateEventDto("create", room);
-            log.info(createEventDto.toString());
             messageInterface.publishEventToKafka("create",objectMapper.writeValueAsString(createEventDto));
             return;
         }
@@ -51,36 +50,35 @@ public class ConnectionServiceImpl implements ConnectionService{
     }
 
     @Override
-    public void joinRoom(WebSocketSession session, String username, String roomId) throws Exception{
+    public void joinRoom(WebSocketSession session, String sederSession, String username, String roomId) throws Exception{
         Room room = roomRepository.findById(roomId).orElseThrow();
-        User newParticipant = new User(username, session.getId(), Authority.PLAYER);
+        User newParticipant = new User(username, sederSession, Authority.PLAYER);
 
         room = roomManager.joinRoom(room, newParticipant, session);
 
         room = roomRepository.save(room);
         JoinEventDto joinEventDto = new JoinEventDto("join", room.getRoomId(), newParticipant);
-        log.info(joinEventDto.toString());
         messageInterface.publishEventToKafka("join", objectMapper.writeValueAsString(joinEventDto));
     }
 
     @Override
-    public void leaveRoom(WebSocketSession session) throws Exception {
-        if(userConnectionManager.checkIfUserDoesNotExists(session)){
+    public void leaveRoom(WebSocketSession interfaceSession, String senderSession) throws Exception {
+        if(userConnectionManager.checkIfUserDoesNotExists(senderSession)){
            log.info("USER doesn't exist. There is no one to leave");
            return;
         }
 
-        UserConnection participant = userConnectionManager.getBySession(session);
+        UserConnection participant = userConnectionManager.getBySession(senderSession);
         Room room = roomRepository.findById(participant.getRoomId()).orElseThrow();
 
         if(room.checkIfLeader(participant.getUsername())){
-            room = roomManager.leave(participant,room);
-            roomManager.close(room);
+            room = roomManager.leave(interfaceSession, participant,room);
+            roomManager.close(interfaceSession, room);
             roomRepository.delete(room);
             return;
         }
 
-        room = roomManager.leave(participant, room);
+        room = roomManager.leave(interfaceSession, participant, room);
 
         roomRepository.save(room);
     }

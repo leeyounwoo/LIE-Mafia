@@ -17,14 +17,14 @@ public class UserConnectionManager {
 
     public void connectUser(UserConnection user){
         usersByUsername.put(user.getUsername(), user);
-        usersBySessionId.put(user.getSession().getId(), user);
+        usersBySessionId.put(user.getSessionId(), user);
     }
 
     public UserConnection getByUsername(String username){ return usersByUsername.get(username); }
-    public UserConnection getBySession(WebSocketSession session){ return usersBySessionId.get(session.getId()); }
+    public UserConnection getBySession(String sessionId){ return usersBySessionId.get(sessionId); }
 
-    public Boolean checkIfUserDoesNotExists(WebSocketSession session){
-        if(ObjectUtils.isEmpty(getBySession(session))){
+    public Boolean checkIfUserDoesNotExists(String sessionId){
+        if(ObjectUtils.isEmpty(getBySession(sessionId))){
             return true;
         }
         return false;
@@ -34,15 +34,13 @@ public class UserConnectionManager {
     //WebRTCEndpoint 이미 존재하면?
     //그거에 대한 check 필요
 
-    public UserConnection removeBySession(WebSocketSession session){
-
-        if (checkIfUserDoesNotExists(session)) {
+    public UserConnection removeBySession(String sessionId){
+        if (checkIfUserDoesNotExists(sessionId)) {
             return null;
         }
-
-        final UserConnection user = getBySession(session);
+        final UserConnection user = getBySession(sessionId);
         usersByUsername.remove(user.getUsername());
-        usersBySessionId.remove(session.getId());
+        usersBySessionId.remove(sessionId);
         return user;
     }
 }
