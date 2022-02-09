@@ -23,6 +23,7 @@ public class Room {
     RoomPhase roomPhase;
     Integer day;
     LocalDateTime endTime;
+    String result;
 
     public Room join(User user){
         this.participants.put(user.getUsername(), user);
@@ -45,14 +46,14 @@ public class Room {
         if(participants.size()<4){
             return null;
         }
-        for(User participant : participants.values()){
-            if(participant.getUsername().equals(username)){
-                continue;
-            }
-            if(!participant.getReady()){
-                return null;
-            }
-        }
+//        for(User participant : participants.values()){
+//            if(participant.getUsername().equals(username)){
+//                continue;
+//            }
+//            if(!participant.getReady()){
+//                return null;
+//            }
+//        }
 
         this.roomStatus = RoomStatus.START;
 
