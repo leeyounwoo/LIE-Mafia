@@ -36,29 +36,14 @@ public class GameHandler extends TextWebSocketHandler{
                 gameService.pressStart(session,
                         jsonMessage.get("roomId").asText(),
                         jsonMessage.get("username").asText());
-                // 직업 배정 테스트, 메소드 호출
-                gameService.roleAssign(jsonMessage.get("roomId").asText());
-                //session response
-
-                //createvote 테스트
-                gameService.createVote(jsonMessage.get("roomId").asText(), RoomPhase.NIGHT);
                 break;
-<<<<<<< HEAD
-            case "citizenVote":
-                gameService.selectVote(session
-                        ,jsonMessage.get("roomId").asText()
-                        ,jsonMessage.get("username").asText()
-                        ,jsonMessage.get("select").asText());
-                break;
-
-=======
             case "madeVote":
                 if(jsonMessage.hasNonNull("phase") && "citizenVote".equals(jsonMessage.get("phase").asText())){
                     gameService.selectExecutionVote(session
                             ,jsonMessage.get("roomId").asText()
                             ,jsonMessage.get("username").asText()
                             ,jsonMessage.get("select").asText()
-                            ,RoomPhase.EXECUTIONVOTE
+                            , RoomPhase.EXECUTIONVOTE
                             ,jsonMessage.get("agreeToDead").asBoolean()
                     );
                 }else {
@@ -68,14 +53,11 @@ public class GameHandler extends TextWebSocketHandler{
                             , jsonMessage.get("select").asText()
                     );
                 }
+            //dead test용
+//            case "dead" :
+//                gameService.dead(jsonMessage.get("roomId").asText(),jsonMessage.get("username").asText());
+//                break;
 
-
-                gameService.resultNightVote(jsonMessage.get("roomId").asText());
-                break;
-
-            case "delete":
-                gameService.deleteVote(jsonMessage.get("roomId").asText());
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
         }
         return;
     }

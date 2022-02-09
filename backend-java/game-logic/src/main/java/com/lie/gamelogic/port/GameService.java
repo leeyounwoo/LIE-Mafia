@@ -20,15 +20,6 @@ public interface GameService {
     void pressReady(WebSocketSession session, String roomId, String username);
     void pressStart(WebSocketSession session, String roomId, String username) throws IOException;
     void roleAssign(String roomId);
-<<<<<<< HEAD
-    void createVote(String roomId);
-    void selectVote(WebSocketSession session,String roomId,String username,String select);
-    void resultMornigVote(String roomId);
-    void deleteVote(String roomId);
-<<<<<<< HEAD
-    void dead(String roomId,String person);
-    void gameEnd(String roomId);
-=======
     void createVote(String roomId, RoomPhase phase);
     void selectVote(WebSocketSession session,String roomId,String username,String select);
     void selectExecutionVote(WebSocketSession session,String roomId,String username,String select,RoomPhase roomPhase,boolean agree);
@@ -37,8 +28,7 @@ public interface GameService {
     void resultNightVote(String roomId);
     void deleteVote(String roomId);
     void deleteExecutionVote(String roomId);
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
+    void dead(String roomId,String person);
+    void gameEnd(String roomId);
 
-=======
->>>>>>> parent of 05bcdef (Feat: dead 이벤트 구현, Kafka에 구현)
 }

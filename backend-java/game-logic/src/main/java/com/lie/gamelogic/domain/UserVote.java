@@ -16,8 +16,5 @@ public class UserVote {
     private String select;
 
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
 }

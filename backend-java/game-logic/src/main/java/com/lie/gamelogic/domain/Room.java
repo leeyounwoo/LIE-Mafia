@@ -1,5 +1,6 @@
 package com.lie.gamelogic.domain;
 
+import com.lie.gamelogic.dto.GameEndDto;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
@@ -24,6 +25,7 @@ public class Room {
     Integer day;
     LocalDateTime endTime;
     String result;
+    GameEndDto gameResult;
 
     public Room join(User user){
         this.participants.put(user.getUsername(), user);
@@ -62,7 +64,7 @@ public class Room {
             user.setAlive(true);
         });
 
-        this.roomPhase = RoomPhase.MORNING;
+        this.roomPhase = RoomPhase.ROLEASSIGN;
         this.day = 1;
 
         return this;
@@ -95,8 +97,6 @@ public class Room {
     }
 
     public Room initStartGame() {
-
-
         //직업배정
         List<String> players=new ArrayList<>(participants.keySet());
 
@@ -134,6 +134,25 @@ public class Room {
             }
         });
 
+
+        return this;
+    }
+    //방 자체 초기화가 아닌 game초기화
+    public Room Gameclear(){
+
+        this.roomPhase = RoomPhase.MORNING;
+        this.roomStatus = RoomStatus.WAITING;
+        this.day = 0;
+        this.setResult(null);
+        this.getGameResult().setLoser(null);
+        this.getGameResult().setWinner(null);
+        this.setGameResult(null);
+
+        this.participants.forEach((player,user)->{
+            user.setAlive(false);
+            user.setReady(false);
+            user.setJob(null);
+        });
 
         return this;
     }

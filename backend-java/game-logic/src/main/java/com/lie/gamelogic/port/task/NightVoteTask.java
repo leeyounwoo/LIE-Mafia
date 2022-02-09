@@ -1,6 +1,7 @@
 package com.lie.gamelogic.port.task;
 
 import com.lie.gamelogic.domain.Room;
+import com.lie.gamelogic.domain.RoomPhase;
 import com.lie.gamelogic.port.GameService;
 import com.lie.gamelogic.port.GameTurnImpl;
 import com.lie.gamelogic.port.RoomRepository;
@@ -24,12 +25,42 @@ public class NightVoteTask extends TimerTask {
     @Override
     public void run() {
         room = gameTurn.getRoom();
-        room.setDay(room.getDay()+1);
-        room.setRoomPhase(gameTurn.getNextPhase());
+        //현재 페이지 받아옴
+        RoomPhase currentPhase = room.getRoomPhase();
 
-        //log.info(room);
+        log.info("this Phase is {} and next Phase is {}" ,currentPhase,gameTurn.getNextPhase());
+
+        //결과를 초기화
+        room.setGameResult(null);
         roomRepository.save(room);
 
-        log.info(roomRepository.findById(gameTurn.getRoomId()));
+        //투표 결과를 처리하는 것
+        gameService.resultNightVote(room.getRoomId());
+        //저장한 결과값을 불려와주어야 한다.
+        room = roomRepository.findById(room.getRoomId()).orElseThrow();
+
+        //사망 처리
+        gameService.dead(room.getRoomId(),room.getResult());
+
+        //사망 처리값을 불려와주어야 한다.
+        room = roomRepository.findById(room.getRoomId()).orElseThrow();
+
+        //날짜를 추가해준다.
+        room.setDay(room.getDay()+1);
+        room.setRoomPhase(gameTurn.getNextPhase());
+        roomRepository.save(room);
+
+
+        //저녁 결과를 삭제
+        gameService.deleteVote(room.getRoomId());
+
+        //종료 체크
+        gameService.gameEnd(room.getRoomId());
+        room = roomRepository.findById(room.getRoomId()).orElseThrow();
+
+//        if(room.getGameResult().getWinner() != null){
+//            return;
+//        }
+
     }
 }

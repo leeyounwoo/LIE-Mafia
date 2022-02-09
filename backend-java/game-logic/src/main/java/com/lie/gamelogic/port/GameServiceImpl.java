@@ -1,13 +1,7 @@
 package com.lie.gamelogic.port;
 
-<<<<<<< HEAD
-import com.lie.gamelogic.domain.Room;
-import com.lie.gamelogic.domain.User;
-import com.lie.gamelogic.domain.UserVote;
-import com.lie.gamelogic.domain.Vote;
-=======
 import com.lie.gamelogic.domain.*;
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
+import com.lie.gamelogic.dto.GameEndDto;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +12,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.*;
-<<<<<<< HEAD
 import java.util.concurrent.ConcurrentHashMap;
-=======
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
 
 //service 롤백의 개념 transcation 처리
 @Service
@@ -31,14 +22,10 @@ public class GameServiceImpl implements GameService{
 
     private final MessageInterface messageInterface;
     private final RoomRepository roomRepository;
-<<<<<<< HEAD
     private final VoteRepository voteRepository;
+    private final ExecutionVoteRepository executionVoteRepository;
 
     ConcurrentHashMap<String, Timer> gameTimerByRoomId = new ConcurrentHashMap<>();
-=======
-    private final ExecutionVoteRepository executionVoteRepository;
-    private final VoteRepository voteRepository;
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
 
     @Override
     public void createGameRoom(Room room) {
@@ -73,6 +60,15 @@ public class GameServiceImpl implements GameService{
     public void pressStart(WebSocketSession session, String roomId, String username) throws IOException {
         Room room = roomRepository.findById(roomId).orElseThrow();
 
+        //test용으로
+        room.setRoomStatus(RoomStatus.WAITING);
+
+        //시작 상태면 예외 처리
+        if(room.getRoomStatus() == RoomStatus.START) {
+            log.info("Error");
+            session.sendMessage(new TextMessage("Already Started!!!"));
+            return;
+        }
         room = room.pressStart(username);
 
         if(ObjectUtils.isEmpty(room)){
@@ -86,7 +82,12 @@ public class GameServiceImpl implements GameService{
         roomRepository.save(room);
         //message produce
 
-        gameTimerByRoomId.put(roomId,new Timer());
+        if(gameTimerByRoomId.get(roomId) == null)
+            gameTimerByRoomId.put(roomId,new Timer());
+        else {
+            gameTimerByRoomId.remove(roomId,gameTimerByRoomId.get(roomId));
+            gameTimerByRoomId.put(roomId,new Timer());
+        }
         GameTurn gameTurn = new GameTurnImpl(roomRepository,this);
         gameTurn.setnextWork(roomId,gameTimerByRoomId.get(roomId));
 
@@ -120,15 +121,6 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
-<<<<<<< HEAD
-    public void createVote(String roomId) {
-        Vote vote=new Vote();
-
-        Room room = roomRepository.findById(roomId).orElseThrow();
-        voteRepository.save(vote.createVote(roomId,room.getRoomPhase()));
-        vote=vote.createVote(roomId,room.getRoomPhase());
-        log.info(vote.toString());
-=======
     public void createVote(String roomId, RoomPhase phase) {
 
         switch (phase){
@@ -145,7 +137,6 @@ public class GameServiceImpl implements GameService{
                 break;
         }
 
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
     }
 
     @Override
@@ -167,15 +158,9 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
-<<<<<<< HEAD
-    public void resultMornigVote(String roomId) {
-=======
     public void selectExecutionVote(WebSocketSession session, String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
         Room room =roomRepository.findById(roomId).orElseThrow();
-    //test
-        room.setResult("dlrjsxptmxmfmfdnl111111111111111gksdkd");
-        roomRepository.save(room);
-        //
+
         User user=room.getUserByUsername(username);
         if(!user.getAlive()){ //살아있는 user만 select
             log.info("User {} died in Room {}", username, roomId);
@@ -200,7 +185,7 @@ public class GameServiceImpl implements GameService{
             vote.putUserVote(username,userExecutionVote);
         }
 
-       vote=vote.pressVoted(username,agree);
+        vote=vote.pressVoted(username,agree);
         executionVoteRepository.save(vote);
 
         log.info(vote.toString());
@@ -208,8 +193,6 @@ public class GameServiceImpl implements GameService{
 
     @Override
     public void resultMornigVote(String roomId) {
-        Room room=roomRepository.findById(roomId).orElseThrow();
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         List<String> list= new ArrayList(vote.selectList()); //투표 내용 가져오기
         Map<String,Integer> voteResult=new HashMap<>();
@@ -225,56 +208,26 @@ public class GameServiceImpl implements GameService{
             }
 
             if(voteResult.get(select)+1>=max){
-<<<<<<< HEAD
                 max=voteResult.get(select);
-=======
-                max=voteResult.get(select)+1;
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
                 username=select;
             }
         };
 
-<<<<<<< HEAD
         Room room=roomRepository.findById(roomId).orElseThrow();
         room.setResult(username);
 
-=======
-        room.setResult(username);
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
         roomRepository.save(room);
 
         log.info(room.toString());
     }
 
     @Override
-<<<<<<< HEAD
     public void deleteVote(String roomId) {
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
         voteRepository.delete(vote);
     }
-<<<<<<< HEAD
 
     @Override
-    public void dead(String roomId, String username) {
-        //room 정보를 가져옴
-        Room room = roomRepository.findById(roomId).orElseThrow();
-        //user에서 찾아봄
-        //없을시
-        if(!room.checkIfUserExists(username)){
-            log.info("User {} doesn't exist in Room {}",username, roomId);
-            return;
-        }
-        User user = room.getParticipants().get(username);
-        //이미 죽어 있을 시
-        if(!user.getAlive()){
-            log.info("User {} is already dead ", username);
-            return;
-        }
-        user.setAlive(false);
-
-        messageInterface.publishDeadEvent("dead",user,roomId);
-
-=======
     public void resultExecutionVote(String roomId) {
         ExecutionVote vote=executionVoteRepository.findById("executionvote"+roomId).orElseThrow();
         Room room=roomRepository.findById(roomId).orElseThrow();
@@ -289,10 +242,6 @@ public class GameServiceImpl implements GameService{
         Room room=roomRepository.findById(roomId).orElseThrow();
         Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
 
-        //test
-        room.setResult("himynameishjhahahohi");
-        roomRepository.save(room);
-        //test
         HashMap<String,UserVote> voteMap=vote.getVotes();
         Set<String> mafiaSelect=new HashSet<>();
         String doctorSelect="";
@@ -319,22 +268,8 @@ public class GameServiceImpl implements GameService{
 
         room.setResult(null); //그 외는 죽은 사람이 없다.
         log.info(room.getResult());
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
         roomRepository.save(room);
 
-    }
-
-    @Override
-<<<<<<< HEAD
-    public void gameEnd(String roomId) {
-
-    }
-
-
-=======
-    public void deleteVote(String roomId) {
-        Vote vote=voteRepository.findById("vote"+roomId).orElseThrow();
-        voteRepository.delete(vote);
     }
 
     @Override
@@ -342,7 +277,99 @@ public class GameServiceImpl implements GameService{
         ExecutionVote vote=executionVoteRepository.findById("executionvote"+roomId).orElseThrow();
         executionVoteRepository.delete(vote);
     }
->>>>>>> c5ea1426c1f17c6add44b349dc4cc5b8421e8b06
-=======
->>>>>>> parent of 05bcdef (Feat: dead 이벤트 구현, Kafka에 구현)
+
+    @Override
+    public void dead(String roomId, String username) {
+        //room 정보를 가져옴
+        Room room = roomRepository.findById(roomId).orElseThrow();
+
+        //null 일시
+        if(username == null){
+            log.info("no One Dead");
+            return;
+        }
+        //방안에 없을시
+        if(!room.checkIfUserExists(username)){
+            log.info("User {} doesn't exist in Room {}",username, roomId);
+            return;
+        }
+        User user = room.getParticipants().get(username);
+        //이미 죽어 있을 시
+        if(!user.getAlive()){
+            log.info("User {} is already dead ", username);
+            return;
+        }
+        user.setAlive(false);
+
+        log.info("User {} is dead ", username);
+        messageInterface.publishDeadEvent("dead",user,roomId);
+        roomRepository.save(room);
+
+        //gameEnd(roomId);
+    }
+
+    @Override
+    public void gameEnd(String roomId) {
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        Integer citizenCount = 0;
+        Integer mapiaCount =0;
+        //시민 리스트
+        List<String> citizenList = new ArrayList<>();
+        //마피아 리스트
+        List<String> mapiaList = new ArrayList<>();
+        //이긴 직업
+        Job Winner = null;
+        //진 직업
+        Job Loser = null;
+        GameEndDto gameEndDto = null;
+        Set set = room.getParticipants().keySet();
+        Iterator iterator = set.iterator();
+
+        while(iterator.hasNext()){
+            User user = room.getParticipants().get(iterator.next());
+            //살아 있는 경우에 사용 해줌
+            Job job = user.getJob();
+            if (job.equals(Job.CITIZEN)) {
+                citizenList.add(user.getUsername());
+                if(user.getAlive())
+                    citizenCount++;
+            }
+            else if (job.equals(Job.DOCTOR)){
+                citizenList.add(user.getUsername());
+                if(user.getAlive())
+                    citizenCount++;
+            }
+            else {
+                mapiaList.add(user.getUsername());
+                if(user.getAlive())
+                    mapiaCount++;
+            }
+        }
+        //마피아가 한명도 없을 때
+        if(mapiaCount == 0) {
+            //log.info("Citizen wins winner is : {} ", citizenList);
+            Winner = Job.CITIZEN;
+            Loser = Job.MAFIA;
+            gameEndDto = new GameEndDto(Winner,Loser,citizenList,mapiaList);
+        }
+        else if(mapiaCount >= citizenCount){ // 마피아가 시민 수보다 많을 때
+            //log.info("Mapia wins winner is : {} " , mapiaList);
+            Winner = Job.MAFIA;
+            Loser = Job.CITIZEN;
+            gameEndDto = new GameEndDto(Winner,Loser,mapiaList,citizenList);
+        }
+
+        else{
+            log.info("Game is not end");
+            return;
+        }
+
+        //topic을 end로 만듦
+        messageInterface.publishGameEndEvent("end",gameEndDto);
+        room.setGameResult(gameEndDto);
+        //그리고 room 정보를 변경해주고 이를 저장해줌
+        roomRepository.save(room);
+    }
+
+
 }

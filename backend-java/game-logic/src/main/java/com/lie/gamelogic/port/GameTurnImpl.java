@@ -2,6 +2,7 @@ package com.lie.gamelogic.port;
 
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.RoomPhase;
+import com.lie.gamelogic.dto.GameEndDto;
 import com.lie.gamelogic.port.task.*;
 import com.lie.gamelogic.util.TimeUtils;
 import lombok.Data;
@@ -42,11 +43,11 @@ public class GameTurnImpl implements GameTurn{
     public void setnextWork(String roomId, Timer timer) {
 
         save_time.put(RoomPhase.ROLEASSIGN,15);
-        save_time.put(RoomPhase.NIGHTVOTE,20);
+        save_time.put(RoomPhase.NIGHTVOTE,30);
         save_time.put(RoomPhase.MORNING,20);
-        save_time.put(RoomPhase.MORNINGVOTE,50);
-        save_time.put(RoomPhase.FINALSPEECH,20);
-        save_time.put(RoomPhase.EXECUTIONVOTE,20);
+        save_time.put(RoomPhase.MORNINGVOTE,30);
+        save_time.put(RoomPhase.FINALSPEECH,10);
+        save_time.put(RoomPhase.EXECUTIONVOTE,30);
 
         this.roomId = roomId;
         room = roomRepository.findById(roomId).orElseThrow();
@@ -63,15 +64,15 @@ public class GameTurnImpl implements GameTurn{
         int time = 10;
         //log.info(room);
 
-        setTimer(save_time.get(room.getRoomPhase()));
+        this.setTimer(save_time.get(room.getRoomPhase()));
+        //RoomPhase를 변환 시켜줌
         if(roomPhases.indexOf(room.getRoomPhase()) == roomPhases.size()-1){
             setNextPhase(roomPhases.get(1));
         }
         else{
             setNextPhase(roomPhases.get(roomPhases.indexOf(room.getRoomPhase())+1));
         }
-        //SetEndtime을 지정해주고
-        room.setEndTime(endTime);
+
         roomRepository.save(room);
 
 
@@ -86,16 +87,36 @@ public class GameTurnImpl implements GameTurn{
         }
 
 
-        //새로운 phase가 시작되면 처리 해야 할것을 넣음
+        //새로운 phase가 시작되면 페이지 변화
         TimerTask timerTask2 = new TimerTask(){
             @Override
             public void run() {
+                room.setEndTime(endTime);
                 new GameTurnImpl(roomRepository,gameService).setnextWork(roomId,timer);
             }
         };
 
-        //endTime이 끝나면새롭게 시작함
-        timer.schedule(timerTask2,TimeUtils.convertToDate(startTime));
+
+        if(roomRepository.findById(roomId).orElseThrow().getGameResult()==null)
+            timer.schedule(timerTask2,TimeUtils.convertToDate(startTime));
+        else {
+            GameEndDto gameResult = roomRepository.findById(roomId).orElseThrow().getGameResult();
+            log.info("The game is end");
+            log.info("dead one is {} ", roomRepository.findById(roomId).orElseThrow().getResult());
+            log.info("{} wins winner is : {} " ,gameResult.getWinner() , gameResult.getWinnerList());
+            log.info("{} loses is : {} " , gameResult.getLoser() , gameResult.getLoserList());
+            //clear하는 부분이 필요로하고,
+
+            //log.info(room.getGameResult());
+
+            Room room = roomRepository.findById(roomId).orElseThrow();
+            room = room.Gameclear();
+            roomRepository.save(room);
+
+            //timert를 종료 시킴
+            //timer cancel()시키면 문제 발생
+            timer.cancel();
+        }
     }
 
 }
