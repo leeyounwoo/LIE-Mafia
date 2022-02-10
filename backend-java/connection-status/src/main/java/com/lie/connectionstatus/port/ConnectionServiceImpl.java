@@ -27,7 +27,7 @@ public class ConnectionServiceImpl implements ConnectionService{
     private final ObjectMapper objectMapper;
 
     @Override
-    public void createRoom(WebSocketSession session, String senderSession, String username) throws Exception{
+    public void createRoom( String senderSession, String username) throws Exception{
         //닉네임 랜덤 배정 시 checkUsername 지워도됨
         if(!roomManager.checkIfUsernameExists(username)){
             Room room = roomManager.createRoom();
@@ -38,7 +38,7 @@ public class ConnectionServiceImpl implements ConnectionService{
             User newParticipant = new User(username,senderSession, Authority.LEADER);
 
             //user에게 pipeline 주고, 시스템에 저장해주기
-            room = roomManager.joinRoom(room, newParticipant, session);
+            room = roomManager.joinRoom(room, newParticipant);
 
             room = roomRepository.save(room);
 
@@ -50,11 +50,11 @@ public class ConnectionServiceImpl implements ConnectionService{
     }
 
     @Override
-    public void joinRoom(WebSocketSession session, String sederSession, String username, String roomId) throws Exception{
+    public void joinRoom( String sederSession, String username, String roomId) throws Exception{
         Room room = roomRepository.findById(roomId).orElseThrow();
         User newParticipant = new User(username, sederSession, Authority.PLAYER);
 
-        room = roomManager.joinRoom(room, newParticipant, session);
+        room = roomManager.joinRoom(room, newParticipant);
 
         room = roomRepository.save(room);
         JoinEventDto joinEventDto = new JoinEventDto("join", room.getRoomId(), newParticipant);
@@ -62,7 +62,7 @@ public class ConnectionServiceImpl implements ConnectionService{
     }
 
     @Override
-    public void leaveRoom(WebSocketSession interfaceSession, String senderSession) throws Exception {
+    public void leaveRoom(String senderSession) throws Exception {
         if(userConnectionManager.checkIfUserDoesNotExists(senderSession)){
            log.info("USER doesn't exist. There is no one to leave");
            return;
@@ -72,13 +72,13 @@ public class ConnectionServiceImpl implements ConnectionService{
         Room room = roomRepository.findById(participant.getRoomId()).orElseThrow();
 
         if(room.checkIfLeader(participant.getUsername())){
-            room = roomManager.leave(interfaceSession, participant,room);
-            roomManager.close(interfaceSession, room);
+            room = roomManager.leave(participant,room);
+            roomManager.close( room);
             roomRepository.delete(room);
             return;
         }
 
-        room = roomManager.leave(interfaceSession, participant, room);
+        room = roomManager.leave(participant, room);
 
         roomRepository.save(room);
     }

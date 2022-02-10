@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.websocketinterface.config.ServiceClient;
 import com.lie.websocketinterface.domain.SessionManager;
 import com.lie.websocketinterface.dto.ClientClosedDataDto;
+import com.lie.websocketinterface.dto.InboundMessageDto;
 import com.lie.websocketinterface.dto.OutboundToServiceMessageDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.PingMessage;
@@ -29,11 +31,17 @@ public class MessageProducer {
     @Qualifier("gameServiceSession")
     private final WebSocketSession gameServiceSession;
     private final SessionManager sessionManager;
+    private final KafkaTemplate<String, String> kafkaProducer;
+    public void publishOnKafka(String topic, String message){
+        kafkaProducer.send(topic, message);
+    }
 
     public void sendToService(String service, String data, String sessionId) throws ExecutionException, InterruptedException, IOException {
         OutboundToServiceMessageDto outboundToServiceMessageDto = new OutboundToServiceMessageDto(sessionId,data);
         switch (service){
             case "connection":
+
+
                 connectionServiceSession.sendMessage(new TextMessage(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outboundToServiceMessageDto)));
                 break;
             case "game":

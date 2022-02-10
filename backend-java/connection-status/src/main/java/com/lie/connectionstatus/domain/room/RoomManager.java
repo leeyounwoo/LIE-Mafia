@@ -15,8 +15,6 @@ import org.kurento.client.KurentoClient;
 import org.kurento.client.MediaPipeline;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +55,7 @@ public class RoomManager {
         }
         return false;
     }
-    public Room joinRoom(Room room, User participant, WebSocketSession session) throws IOException {
+    public Room joinRoom(Room room, User participant) throws IOException {
 
         log.info("PARTICIPANT {} : trying to join room {}", participant, room);
         String sessionId = participant.getSessionId();
@@ -70,20 +68,20 @@ public class RoomManager {
 
         //Userconnection sessionId String으로 바뀜
         final UserConnection userConnection =
-                new UserConnection(participant.getUsername(), session, room.getRoomId(),
+                new UserConnection(participant.getUsername(), room.getRoomId(),
                         roomsPipeline.get(room.getRoomId()), participant.getSessionId(),messageInterface);
         //connection 만들어진 것 저장해주기
         userConnectionManager.connectUser(userConnection);
 
         //session 보냄
-        messageInterface.broadCastToClient(session, sessionId, objectMapper.writeValueAsString(new ExistingParticipantMessageDto("existingParticipants",participant,room)));
+        messageInterface.broadCastToClient("client.response", sessionId, objectMapper.writeValueAsString(new ExistingParticipantMessageDto("existingParticipants",participant,room)));
         //이거 여기서 빼야함
 
 
 
         //이거 여기서 빼야함
         NewParticipantMessageDto newParticipantMessage = new NewParticipantMessageDto("newParticipant", participant);
-        messageInterface.broadCastToClient(session,room.getParticipants(), objectMapper.writeValueAsString(newParticipantMessage));
+        messageInterface.broadCastToClient("client.response",room.getParticipants(), objectMapper.writeValueAsString(newParticipantMessage));
 
 
         //room안에 join 할 수 있는지 없는지 조건 체크 안에서하기
@@ -109,7 +107,7 @@ public class RoomManager {
         return roomsPipeline.get(roomId);
     }
 
-    public Room leave(WebSocketSession interfaceSession, UserConnection participant, Room room) throws Exception{
+    public Room leave( UserConnection participant, Room room) throws Exception{
         log.info("PARTICIPANT {}: Leaving room {}", participant.getUsername(), room.getRoomId());
         String senderSessionId = participant.getSessionId();
 
@@ -117,7 +115,7 @@ public class RoomManager {
         room.leave(participant.getUsername());
         ExitParticipantMessageDto exitMessage = new ExitParticipantMessageDto("exitParticipant", room.getRoomId(), participant.getUsername());
 
-        messageInterface.broadCastToClient(interfaceSession, room.getParticipants(), objectMapper.writeValueAsString(exitMessage ));
+        messageInterface.broadCastToClient("client.response", room.getParticipants(), objectMapper.writeValueAsString(exitMessage ));
 
         messageInterface.publishEventToKafka("leave", objectMapper.writeValueAsString(exitMessage));
         userConnectionManager.removeBySession(senderSessionId);
@@ -125,12 +123,12 @@ public class RoomManager {
         return room;
     }
 
-    public void close(WebSocketSession interfaceSession, Room room) throws JsonProcessingException {
+    public void close( Room room) throws JsonProcessingException {
         log.info("ROOM {}: Closing Room", room.getRoomId());
 
         CloseMessageDto closeMessageDto = new CloseMessageDto("close",room.getRoomId());
 
-        messageInterface.broadCastToClient(interfaceSession, room.getParticipants(), objectMapper.writeValueAsString(closeMessageDto));
+        messageInterface.broadCastToClient("client.response", room.getParticipants(), objectMapper.writeValueAsString(closeMessageDto));
         messageInterface.publishEventToKafka("close", objectMapper.writeValueAsString(closeMessageDto));
 
 

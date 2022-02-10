@@ -53,7 +53,7 @@ public class ClientMessageDto {
                 this.name = data.get("name").asText();
             }
             if(!ObjectUtils.isEmpty(data.get("candidate"))){
-                this.candidate = this.candidate.buildDto(data.get("candidate"),objectMapper);
+                this.candidate = new CandidateDto(data.get("candidate"),objectMapper);;
             }
 
         } catch (JsonMappingException e) {
@@ -61,6 +61,9 @@ public class ClientMessageDto {
             return;
         } catch (JsonProcessingException e) {
             log.info("Json Processing Exception when processing \"data\"");
+            return;
+        } catch (Exception e){
+            log.info("error");
             return;
         }
     }

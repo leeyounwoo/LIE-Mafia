@@ -33,29 +33,25 @@ public class MessageInterface {
         kafkaTemplate.send(topic, message);
     }
 
-    public void broadCastToClient(WebSocketSession interfaceSession, Map<String, User> sessionIds, String message) {
+    public void broadCastToClient(String topic, Map<String, User> sessionIds, String message) {
         List<String> clients = sessionIds.values()
                 .stream().map(user -> user.getSessionId())
                 .collect(Collectors.toList());
         OutboundClientMessageDto outboundClientMessageDto = new OutboundClientMessageDto(clients, message);
         try{
-            messageProducer.sendToWebsocketSession(interfaceSession, new TextMessage(objectMapper.writeValueAsString(outboundClientMessageDto)));
+            messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(outboundClientMessageDto));
         } catch (JsonProcessingException jsonProcessingException){
             log.info("Error Processing Json");
-        } catch (IOException ioException){
-            log.info("Error Sending Through Websocket");
         }
     }
-    public void broadCastToClient(WebSocketSession interfaceSession, String sessionId, String message) {
+    public void broadCastToClient(String topic, String sessionId, String message) {
         ArrayList<String> client = new ArrayList<>();
         client.add(sessionId);
         OutboundClientMessageDto outboundClientMessageDto = new OutboundClientMessageDto(client,message);
         try{
-            messageProducer.sendToWebsocketSession(interfaceSession, new TextMessage(objectMapper.writeValueAsString(outboundClientMessageDto)));
+            messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(outboundClientMessageDto));
         } catch (JsonProcessingException jsonProcessingException){
             log.info("Error Processing Json");
-        } catch (IOException ioException){
-            log.info("Error Sending Through Websocket");
         }
     }
 

@@ -5,7 +5,7 @@ spring:
   application:
     name: websocket-interface-server
   kafka:
-    bootstrap-servers: ${spring.environment.production.host}:9092
+    bootstrap-servers: ${spring.environment.stage.host}:9092
     consumer:
       group-id: connection-group
       auto-offset-reset: latest
@@ -22,14 +22,15 @@ spring:
       port: 6379
       password: ssafy
     stage:
-      host: 3.37.1.251
+      host: 52.79.223.21
       port: 6379
       password: ssafy
+
     production:
       host: i6c209.p.ssafy.io
       port: 6379
       password: $$jae923009$
-    redis:
+    sub:
       host: 13.125.149.219
       port: 6379
       password: ssafy

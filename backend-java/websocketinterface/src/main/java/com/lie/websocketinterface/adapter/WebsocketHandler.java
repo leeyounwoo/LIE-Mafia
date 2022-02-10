@@ -3,7 +3,9 @@ package com.lie.websocketinterface.adapter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.websocketinterface.dto.ClientClosedDataDto;
+import com.lie.websocketinterface.dto.EventActionDto;
 import com.lie.websocketinterface.dto.InboundMessageDto;
+import com.lie.websocketinterface.port.MessageInterface;
 import com.lie.websocketinterface.port.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,53 +19,31 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @RequiredArgsConstructor
 public class WebsocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper;
-    private final MessageProducer messageProducer;
+    private final MessageInterface messageInterface;
     private final SessionService sessionService;
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         final JsonNode jsonMessage = objectMapper.readTree(message.getPayload());
-        final InboundMessageDto inboundMessage = InboundMessageDto.builder()
-                                                    .eventType(jsonMessage.get("eventType").asText())
-                                                    .data(jsonMessage.get("data").toString())
-                                                    .build();
+        final String data = jsonMessage.get("data").toString();
+        final EventActionDto eventActionDto = EventActionDto.builder()
+                .eventType(jsonMessage.get("eventType").asText())
+                .id(jsonMessage.get("data").get("id").asText())
+                .build();
 
-        log.info(inboundMessage.toString());
-
-
-        switch(inboundMessage.getEventType()){
-            case "connection":
-                log.info("this is for connection server");
-                log.info(inboundMessage.getData());
-                log.info(session.toString()+"handler");
-                if(jsonMessage.get("data").get("id").asText().equals("create") || jsonMessage.get("data").get("id").asText().equals("join")){
-                    sessionService.registerSession(session,jsonMessage.get("data").get("username").asText());
-                }
-                messageProducer.sendToService(inboundMessage.getEventType(), inboundMessage.getData(), session.getId());
-                break;
-            case "game":
-                log.info("this is for game logic server");
-                log.info(inboundMessage.getData());
-                messageProducer.sendToService(inboundMessage.getEventType(), inboundMessage.getData(), session.getId());
-
-                break;
-            case "chat":
-                log.info("this is for chat server");
-                log.info(inboundMessage.getData());
-                break;
+        if(eventActionDto.getId().equals("create") || eventActionDto.getId().equals("join")){
+            sessionService.registerSession(session,jsonMessage.get("data").get("username").asText());
         }
 
-    }
+        log.info(eventActionDto.toString());
+        log.info(data);
 
-    @Override
-    protected void handlePongMessage(WebSocketSession session, PongMessage message) throws Exception {
-        super.handlePongMessage(session, message);
+        messageInterface.sendToService(eventActionDto.createTopic(), data, session.getId());
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        ClientClosedDataDto clientClosedDataDto = new ClientClosedDataDto("leave", session.getId());
-
-        messageProducer.sendToService("connection",objectMapper.writeValueAsString(clientClosedDataDto),session.getId());
+        ClientClosedDataDto clientClosedDataDto = new ClientClosedDataDto("connection.leave", session.getId());
+        //messageProducer.sendToService("connection",objectMapper.writeValueAsString(clientClosedDataDto),session.getId());
         super.afterConnectionClosed(session, status);
     }
 }

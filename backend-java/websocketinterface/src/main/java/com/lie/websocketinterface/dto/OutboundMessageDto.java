@@ -1,9 +1,7 @@
 package com.lie.websocketinterface.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.*;
 
 import java.util.List;
 
@@ -14,7 +12,5 @@ import java.util.List;
 public class OutboundMessageDto {
     private List<String> receivers;
     private String message;
-
-
 
 }

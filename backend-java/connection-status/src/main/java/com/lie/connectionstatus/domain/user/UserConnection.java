@@ -8,9 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -26,13 +23,11 @@ public class UserConnection implements Closeable {
     private final String sessionId;
 
     private final MediaPipeline mediaPipeline;
-
     private final WebRtcEndpoint outgoingMedia;
     private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
-
     private final MessageInterface messageInterface;
 
-    public UserConnection(final String username, final WebSocketSession session, final String roomId,
+    public UserConnection(final String username, final String roomId,
                           final MediaPipeline mediaPipeline, final String sessionId, final MessageInterface messageInterface){
 
         this.mediaPipeline = mediaPipeline;
@@ -51,18 +46,18 @@ public class UserConnection implements Closeable {
                 response.addProperty("name", username);
                 response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                 synchronized (messageInterface) {
-                    messageInterface.broadCastToClient(session, sessionId,response.toString());
+                    messageInterface.broadCastToClient("client.response", sessionId,response.toString());
                 }
 
             }
         });
     }
-    public void receiveVideoFrom(WebSocketSession session, UserConnection sender, String sdpOffer) throws IOException{
+    public void receiveVideoFrom(UserConnection sender, String sdpOffer) throws IOException{
         log.info("USER {} : connecting with {} ", this.username, sender.getUsername());
 
         log.debug("USER {} : SdpOffer for {} is {}", this.username, sender.getUsername(), sdpOffer);
 
-        final String ipSdpAnswer = this.getEndpointForUser(session, sender).processOffer(sdpOffer);
+        final String ipSdpAnswer = this.getEndpointForUser(sender).processOffer(sdpOffer);
         final JsonObject scParams = new JsonObject();
         scParams.addProperty("id", "receiveVideoAnswer");
         //username
@@ -71,12 +66,12 @@ public class UserConnection implements Closeable {
 
         log.debug("USER {}: SdpAnswer for {} is {}", this.username, sender.getUsername(), ipSdpAnswer);
 
-        this.sendMessage(session, scParams);
+        this.sendMessage(scParams);
         log.debug("gather candidates");
-        this.getEndpointForUser(session, sender).gatherCandidates();
+        this.getEndpointForUser(sender).gatherCandidates();
     }
     
-    private WebRtcEndpoint getEndpointForUser(final WebSocketSession session, final UserConnection sender){
+    private WebRtcEndpoint getEndpointForUser(final UserConnection sender){
         if (sender.getUsername().equals(username)){
             log.debug("PARTICIPANT {}: cofiguring loopback", this.username);
             return outgoingMedia;
@@ -97,7 +92,7 @@ public class UserConnection implements Closeable {
                     response.addProperty("name", sender.getUsername());
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                     synchronized (messageInterface) {
-                        messageInterface.broadCastToClient(session, sessionId, response.toString());
+                        messageInterface.broadCastToClient("client.response", sessionId, response.toString());
                     }
                 }
             });
@@ -109,10 +104,10 @@ public class UserConnection implements Closeable {
 
         return incoming;
     }
-    public void sendMessage(WebSocketSession session, JsonObject message) throws IOException {
+    public void sendMessage(JsonObject message) throws IOException {
         log.debug("USER {}: Sending message {}", username, message);
         synchronized (messageInterface) {
-            messageInterface.broadCastToClient(session, sessionId, message.toString());
+            messageInterface.broadCastToClient("client.response", sessionId, message.toString());
         }
     }
 
