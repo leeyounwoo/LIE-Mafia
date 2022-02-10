@@ -1,4 +1,4 @@
-package com.lie.gamelogic.dto;
+package com.lie.gamelogic.dto.Start;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

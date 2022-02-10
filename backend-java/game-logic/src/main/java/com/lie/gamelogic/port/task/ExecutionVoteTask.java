@@ -52,7 +52,6 @@ public class ExecutionVoteTask extends TimerTask {
         roomRepository.save(room);
 
         //이제 밤투표 시작 해주어야 함
-        gameService.createVote(room.getRoomId(),room.getRoomPhase());
 
 
     }

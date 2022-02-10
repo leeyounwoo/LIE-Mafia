@@ -4,17 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.gamelogic.domain.Room;
-import com.lie.gamelogic.domain.User;
-import com.lie.gamelogic.dto.CreateGameRoomDto;
+import com.lie.gamelogic.dto.ClientMessageDto;
 import com.lie.gamelogic.dto.JoinGameRoomDto;
 import com.lie.gamelogic.port.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 
@@ -77,17 +74,45 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics = {"ready"}, groupId = "game-group")
+    @KafkaListener(topics = {"game.ready"}, groupId = "game-group")
     public void readyConsume(String message){
-        log.info(message);
+        final JsonNode jsonMessage;
+        try {
+            jsonMessage = objectMapper.readTree(message);
+            ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
+
+            gameService.pressReady(clientMessageDto.getSessionId(),
+                        clientMessageDto.getRoomId(),
+                       clientMessageDto.getUsername());
+
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        //session 관리는 이후 api gateway에서 작업할 예정이지만, 테스트를 위해
     }
 
-    @KafkaListener(topics = {"start"}, groupId = "game-group")
+    @KafkaListener(topics = {"game.start"}, groupId = "game-group")
     public void startConsume(String message){
-        log.info(message);
+        final JsonNode jsonMessage;
+        try {
+            jsonMessage = objectMapper.readTree(message);
+            ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
+
+            log.info(clientMessageDto.toString());
+            gameService.pressStart(clientMessageDto.getSessionId(),
+                    clientMessageDto.getRoomId(),
+                    clientMessageDto.getUsername());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    @KafkaListener(topics = {"dead"}, groupId = "game-group")
+    @KafkaListener(topics = {"game.dead"}, groupId = "game-group")
     public void deadConsume(String message) {log.info(message); }
+
+    @KafkaListener(topics = {"game.end"}, groupId = "game-group")
+    public void EndConsume(String message) {log.info(message); }
 
 }

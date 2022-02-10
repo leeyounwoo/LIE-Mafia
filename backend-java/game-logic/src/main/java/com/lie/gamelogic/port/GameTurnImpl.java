@@ -22,7 +22,7 @@ public class GameTurnImpl implements GameTurn{
     LocalDateTime endTime; //Phase가 종료 되는 시간
     LocalDateTime startTime; //새로운 페이즈가 시작됨
     private final RoomRepository roomRepository;
-    private final GameService gameService;
+    private final GameServiceImpl gameService;
     Room room;
     Integer day;
     String roomId;
@@ -74,24 +74,34 @@ public class GameTurnImpl implements GameTurn{
         }
 
         roomRepository.save(room);
-
-
+        //gameService.StartMeesage(room);
         //endTime 사용함
         switch(room.getRoomPhase()){
-            case ROLEASSIGN: timer.schedule(new RoleAssignTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
-            case NIGHTVOTE:  timer.schedule(new NightVoteTask(roomRepository, this,gameService),TimeUtils.convertToDate(endTime)); break;
-            case MORNING: timer.schedule(new MorningTask(roomRepository,gameService, this),TimeUtils.convertToDate(endTime)); break;
-            case MORNINGVOTE: timer.schedule(new MorningVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
+            case ROLEASSIGN:
+                gameService.roleAssign(roomId);
+                timer.schedule(new RoleAssignTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
+            case NIGHTVOTE:
+                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                timer.schedule(new NightVoteTask(roomRepository, this,gameService),TimeUtils.convertToDate(endTime)); break;
+            case MORNING:
+                timer.schedule(new MorningTask(roomRepository,gameService, this),TimeUtils.convertToDate(endTime)); break;
+            case MORNINGVOTE:
+                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                timer.schedule(new MorningVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
             case FINALSPEECH: timer.schedule(new FinalSpeechTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
-            case EXECUTIONVOTE: timer.schedule(new ExecutionVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
+            case EXECUTIONVOTE:
+                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                timer.schedule(new ExecutionVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
         }
-
-
         //새로운 phase가 시작되면 페이지 변화
+
         TimerTask timerTask2 = new TimerTask(){
             @Override
             public void run() {
-                room.setEndTime(endTime);
+                room = roomRepository.findById(roomId).orElseThrow();
+                room.setEndTime(TimeUtils.getFinTime(save_time.get(room.getRoomPhase())));
+                roomRepository.save(room);
+                gameService.StartMeesage(roomRepository.findById(roomId).orElseThrow());
                 new GameTurnImpl(roomRepository,gameService).setnextWork(roomId,timer);
             }
         };

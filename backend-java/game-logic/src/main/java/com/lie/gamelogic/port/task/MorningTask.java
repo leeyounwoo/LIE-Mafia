@@ -41,7 +41,7 @@ public class MorningTask extends TimerTask {
         roomRepository.save(room);
 
         //아침vote를 만들어준다.
-        gameService.createVote(room.getRoomId(),room.getRoomPhase());
+
 
         //log.info(roomRepository.findById(gameTurn.getRoomId()));
     }

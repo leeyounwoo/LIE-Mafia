@@ -2,6 +2,7 @@ package com.lie.gamelogic.port.task;
 
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.port.GameService;
+import com.lie.gamelogic.port.GameServiceImpl;
 import com.lie.gamelogic.port.GameTurnImpl;
 import com.lie.gamelogic.port.RoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,13 @@ import java.util.TimerTask;
 public class RoleAssignTask extends TimerTask {
 
     private final RoomRepository roomRepository;
-    private final GameService gameService;
+    private final GameServiceImpl gameService;
     private final GameTurnImpl gameTurn;
 
     @Override
     public void run() {
         Room room;
-        gameService.roleAssign(gameTurn.getRoomId());
+
         room = roomRepository.findById(gameTurn.getRoomId()).orElseThrow();
         room.setRoomPhase(gameTurn.getNextPhase());
         roomRepository.save(room);

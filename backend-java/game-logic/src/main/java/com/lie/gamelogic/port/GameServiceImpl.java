@@ -1,16 +1,19 @@
 package com.lie.gamelogic.port;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.gamelogic.domain.*;
-import com.lie.gamelogic.dto.GameEndDto;
-import com.lie.gamelogic.dto.JoinGameRoomDto;
+import com.lie.gamelogic.dto.*;
+import com.lie.gamelogic.dto.Start.*;
+import com.lie.gamelogic.util.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,8 +27,12 @@ public class GameServiceImpl implements GameService{
     private final RoomRepository roomRepository;
     private final VoteRepository voteRepository;
     private final ExecutionVoteRepository executionVoteRepository;
+    private final ObjectMapper objectMapper;
 
+    //Timer 지정 
     ConcurrentHashMap<String, Timer> gameTimerByRoomId = new ConcurrentHashMap<>();
+    //Session을 지정
+    ConcurrentHashMap<String, WebSocketSession> gameSessionByRoomId = new ConcurrentHashMap<>();
 
     @Override
     public void createGameRoom(Room room) {
@@ -57,7 +64,7 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
-    public void pressStart(WebSocketSession session, String roomId, String username) throws IOException {
+    public void pressStart(String sessionId, String roomId, String username) throws IOException {
         Room room = roomRepository.findById(roomId).orElseThrow();
 
         //test용으로
@@ -66,14 +73,15 @@ public class GameServiceImpl implements GameService{
         //시작 상태면 예외 처리
         if(room.getRoomStatus() == RoomStatus.START) {
             log.info("Error");
-            session.sendMessage(new TextMessage("Already Started!!!"));
+            //session.sendMessage(new TextMessage("Already Started!!!"));
             return;
         }
         room = room.pressStart(username);
 
+        //방이 없으면 예외 처리
         if(ObjectUtils.isEmpty(room)){
             log.info("Error");
-            session.sendMessage(new TextMessage("Start failed"));
+            //session.sendMessage(new TextMessage("Start failed"));
             return;
         }
 
@@ -88,13 +96,14 @@ public class GameServiceImpl implements GameService{
             gameTimerByRoomId.remove(roomId,gameTimerByRoomId.get(roomId));
             gameTimerByRoomId.put(roomId,new Timer());
         }
+
         GameTurn gameTurn = new GameTurnImpl(roomRepository,this);
         gameTurn.setnextWork(roomId,gameTimerByRoomId.get(roomId));
 
     }
 
     @Override
-    public void pressReady(WebSocketSession session, String roomId, String username) {
+    public void pressReady(String sessionId, String roomId, String username) {
         Room room = roomRepository.findById(roomId).orElseThrow();
 
         if(!room.checkIfUserExists(username)){
@@ -107,17 +116,52 @@ public class GameServiceImpl implements GameService{
         }
         room = room.pressReady(username);
         User user = room.getUserByUsername(username);
-        messageInterface.publishReadyEvent("ready", user, roomId);
+        //messageInterface.publishReadyEvent("ready", user, roomId);
+
         roomRepository.save(room);
+
+        //메시지 전송에 대한 것
+        ReadUserDto readUserDto = new ReadUserDto("game","ready",roomId,username,user.getReady());
+        try {
+            messageInterface.publishReadyEvent("client.response"
+                    ,roomRepository.findById(roomId).orElseThrow()
+                    ,objectMapper.writeValueAsString(readUserDto));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         //produce ready
-        return;
     }
 
     @Override
     public void roleAssign(String roomId) {
         Room room=roomRepository.findById(roomId).orElseThrow();
         room=room.initStartGame(); //alive true, 직업배정
+        room.setEndTime(TimeUtils.getFinTime(15));
         roomRepository.save(room);
+
+        List<String> userList = new ArrayList<>();
+
+        room.getParticipants().forEach((player,user)->{
+            userList.add(user.getUsername());
+        });
+
+        LocalDateTime endTime = room.getEndTime();
+
+        room.getParticipants().forEach((player,user)->{
+           roleAssignDto roleDto =
+                   new roleAssignDto("game","roleAssign",roomId,
+                     userList,endTime,user.getJob());
+
+           log.info(roleDto.toString());
+
+           try {
+               messageInterface.publishReponseEvent("client.response"
+                       ,user
+                       ,objectMapper.writeValueAsString(roleDto));
+           } catch (JsonProcessingException e) {
+               e.printStackTrace();
+           }
+       });
     }
 
     @Override
@@ -153,6 +197,24 @@ public class GameServiceImpl implements GameService{
 
         vote.putUserVote(username,userVote);
         voteRepository.save(vote);
+        ClientVoteDto voteDto = new ClientVoteDto("game","madeVote",room.getRoomId(),
+                username,select);
+
+        try {
+            if(room.getRoomPhase().equals(RoomPhase.MORNINGVOTE)){
+                messageInterface.publishReponseEvent("game.madeVote"
+                        ,room
+                        ,objectMapper.writeValueAsString(voteDto));
+            }
+            else{
+                //마피아 두명 이상일 때 처리 필요
+                messageInterface.publishReponseEvent("game.madeVote"
+                        ,user
+                        ,objectMapper.writeValueAsString(voteDto));
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         log.info(vote.toString());
     }
@@ -187,6 +249,33 @@ public class GameServiceImpl implements GameService{
 
         vote=vote.pressVoted(username,agree);
         executionVoteRepository.save(vote);
+
+        ClientExecutionVoteDto executionVoteDto = new ClientExecutionVoteDto("game","madeVote"
+        ,roomPhase,roomId,username,select,agree);
+
+        //생존자 체크
+        List<User> alive = new ArrayList<>();
+        User selected = null;
+
+        room.getParticipants().forEach((player,user1)-> {
+            if(user1.getUsername().equals(select)){
+                log.info("exception");
+            }
+            else if (user1.getAlive()) {
+                alive.add(user1);
+            }
+        });
+
+        try {
+            if(room.getRoomPhase().equals(RoomPhase.MORNINGVOTE)){
+                messageInterface.publishReponseEvent("client.response"
+                        ,alive
+                        ,objectMapper.writeValueAsString(executionVoteDto));
+            }
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         log.info(vote.toString());
     }
@@ -371,5 +460,124 @@ public class GameServiceImpl implements GameService{
         roomRepository.save(room);
     }
 
+    public ConcurrentHashMap<String, WebSocketSession> getGameSessionByRoomId() {
+        return gameSessionByRoomId;
+    }
 
+    public void StartMeesage(Room room){
+        //생존자 넣는다.
+        List<String> aliveList = new ArrayList<>();
+        List<User> aliveUserList = new ArrayList<>();
+        List<String> coworker = new ArrayList<>();
+        room.getParticipants().forEach((player,user)->{
+            if(user.getAlive()) {
+                aliveList.add(user.getUsername());
+                aliveUserList.add(user);
+            }
+            if(user.getJob().equals(Job.MAFIA)){
+                coworker.add(user.getUsername());
+            }
+        });
+
+        MadeDataDto DataDto = null;
+
+        //현재 페이지 에 맞춰서 메시지를 넣어줌
+        switch(room.getRoomPhase()){
+            case MORNING:
+                try {
+                    DataDto = new MadeDataDto("game","startMorning",
+                            new startMorningDto(room.getRoomId(),
+                                    room.getEndTime(),aliveList,room.getDay(),true));
+                    messageInterface.publishReponseEvent("client.response",room,objectMapper.writeValueAsString(DataDto));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case MORNINGVOTE:
+                room.getParticipants().forEach((player,user)->{
+                    MadeDataDto startMorngingVoteDto =
+                            null;
+
+                        startMorngingVoteDto = new MadeDataDto("game","startMorningVote"
+                        ,new startMorngingVoteDto(room.getRoomId(),room.getEndTime(),aliveList,user.getAlive()));
+
+
+                    log.info(startMorngingVoteDto.toString());
+
+                    try {
+                        messageInterface.publishReponseEvent("client.response"
+                                ,user
+                                ,objectMapper.writeValueAsString(startMorngingVoteDto));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                });
+
+            break;
+            case FINALSPEECH :
+                try {
+                    DataDto = new MadeDataDto("game","startFinalSpeech",
+                                    new FinalSpeechDto(room.getRoomId(),
+                                    room.getEndTime(),room.getResult()));
+                    messageInterface.publishReponseEvent("client.response",room,objectMapper.writeValueAsString(DataDto));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case EXECUTIONVOTE:
+                MadeDataDto executionVoteDto = null;
+                executionVoteDto = new MadeDataDto("game", "startExecutionVote",
+                            new ExecutionVoteDto(
+                             room.getRoomId(), room.getEndTime(), room.getResult()));
+
+
+                try {
+                            messageInterface.publishReponseEvent("client.response"
+                                    ,aliveUserList
+                                    ,objectMapper.writeValueAsString(executionVoteDto));
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+            case NIGHTVOTE:
+                room.getParticipants().forEach((player,user)->{
+                    Job job = null;
+                    Boolean votable = false;
+                    MadeDataDto nightVoteDto = null;
+                   if(user.getJob().equals(Job.MAFIA)) {
+                       job = Job.MAFIA;
+                       votable = true;
+                       coworker.add(user.getUsername());
+                   }
+                   else if(user.getJob().equals(Job.DOCTOR)) {
+                       job = Job.DOCTOR;
+                       votable = true;
+                   }
+                   else job = Job.CITIZEN;
+
+                   if(job.equals(Job.MAFIA)) {
+
+                       nightVoteDto =
+                                   new MadeDataDto("game","nightVote",
+                                           new NightVoteDto(
+                                           room.getRoomId(), room.getEndTime(), aliveList, votable, coworker));
+
+                   }
+                   else{
+
+                           nightVoteDto =
+                                   new MadeDataDto("game","nightVote",new NightVoteDto(
+                                           room.getRoomId(), room.getEndTime(), aliveList, votable, null));
+
+                   }
+                    try {
+                        messageInterface.publishReponseEvent("client.response"
+                                ,user
+                                ,objectMapper.writeValueAsString(nightVoteDto));
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                });break;
+        }
+    }
 }
