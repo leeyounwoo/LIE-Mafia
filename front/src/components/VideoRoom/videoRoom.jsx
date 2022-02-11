@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import UserCam from "../UserCam/userCam";
-// import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
 import styled from "styled-components";
-// import styles from "./videoRoom.module.css";
+import styles from "./videoRoom.css";
 
-const Container = styled.div`
+const VideoGrid = styled.div`
   display: grid;
   place-items: center;
   grid-template-columns: repeat(3, 1fr);
@@ -13,47 +13,34 @@ const Container = styled.div`
   row-gap: 15vh;
   padding: 20px 10px;
 `;
-const userColor0 = {
+
+const buttonColor0 = {
   background: "red",
 };
-const userColor1 = {
+const buttonColor1 = {
   background: "orange",
 };
-const userColor2 = {
+const buttonColor2 = {
   background: "yellow",
 };
-const userColor3 = {
+const buttonColor3 = {
   background: "#20c997",
 };
-const userColor4 = {
+const buttonColor4 = {
   background: "#0d6efd",
 };
-const userColor5 = {
+const buttonColor5 = {
   background: "#6f42c1",
 };
 
-const StyledCam0 = styled.div`
-  background-color: red;
-`;
-const StyledCam1 = styled.div`
-  background-color: orange;
-`;
-const StyledCam2 = styled.div`
-  background-color: yellow;
-`;
-const StyledCam3 = styled.div`
-  background-color: #20c997;
-`;
-const StyledCam4 = styled.div`
-  background-color: #0d6efd;
-`;
-const StyledCam5 = styled.div`
-  background-color: #6f42c1;
-`;
-
-const VideoRoom = ({ participantsVideo, participantsName }) => {
-  let participantCnt = participantsVideo.length;
-
+const VideoRoom = ({
+  participantsVideo,
+  participantsName,
+  isVotable,
+  isNight,
+}) => {
+  // 투표 상황을 보여주는 voteState
+  // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
   const [voteState, setVoteState] = useState({
     0: {
       0: false,
@@ -111,321 +98,93 @@ const VideoRoom = ({ participantsVideo, participantsName }) => {
     },
   });
 
-  const onVote0 = () => {
+  // 투표
+  const onVote = (event) => {
+    let clickIndex = event.target.id[event.target.id.length - 1];
+    // 클릭 이벤트를 사용해서 클릭한 컴포넌트의 index 를 찾는다.
+    if (clickIndex) {
+      console.log(event.target.id[event.target.id.length - 1]);
+      // Container 클릭 했을 때
+    } else {
+      clickIndex =
+        event.target.parentElement.id[event.target.parentElement.id.length - 1];
+      // 제목을 클릭했을 때
+      if (clickIndex) {
+        console.log(
+          event.target.parentElement.id[
+            event.target.parentElement.id.length - 1
+          ]
+        );
+        // Row 클릭했을 때
+      } else {
+        clickIndex = event.target.firstElementChild.id;
+        console.log(event.target.firstElementChild.id);
+      }
+    }
+
+    // voteState를 갱신시켜줄 newVoteState
     let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[0]);
+    console.log(participantsName[0], " vote to ", participantsName[clickIndex]);
+
+    // 사용자가 이전에 선택했던 컴포넌트
     const prevChoice = newVoteState[0]["choice"];
+    // 이전에 선택했던 컴포넌트가 있고 그 값이 true 일 경우 false로 바꿔줌
     if (prevChoice !== "" && newVoteState[prevChoice][0]) {
       newVoteState[prevChoice][0] = false;
     }
-    newVoteState[0]["choice"] = 0;
-    newVoteState[0][0] = true;
+    // 사용자가 선택한 값을 선택한 컴포넌트로 갱신
+    newVoteState[0]["choice"] = clickIndex;
+    // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
+    newVoteState[clickIndex][0] = true;
     setVoteState(newVoteState);
   };
 
-  const onVote1 = () => {
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[1]);
-    const prevChoice = newVoteState[0]["choice"];
-    if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-      newVoteState[prevChoice][0] = false;
-    }
-    newVoteState[0]["choice"] = 1;
-    newVoteState[1][0] = true;
-    setVoteState(newVoteState);
-  };
-
-  const onVote2 = () => {
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[2]);
-    const prevChoice = newVoteState[0]["choice"];
-    if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-      newVoteState[prevChoice][0] = false;
-    }
-    newVoteState[0]["choice"] = 2;
-    newVoteState[2][0] = true;
-    setVoteState(newVoteState);
-  };
-
-  const onVote3 = () => {
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[3]);
-    const prevChoice = newVoteState[0]["choice"];
-    if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-      newVoteState[prevChoice][0] = false;
-    }
-    newVoteState[0]["choice"] = 3;
-    newVoteState[3][0] = true;
-    setVoteState(newVoteState);
-  };
-
-  const onVote4 = () => {
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[4]);
-    const prevChoice = newVoteState[0]["choice"];
-    if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-      newVoteState[prevChoice][0] = false;
-    }
-    newVoteState[0]["choice"] = 4;
-    newVoteState[4][0] = true;
-    setVoteState(newVoteState);
-  };
-
-  const onVote5 = () => {
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log(participantsName[0], " vote to ", participantsName[5]);
-    const prevChoice = newVoteState[0]["choice"];
-    if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-      newVoteState[prevChoice][0] = false;
-    }
-    newVoteState[0]["choice"] = 5;
-    newVoteState[5][0] = true;
-    setVoteState(newVoteState);
-  };
+  // 사용자 인덱스 배열
+  const userIndexArray = ["0", "1", "2", "3", "4", "5"];
 
   return (
-    <Container>
-      <StyledCam0 onClick={onVote0}>
-        <div id="0">
-          {!(participantCnt >= 1) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 1 && (
-            <div>
-              <UserCam
-                index="video-0"
-                keys={participantsVideo.id}
-                participant={participantsVideo[0]}
-              />
-              <ul>
-                {voteState["0"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["0"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["0"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["0"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["0"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["0"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam0>
-      <StyledCam1 onClick={onVote1}>
-        <div id="1">
-          {!(participantCnt >= 2) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 2 && (
-            <div>
-              <UserCam
-                index="video-1"
-                keys={participantsVideo.id}
-                participant={participantsVideo[1]}
-              />
-              <ul>
-                {voteState["1"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["1"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["1"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["1"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["1"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["1"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam1>
-      <StyledCam2 onClick={onVote2}>
-        <div id="2">
-          {!(participantCnt >= 3) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 3 && (
-            <div>
-              <UserCam
-                index="video-2"
-                keys={participantsVideo.id}
-                participant={participantsVideo[2]}
-              />
-              <ul>
-                {voteState["2"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["2"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["2"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["2"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["2"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["2"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam2>
-      <StyledCam3 onClick={onVote3}>
-        <div id="3">
-          {!(participantCnt >= 4) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 4 && (
-            <div>
-              <UserCam
-                index="video-3"
-                keys={participantsVideo.id}
-                participant={participantsVideo[3]}
-              />
-              <ul>
-                {voteState["3"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["3"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["3"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["3"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["3"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["3"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam3>
-      <StyledCam4 onClick={onVote4}>
-        <div id="4">
-          {!(participantCnt >= 5) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 5 && (
-            <div>
-              <UserCam
-                index="video-4"
-                keys={participantsVideo.id}
-                participant={participantsVideo[4]}
-              />
-              <ul>
-                {voteState["4"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["4"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["4"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["4"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["4"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["4"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam4>
-      <StyledCam5 onClick={onVote5}>
-        <div id="5">
-          {!(participantCnt >= 6) && (
-            <img
-              src="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
-              alt="마피아 게임 툴즈 - 모바일 마피아 게임 by Youngseung Seo"
-              width={400}
-            ></img>
-          )}
-          {participantCnt >= 6 && (
-            <div>
-              <UserCam
-                index="video-5"
-                keys={participantsVideo.id}
-                participant={participantsVideo[5]}
-              />
-              <ul>
-                {voteState["5"]["0"] && (
-                  <button style={userColor0}>{participantsName[0]}</button>
-                )}
-                {voteState["5"]["1"] && (
-                  <button style={userColor1}>{participantsName[1]}</button>
-                )}
-                {voteState["5"]["2"] && (
-                  <button style={userColor2}>{participantsName[2]}</button>
-                )}
-                {voteState["5"]["3"] && (
-                  <button style={userColor3}>{participantsName[3]}</button>
-                )}
-                {voteState["5"]["4"] && (
-                  <button style={userColor4}>{participantsName[4]}</button>
-                )}
-                {voteState["5"]["5"] && (
-                  <button style={userColor5}>{participantsName[5]}</button>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </StyledCam5>
-    </Container>
+    <VideoGrid>
+      {/* 사용자 인덱스 배열 순회하면서 사용자 비디오 컴포넌트 렌더링 */}
+      {userIndexArray.map((userIndex, idx) => {
+        return (
+          // 사용자 화면 상자 어디를 클릭해도 onVote 함수 호출
+          // id를 이용하여 사용자 화면 상자 색상 지정
+          <Container onClick={onVote} id={`userContainerUsual${userIndex}`}>
+            {/* 비디오 화면을 상자 가운데에 배치 */}
+            <Row className="justify-content-md-center">
+              <Col md="auto" id={userIndex}>
+                <UserCam
+                  index={`video-${userIndex}`}
+                  keys={participantsVideo.id}
+                  participant={participantsVideo[idx]}
+                  participantName={participantsName[idx]}
+                />
+                <ul>
+                  {voteState[userIndex]["0"] && (
+                    <button style={buttonColor0}>{participantsName[0]}</button>
+                  )}
+                  {voteState[userIndex]["1"] && (
+                    <button style={buttonColor1}>{participantsName[1]}</button>
+                  )}
+                  {voteState[userIndex]["2"] && (
+                    <button style={buttonColor2}>{participantsName[2]}</button>
+                  )}
+                  {voteState[userIndex]["3"] && (
+                    <button style={buttonColor3}>{participantsName[3]}</button>
+                  )}
+                  {voteState[userIndex]["4"] && (
+                    <button style={buttonColor4}>{participantsName[4]}</button>
+                  )}
+                  {voteState[userIndex]["5"] && (
+                    <button style={buttonColor5}>{participantsName[5]}</button>
+                  )}
+                </ul>
+              </Col>
+            </Row>
+          </Container>
+        );
+      })}
+    </VideoGrid>
   );
 };
 
