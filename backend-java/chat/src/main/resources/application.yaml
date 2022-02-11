@@ -9,7 +9,7 @@ spring:
     bootstrap-servers: ${spring.environment.production.host}:9092
 
     consumer:
-      group-id: game-group
+      group-id: chat-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -32,6 +32,6 @@ spring:
       port: 6379
       password: $$jae923009$
     redis:
-      host: 13.125.149.219
+      host: 18.212.69.181
       port: 6379
       password: ssafy

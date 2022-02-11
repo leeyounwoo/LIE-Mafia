@@ -31,6 +31,7 @@ dependencies {
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	implementation 'org.modelmapper:modelmapper:3.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	//이거가 새로생긴 websocket 디펜던시
 	implementation 'org.springframework:spring-websocket'
 	implementation 'org.springframework.kafka:spring-kafka'
 }
