@@ -105,6 +105,33 @@ public class MessageInterface {
         }
     }
 
+    public void publishSelectEvent(String topic, Room room, String message){
+        List<String> clients = room.getParticipants().values()
+                .stream().map(user -> user.getSessionId())
+                .collect(Collectors.toList());
+        OutboundClientMessageDto outboundClientMessageDto = new OutboundClientMessageDto(clients, message ,null);
+        try{
+            messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(outboundClientMessageDto));
+        } catch (JsonProcessingException jsonProcessingException){
+            log.info("Error Processing Json");
+        } catch (IOException ioException){
+            log.info("Error Sending Through Websocket");
+        }
+    }
+
+    public void publishSelectEvent(String topic, List<User> JobList, String message){
+        List<String> clients = JobList.stream().map(
+                        user -> user.getSessionId())
+                .collect(Collectors.toList());
+        OutboundClientMessageDto outboundClientMessageDto = new OutboundClientMessageDto(clients, message);
+        try{
+            messageProducer.publishOnKafkaBroker(topic, objectMapper.writeValueAsString(outboundClientMessageDto));
+        } catch (JsonProcessingException jsonProcessingException){
+            log.info("Error Processing Json");
+        } catch (IOException ioException){
+            log.info("Error Sending Through Websocket");
+        }
+    }
 
 
 //    //전체에게 보내주는 것

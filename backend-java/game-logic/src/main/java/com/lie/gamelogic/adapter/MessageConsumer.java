@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.gamelogic.domain.Room;
-import com.lie.gamelogic.dto.ClientMessageDto;
-import com.lie.gamelogic.dto.JoinGameRoomDto;
+import com.lie.gamelogic.domain.RoomPhase;
+import com.lie.gamelogic.dto.*;
 import com.lie.gamelogic.port.GameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -103,6 +103,71 @@ public class MessageConsumer {
             gameService.pressStart(clientMessageDto.getSessionId(),
                     clientMessageDto.getRoomId(),
                     clientMessageDto.getUsername());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @KafkaListener(topics = {"game.nightVote"}, groupId = "game-group")
+    public void nightVoteConsume(String message){
+        final JsonNode jsonMessage;
+        try {
+            jsonMessage = objectMapper.readTree(message);
+            ClientMessageVoteDto clientMessageVoteDto = new ClientMessageVoteDto(jsonMessage,objectMapper);
+
+            log.info(clientMessageVoteDto.toString());
+
+            gameService.selectNightVote(clientMessageVoteDto.getSessionId(),
+                    clientMessageVoteDto.getRoomId(),
+                    clientMessageVoteDto.getUsername(),
+                    clientMessageVoteDto.getSelect());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @KafkaListener(topics = {"game.executionVote"}, groupId = "game-group")
+    public void ExceptionVoteConsume(String message){
+        final JsonNode jsonMessage;
+        try {
+            jsonMessage = objectMapper.readTree(message);
+            ClientMessageExceptionVoteDto clientMessageVoteDto = new ClientMessageExceptionVoteDto(jsonMessage,objectMapper);
+            RoomPhase roomPhase = null;
+           if(clientMessageVoteDto.getRoomPhase().equals("citizenVote")){
+               roomPhase = RoomPhase.EXECUTIONVOTE;
+           }
+
+            log.info(clientMessageVoteDto.toString());
+            gameService.selectExecutionVote(clientMessageVoteDto.getSessionId(),
+                    clientMessageVoteDto.getRoomId(),
+                    clientMessageVoteDto.getUsername(),
+                    clientMessageVoteDto.getSelect(),
+                    roomPhase,
+                    clientMessageVoteDto.getAgreeToDead()
+                    );
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @KafkaListener(topics = {"game.citizenVote"}, groupId = "game-group")
+    public void CitizenVoteConsume(String message){
+
+        log.info(message);
+        final JsonNode jsonMessage;
+        try {
+            jsonMessage = objectMapper.readTree(message);
+            ClientMessageVoteDto clientMessageVoteDto = new ClientMessageVoteDto(jsonMessage,objectMapper);
+
+            log.info(clientMessageVoteDto.toString());
+            gameService.selectMoringVote(clientMessageVoteDto.getSessionId(),
+                    clientMessageVoteDto.getRoomId(),
+                    clientMessageVoteDto.getUsername(),
+                    clientMessageVoteDto.getSelect());
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -14,5 +14,7 @@ public class ClientExecutionVoteDto {
     String username;
     String select;
     Boolean agreeToDead;
+    Integer agreeDie;
+    Integer agreeAlive;
 
 }

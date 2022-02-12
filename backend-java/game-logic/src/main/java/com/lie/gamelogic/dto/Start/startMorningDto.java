@@ -12,6 +12,7 @@ public class startMorningDto {
 
     String roomId;
     LocalDateTime EndTime;
+    String result;
     List<String> aliveUsers;
     Integer dayCount;
     Boolean isDay;

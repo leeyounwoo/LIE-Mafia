@@ -144,8 +144,9 @@ public class Room {
         this.roomStatus = RoomStatus.WAITING;
         this.day = 0;
         this.setResult(null);
-        this.getGameResult().setLoser(null);
-        this.getGameResult().setWinner(null);
+        this.getGameResult().setResult(null);
+        this.getGameResult().setActionType(null);
+        this.getGameResult().setEventType(null);
         this.setGameResult(null);
 
         this.participants.forEach((player,user)->{

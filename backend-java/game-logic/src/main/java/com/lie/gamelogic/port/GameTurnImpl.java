@@ -1,5 +1,6 @@
 package com.lie.gamelogic.port;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lie.gamelogic.domain.Room;
 import com.lie.gamelogic.domain.RoomPhase;
 import com.lie.gamelogic.dto.GameEndDto;
@@ -81,16 +82,16 @@ public class GameTurnImpl implements GameTurn{
                 gameService.roleAssign(roomId);
                 timer.schedule(new RoleAssignTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
             case NIGHTVOTE:
-                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                gameService.createNightVote(room.getRoomId());
                 timer.schedule(new NightVoteTask(roomRepository, this,gameService),TimeUtils.convertToDate(endTime)); break;
             case MORNING:
                 timer.schedule(new MorningTask(roomRepository,gameService, this),TimeUtils.convertToDate(endTime)); break;
             case MORNINGVOTE:
-                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                gameService.createMovingVote(room.getRoomId());
                 timer.schedule(new MorningVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
             case FINALSPEECH: timer.schedule(new FinalSpeechTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
             case EXECUTIONVOTE:
-                gameService.createVote(room.getRoomId(),room.getRoomPhase());
+                gameService.createExecutionVote(room.getRoomId());
                 timer.schedule(new ExecutionVoteTask(roomRepository,gameService,this),TimeUtils.convertToDate(endTime)); break;
         }
         //새로운 phase가 시작되면 페이지 변화
@@ -111,14 +112,8 @@ public class GameTurnImpl implements GameTurn{
             timer.schedule(timerTask2,TimeUtils.convertToDate(startTime));
         else {
             GameEndDto gameResult = roomRepository.findById(roomId).orElseThrow().getGameResult();
-            log.info("The game is end");
-            log.info("dead one is {} ", roomRepository.findById(roomId).orElseThrow().getResult());
-            log.info("{} wins winner is : {} " ,gameResult.getWinner() , gameResult.getWinnerList());
-            log.info("{} loses is : {} " , gameResult.getLoser() , gameResult.getLoserList());
-            //clear하는 부분이 필요로하고,
-
             //log.info(room.getGameResult());
-
+            gameService.GameEndMessage(room,gameResult);
             Room room = roomRepository.findById(roomId).orElseThrow();
             room = room.Gameclear();
             roomRepository.save(room);

@@ -164,31 +164,80 @@ public class GameServiceImpl implements GameService{
        });
     }
 
+//    @Override
+//    public void createVote(String roomId, RoomPhase phase) {
+//
+//        switch (phase){
+//            case EXECUTIONVOTE :
+//                ExecutionVote executionVote=new ExecutionVote();
+//                executionVoteRepository.save(executionVote.createVote(roomId,phase));
+//                log.info(executionVote.toString());
+//                break;
+//            default:
+//                Vote vote=new Vote();
+//                voteRepository.save(vote.createVote(roomId,phase));
+//                vote=vote.createVote(roomId,phase);
+//                log.info(vote.toString());
+//                break;
+//        }
+//    }
     @Override
-    public void createVote(String roomId, RoomPhase phase) {
-
-        switch (phase){
-            case EXECUTIONVOTE :
-                ExecutionVote executionVote=new ExecutionVote();
-                executionVoteRepository.save(executionVote.createVote(roomId,phase));
-                log.info(executionVote.toString());
-                break;
-            default:
-                Vote vote=new Vote();
-                voteRepository.save(vote.createVote(roomId,phase));
-                vote=vote.createVote(roomId,phase);
-                log.info(vote.toString());
-                break;
-        }
-
+    public void createMovingVote(String roomId){
+        Vote vote=new Vote();
+        voteRepository.save(vote.createVote(roomId,RoomPhase.MORNING));
+        vote=vote.createVote(roomId,RoomPhase.MORNING);
+        log.info(vote.toString());
     }
 
     @Override
-    public void selectVote(WebSocketSession session, String roomId, String username, String select) {
+    public void createExecutionVote(String roomId){
+        ExecutionVote executionVote=new ExecutionVote();
+        executionVoteRepository.save(executionVote.createVote(roomId,RoomPhase.EXECUTIONVOTE));
+        log.info(executionVote.toString());
+    }
+
+    @Override
+    public void createNightVote(String roomId){
+        Vote vote=new Vote();
+        voteRepository.save(vote.createVote(roomId,RoomPhase.NIGHTVOTE));
+        vote=vote.createVote(roomId,RoomPhase.NIGHTVOTE);
+        log.info(vote.toString());
+    }
+    @Override
+    public void selectMoringVote(String sessionId,String roomId, String username, String select) {
+        Room room = roomRepository.findById(roomId).orElseThrow();
+        User user = room.getUserByUsername(username);
+        if (!user.getAlive()) { //살아있는 user만 select
+            log.info("User {} died in Room {}", username, roomId);
+            return;
+        }
+
+        Vote vote = voteRepository.findById("vote" + roomId).orElseThrow();
+        UserVote userVote = new UserVote(username, user.getSessionId(), user.getJob(), select);
+
+        vote.putUserVote(username, userVote);
+        voteRepository.save(vote);
+        ClientVoteDto voteDto = new ClientVoteDto("game", "citizenVote", room.getRoomId(), username, select);
+        try {
+            messageInterface.publishSelectEvent("client.response"
+                    ,room
+                    ,objectMapper.writeValueAsString(voteDto));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void selectNightVote(String sessionId,String roomId, String username, String select) {
         Room room =roomRepository.findById(roomId).orElseThrow();
         User user=room.getUserByUsername(username);
         if(!user.getAlive()){ //살아있는 user만 select
             log.info("User {} died in Room {}", username, roomId);
+            return;
+        }
+
+        if(user.getJob().equals(Job.CITIZEN)){
+            log.info("User {} doesn't have to Vote");
             return;
         }
 
@@ -197,21 +246,32 @@ public class GameServiceImpl implements GameService{
 
         vote.putUserVote(username,userVote);
         voteRepository.save(vote);
-        ClientVoteDto voteDto = new ClientVoteDto("game","madeVote",room.getRoomId(),
-                username,select);
+        ClientVoteDto voteDto = new ClientVoteDto("game","nightVote",room.getRoomId(),username,select);
+
+        List<User> coworker = new ArrayList<>();
+        List<User> Doctor = new ArrayList<>();
+
+        room.getParticipants().forEach((player,name)->{
+            if(name.getJob().equals(Job.MAFIA)) {
+                coworker.add(name);
+            }
+            else if(name.getJob().equals(Job.DOCTOR)) {
+                Doctor.add(name);
+            }
+        });
 
         try {
-            if(room.getRoomPhase().equals(RoomPhase.MORNINGVOTE)){
-                messageInterface.publishReponseEvent("game.madeVote"
-                        ,room
-                        ,objectMapper.writeValueAsString(voteDto));
+            if(user.getJob().equals(Job.MAFIA)) {
+                messageInterface.publishReponseEvent("client.response"
+                        , coworker
+                        , objectMapper.writeValueAsString(voteDto));
             }
-            else{
-                //마피아 두명 이상일 때 처리 필요
-                messageInterface.publishReponseEvent("game.madeVote"
-                        ,user
-                        ,objectMapper.writeValueAsString(voteDto));
+            if(user.getJob().equals(Job.DOCTOR)){
+                messageInterface.publishReponseEvent("client.response"
+                        , Doctor
+                        , objectMapper.writeValueAsString(voteDto));
             }
+
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -220,7 +280,7 @@ public class GameServiceImpl implements GameService{
     }
 
     @Override
-    public void selectExecutionVote(WebSocketSession session, String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
+    public void selectExecutionVote(String sessionId,String roomId, String username, String select, RoomPhase roomPhase, boolean agree) {
         Room room =roomRepository.findById(roomId).orElseThrow();
 
         User user=room.getUserByUsername(username);
@@ -251,11 +311,10 @@ public class GameServiceImpl implements GameService{
         executionVoteRepository.save(vote);
 
         ClientExecutionVoteDto executionVoteDto = new ClientExecutionVoteDto("game","madeVote"
-        ,roomPhase,roomId,username,select,agree);
+        ,roomPhase,roomId,username,select,agree,vote.getAgreeDie(), vote.getAgreeAlive());
 
         //생존자 체크
         List<User> alive = new ArrayList<>();
-        User selected = null;
 
         room.getParticipants().forEach((player,user1)-> {
             if(user1.getUsername().equals(select)){
@@ -267,11 +326,9 @@ public class GameServiceImpl implements GameService{
         });
 
         try {
-            if(room.getRoomPhase().equals(RoomPhase.MORNINGVOTE)){
-                messageInterface.publishReponseEvent("client.response"
-                        ,alive
-                        ,objectMapper.writeValueAsString(executionVoteDto));
-            }
+            messageInterface.publishReponseEvent("client.response"
+                    ,alive
+                    ,objectMapper.writeValueAsString(executionVoteDto));
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -439,25 +496,39 @@ public class GameServiceImpl implements GameService{
             //log.info("Citizen wins winner is : {} ", citizenList);
             Winner = Job.CITIZEN;
             Loser = Job.MAFIA;
-            gameEndDto = new GameEndDto(Winner,Loser,citizenList,mapiaList);
+            gameEndDto = new GameEndDto("game","end",
+                    new ResultDto(roomRepository.findById(roomId).orElseThrow().getResult(),
+                            new FindDto(Winner,citizenList),
+                            new FindDto(Loser,mapiaList)));
         }
         else if(mapiaCount >= citizenCount){ // 마피아가 시민 수보다 많을 때
             //log.info("Mapia wins winner is : {} " , mapiaList);
             Winner = Job.MAFIA;
             Loser = Job.CITIZEN;
-            gameEndDto = new GameEndDto(Winner,Loser,mapiaList,citizenList);
+            gameEndDto = new GameEndDto("game","end",
+                    new ResultDto(roomRepository.findById(roomId).orElseThrow().getResult(),
+                            new FindDto(Winner,mapiaList),
+                            new FindDto(Loser,citizenList)));
         }
-
         else{
             log.info("Game is not end");
             return;
         }
 
         //topic을 end로 만듦
-        messageInterface.publishGameEndEvent("end",gameEndDto);
         room.setGameResult(gameEndDto);
         //그리고 room 정보를 변경해주고 이를 저장해줌
         roomRepository.save(room);
+
+    }
+
+    @Override
+    public void GameEndMessage(Room room, GameEndDto gameEndDto){
+        try {
+            messageInterface.publishReponseEvent("client.response",room,objectMapper.writeValueAsString(gameEndDto));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     public ConcurrentHashMap<String, WebSocketSession> getGameSessionByRoomId() {
@@ -487,7 +558,7 @@ public class GameServiceImpl implements GameService{
                 try {
                     DataDto = new MadeDataDto("game","startMorning",
                             new startMorningDto(room.getRoomId(),
-                                    room.getEndTime(),aliveList,room.getDay(),true));
+                                    room.getEndTime(),room.getResult(),aliveList,room.getDay(),true));
                     messageInterface.publishReponseEvent("client.response",room,objectMapper.writeValueAsString(DataDto));
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
@@ -496,9 +567,7 @@ public class GameServiceImpl implements GameService{
             case MORNINGVOTE:
                 room.getParticipants().forEach((player,user)->{
                     MadeDataDto startMorngingVoteDto =
-                            null;
-
-                        startMorngingVoteDto = new MadeDataDto("game","startMorningVote"
+                             new MadeDataDto("game","startMorningVote"
                         ,new startMorngingVoteDto(room.getRoomId(),room.getEndTime(),aliveList,user.getAlive()));
 
 
@@ -561,14 +630,12 @@ public class GameServiceImpl implements GameService{
                                    new MadeDataDto("game","nightVote",
                                            new NightVoteDto(
                                            room.getRoomId(), room.getEndTime(), aliveList, votable, coworker));
-
                    }
                    else{
 
                            nightVoteDto =
                                    new MadeDataDto("game","nightVote",new NightVoteDto(
                                            room.getRoomId(), room.getEndTime(), aliveList, votable, null));
-
                    }
                     try {
                         messageInterface.publishReponseEvent("client.response"
