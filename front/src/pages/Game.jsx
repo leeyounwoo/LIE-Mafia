@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import VideoRoom from "../components/VideoRoom/videoRoom";
+import FinalArgument from "../components/VideoRoom/finalArgument";
 import WaitingNav from "../components/Navbar/navbar";
+import GameNav from "../components/Navbar/gameNav";
 import Footer from "../components/Footer/footer";
 // import Chat from "../components/Chat/chat";
 import { WebRtcPeer } from "kurento-utils";
@@ -18,25 +20,47 @@ const Main = styled.div`
 `;
 
 function Game() {
-  const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
-  // 참여자가 변화할 때마다 리렌더링
+  const ws = new WebSocket("ws://52.79.223.21:8001/ws");
+  // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
-  const username = `user${Math.random().toString(36).substr(2, 11)}`;
-  const [authority, setAuthority] = useState([]);
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
+  // 로컬 사용자
+  const username = `User${Math.random().toString(36).substr(2, 11)}`;
+  const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
+  // 지목받은 사용자 (최후의 변론)
+  const [selectedUserName, setSelectedUserName] = useState(participantsName[0]);
+  const [selectedUserVideo, setSelectedUserVideo] = useState(
+    participantsVideo[0]
+  );
+  // 최후의 변론 그리드
+  const [isExcutionGrid, setIsExcutionGrid] = useState(false);
+
+  // 게임 생존자
+  const [votersName, setVotersName] = useState(participantsName);
+
+  // 투표 가능한 상태
+  const [isVotable, setIsVotable] = useState(false);
+
+  // 밤투표 상황인지 아닌지
+  const [isNight, setIsNight] = useState(false);
+
+  // 게임 진행 상태
+  const [isGameStart, setIsGameStart] = useState(false);
 
   // 서버쪽으로 메세지를 보내는 함수
   const sendMessage = (message) => {
-    const jsonMessage = JSON.stringify(message);
+    const newMessage = { eventType: "connection", data: message };
+    const jsonMessage = JSON.stringify(newMessage);
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   };
 
+  // 비디오를 등록하는 함수
   const receiveVideo = (participant) => {
     let user = {
       name: participant.username,
@@ -93,7 +117,8 @@ function Game() {
     });
   };
 
-  const onExistingParticipants = (msg) => {
+  // 처음 사용자가 방에 입장하면 본인을 등록하고 기존 사용자를 등록
+  const onExistingParticipants = async (msg) => {
     var constraints = {
       audio: false,
       video: {
@@ -118,6 +143,10 @@ function Game() {
     tempParticipantsName.push(msg.user.username);
     tempParticipantsVideo.push(user);
     setRoomId(msg.data.roomId);
+
+    // 임시
+    setSelectedUserName(user.name);
+    setSelectedUserVideo(user);
 
     console.log(msg.user.username + " registered in room " + roomId);
 
@@ -162,28 +191,46 @@ function Game() {
     );
   };
 
+  // 방에 새로운 사용자가 입장했을 때 기존 사용자는 새로운 사용자를 등록
   const onNewParticipant = (msg) => {
     receiveVideo(Object.values(msg.data)[0]);
     updateParticipants();
   };
 
+  // rtcPeer Answer
   const onReceiveVideoAnswer = (msg) => {
     tempParticipantsVideo[
       tempParticipantsName.indexOf(msg.name)
     ].rtcPeer.processAnswer(msg.sdpAnswer);
   };
 
+  // rtcPeer IceCandidate
   const onAddIceCandidate = (msg) => {
     tempParticipantsVideo[
       tempParticipantsName.indexOf(msg.name)
     ].rtcPeer.addIceCandidate(msg.candidate);
   };
 
+  // tempParticipant와 participant 동기화
   const updateParticipants = () => {
     setParticipantsName([]);
     setParticipantsVideo([]);
     setParticipantsName(tempParticipantsName);
     setParticipantsVideo(tempParticipantsVideo);
+  };
+
+  // 최후의 변론
+  // 지목된 사용자 지정
+  const onFinalSpeech = (msg) => {
+    const selectedUserIndex = participantsName.indexOf(msg.result);
+    setSelectedUserName(participantsName[selectedUserIndex]);
+    setSelectedUserVideo(participantsVideo[selectedUserIndex]);
+  };
+
+  // 사형 투표
+  // 해야 할 일: 타이머 설정
+  const onExecutionVote = (msg) => {
+    console.log("onExecutionVote");
   };
 
   useEffect(() => {
@@ -218,6 +265,37 @@ function Game() {
       var parsedMessage = JSON.parse(message.data);
       console.info("Received message: " + message.data);
 
+      // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
+      // 그 외엔 일반 게임 그리드
+      if (
+        parsedMessage.id === "finalspeech" ||
+        parsedMessage.id === "executionvote"
+      ) {
+        setIsExcutionGrid(true);
+      } else {
+        setIsExcutionGrid(false);
+      }
+
+      // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
+      // 그 외엔 투표 불가능
+      if (
+        parsedMessage.id === "executionvote" ||
+        parsedMessage.id === "morningvote" ||
+        parsedMessage.id === "nightvote"
+      ) {
+        setIsVotable(true);
+      } else {
+        setIsVotable(false);
+      }
+
+      // 밤투표일 땐 밤
+      // 그 외엔 낮
+      if (parsedMessage.id === "nightvote") {
+        setIsNight(true);
+      } else {
+        setIsNight(false);
+      }
+
       switch (parsedMessage.id) {
         // 새로 방에 참여한 사용자에게 오는 메세지
         // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
@@ -239,6 +317,16 @@ function Game() {
         // onIceCandidate 메세지에 대한 대답
         case "iceCandidate":
           onAddIceCandidate(parsedMessage);
+          break;
+
+        // 최후의 변론
+        case "finalspeech":
+          onFinalSpeech(parsedMessage);
+          break;
+
+        // 사형 투표
+        case "executionvote":
+          onExecutionVote(parsedMessage);
           break;
 
         default:
@@ -266,11 +354,13 @@ function Game() {
     setJoin(true);
   };
 
+  // 카메라 켜고 끄기
   const onClickCamera = () => {
     participantsVideo[0].rtcPeer.videoEnabled =
       !participantsVideo[0].rtcPeer.videoEnabled;
   };
 
+  // 마이크 켜고 끄기
   const onClickMute = () => {
     participantsVideo[0].rtcPeer.audioEnabled =
       !participantsVideo[0].rtcPeer.audioEnabled;
@@ -281,28 +371,61 @@ function Game() {
       {!join && <Home onBtnClick={onBtnClick} />}
       {join && (
         <div>
-          <WaitingNav roomId={roomId} />
-          <Main>
-            <header className="App-header">
-              <>
-                <h1>참가자 수: {participantsVideo.length}</h1>
-                <VideoRoom
-                  participantsVideo={participantsVideo}
-                  participantsName={participantsName}
-                ></VideoRoom>
-              </>
-            </header>
-            {/* <Chat /> */}
-          </Main>
-          {/* <Chat /> */}
-          <Footer
-            authority={authority}
-            roomId={roomId}
-            username={username}
-            localUserVideo={participantsVideo[0]}
-            onClickCamera={onClickCamera}
-            onClickMute={onClickMute}
-          />
+          {/* 게임 진행 */}
+          {isGameStart && (
+            <div>
+              <GameNav />
+              <header>
+                {/* 최후의 변론 X */}
+                {!isExcutionGrid && (
+                  <VideoRoom
+                    isNight={isNight}
+                    isVotable={isVotable}
+                    participantsVideo={participantsVideo}
+                    participantsName={participantsName}
+                  />
+                )}
+                {/* 최후의 변론 */}
+                {isExcutionGrid && (
+                  <FinalArgument
+                    isVotable={isVotable}
+                    selectedUserName={selectedUserName}
+                    selectedUserVideo={selectedUserVideo}
+                    votersName={votersName}
+                    participantsName={participantsName}
+                    participantsVideo={participantsVideo}
+                  />
+                )}
+              </header>
+            </div>
+          )}
+          {/* 게임 진행 X (게임 시작 전) */}
+          {!isGameStart && (
+            <div>
+              <WaitingNav roomId={roomId} />
+              <Main>
+                <header className="App-header">
+                  <>
+                    <VideoRoom
+                      isNight={isNight}
+                      isVotable={isVotable}
+                      participantsVideo={participantsVideo}
+                      participantsName={participantsName}
+                    />
+                  </>
+                </header>
+              </Main>
+              {/* <Chat /> */}
+              <Footer
+                authority={authority}
+                roomId={roomId}
+                username={username}
+                localUserVideo={participantsVideo[0]}
+                onClickCamera={onClickCamera}
+                onClickMute={onClickMute}
+              />
+            </div>
+          )}
         </div>
       )}
     </StyledContainer>

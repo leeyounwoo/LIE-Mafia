@@ -1,0 +1,51 @@
+/* 사형투표에 참여하는 사용자 상자 */
+#userContainer0 {
+  background: red;
+  width: 350px;
+}
+#userContainer1 {
+  background: orange;
+  width: 350px;
+}
+#userContainer2 {
+  background: yellow;
+  width: 350px;
+}
+#userContainer3 {
+  background: #20c997;
+  width: 350px;
+}
+#userContainer4 {
+  background: #0d6efd;
+  width: 350px;
+}
+#userContainer5 {
+  background: #6f42c1;
+  width: 350px;
+}
+
+/* 지목당한 사용자 상자 */
+#selectedUserContainer0 {
+  background: red;
+  width: 550px;
+}
+#selectedUserContainer1 {
+  background: orange;
+  width: 550px;
+}
+#selectedUserContainer2 {
+  background: yellow;
+  width: 550px;
+}
+#selectedUserContainer3 {
+  background: #20c997;
+  width: 550px;
+}
+#selectedUserContainer4 {
+  background: #0d6efd;
+  width: 550px;
+}
+#selectedUserContainer5 {
+  background: #6f42c1;
+  width: 550px;
+}

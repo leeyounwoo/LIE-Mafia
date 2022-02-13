@@ -1,15 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./userCam.module.css";
-import styled from "styled-components";
 
-const User = styled.div`
-  box-sizing: border-box;
-  width: 24vw;
-  height: 30vh;
-  border: 1px solid black;
-`;
-
-const UserCam = ({ key, participant, index }) => {
+const UserCam = ({ participant, index, participantName }) => {
   const videoRef = useRef(null);
   useEffect(() => {
     waitForParticipantAdd(videoRef.current.srcObject, function () {});
@@ -33,18 +25,19 @@ const UserCam = ({ key, participant, index }) => {
   }
 
   return (
-    <User>
-      <li className={styles.li} key={key}>
-        <h1>{participant.name}</h1>
-        <video
-          className={styles.video}
-          id={index}
-          ref={videoRef}
-          autoPlay
-          width={420}
-        ></video>
-      </li>
-    </User>
+    <div>
+      {participantName && <h1 id={index}>{participantName}</h1>}
+      {!participantName && <h1 id={index}>Anonymous</h1>}
+      <video
+        className={styles.video}
+        id={index}
+        ref={videoRef}
+        autoPlay
+        width={420}
+        height={370}
+        poster="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
+      ></video>
+    </div>
   );
 };
 
