@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.lie.websocketinterface.config.ServiceClient;
 import com.lie.websocketinterface.domain.SessionManager;
+import com.lie.websocketinterface.dto.OutboundErrorDto;
 import com.lie.websocketinterface.dto.OutboundMessageDto;
 import com.lie.websocketinterface.port.MessageInterface;
 import com.lie.websocketinterface.port.SessionService;
@@ -30,7 +31,7 @@ public class MessageConsumer {
     private final ObjectMapper objectMapper;
     private final SessionService sessionService;
 
-    @KafkaListener(topics={"client.response"}, groupId = "websocket-interface-group")
+    @KafkaListener(topics={"client.response"}, groupId = "websocket-interface-test-group")
     public void responseConsume(String message){
         log.info(message);
         try {
@@ -41,6 +42,20 @@ public class MessageConsumer {
            log.info("Nothing sent to clients");
            log.info(e.getMessage());
         }
+    }
+    @KafkaListener(topics={"error"}, groupId = "websocket-interface-test-group")
+    public void errorConsume(String message){
+        log.info(message);
+        try {
+            OutboundErrorDto outboundErrorDto = objectMapper.convertValue(message, OutboundErrorDto.class);
+            sessionService.sendErrorMessageToClient(outboundErrorDto);
+        } catch (JsonProcessingException e) {
+            log.info("Error making outbound message");
+            log.info("Nothing sent to clients");
+            log.info(e.getMessage());
+        } catch (IOException e){
+            log.info(e.getMessage());
+        }
 
 
     }
@@ -50,36 +65,4 @@ public class MessageConsumer {
                 .receivers(objectMapper.readValue(jsonNode.get("receivers").toString(), TypeFactory.defaultInstance().constructCollectionType(List.class,String.class)))
                 .message(jsonNode.get("message").asText()).build();
     }
-
-//    @KafkaListener(topics={"disconnection"}, groupId = "websocket-interface-group")
-//    public void serviceDisconnection(String message){
-//        log.info(message);
-//        try{
-//            JsonNode jsonNode = objectMapper.readTree(message);
-//            switch (jsonNode.get("service").asText()){
-//                case "connection" :
-//                    log.info("reconnecting");
-//                    //connectionServiceSession = null;
-//                    //connectionServiceSession = serviceClient.reconnectToConnectionService();
-//                    break;
-//                case "game" :
-//                    gameServiceSession = serviceClient.connectToGameService();
-//                    break;
-//
-//            }
-//        } catch (JsonProcessingException jsonProcessingException){
-//            log.info("Error Consuming Service Disconnection ");
-//        } catch (ExecutionException e) {
-//            log.info("Execution Error ");
-//
-//            e.printStackTrace();
-//        } catch (InterruptedException e) {
-//            log.info("Interrupt Error");
-//
-//            e.printStackTrace();
-//        }
-//
-//        log.info(message);
-//    }
-
 }

@@ -1,5 +1,6 @@
 package com.lie.websocketinterface.domain;
 
+import com.lie.websocketinterface.exception.DuplicateException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,21 +18,19 @@ public class SessionManager {
     private final ConcurrentMap<String, WebSocketSession> sessionBySessionId = new ConcurrentHashMap<String, WebSocketSession>();
     private final ConcurrentMap<String, WebSocketSession> sessionByUsername = new ConcurrentHashMap<String, WebSocketSession>();
 
-    public void registerSession(WebSocketSession session,String username){
+    public void registerSession(WebSocketSession session,String username) throws DuplicateException {
         log.info(session.toString() + " registerSession Method");
-        if(checkIfSessionDoesNotExists(session.getId())){
-            log.info(session.getId() + " registering");
-            sessionBySessionId.put(session.getId(), session);
-            return;
-        }
         if(checkIfUsernameExist(username)){
-            log.info("USER {} already exist. Replacing WebSocketSession");
-
-            sessionByUsername.replace(username,session);
+            log.debug("USER {} already exist. Replacing WebSocketSession");
+            throw new DuplicateException("User "+username+"already exist.");
         }
-        return;
-    }
+        if(checkIfSessionExist(session.getId())){
+            throw new DuplicateException("Session Already Registered");
+        }
 
+        log.info(session.getId() + " registering");
+        sessionBySessionId.put(session.getId(), session);
+    }
     public WebSocketSession getBySessionId(String sessionId){
         return sessionBySessionId.get(sessionId);
     }
@@ -41,21 +40,21 @@ public class SessionManager {
         }
         return false;
     }
-    public Boolean checkIfSessionDoesNotExists(String sessionId){
-        log.info(sessionId + "checkIfSessionDoesNotExist");
+    public Boolean checkIfSessionExist(String sessionId){
+
         if(sessionBySessionId.containsKey(sessionId)){
-            return false;
+            log.debug(sessionId + " Already Exists");
+            return true;
         }
-        return true;
+        return false;
     }
     public void removeBySession(WebSocketSession session) {
-        if(checkIfSessionDoesNotExists(session.getId())){
+        if(checkIfSessionExist(session.getId())){
             log.info("Session Does not exist");
             return;
         }
         log.info("Session" + sessionBySessionId.get(session.getId())+"exist");
         sessionBySessionId.remove(session.getId());
         log.info("Session Removed");
-        return;
     }
 }
