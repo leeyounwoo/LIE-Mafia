@@ -63,7 +63,7 @@ public class Room {
         return false;
     }
     public void leave(String username){
-        log.info("ROOM {}: participant {} entering", this.roomId, username);
+        log.info("ROOM {}: participant {} leaving", this.roomId, username);
         this.participants.remove(username);
     }
     public void close(){

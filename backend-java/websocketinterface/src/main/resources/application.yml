@@ -1,26 +1,20 @@
+server:
+  port: 8000
+
 spring:
   application:
-    name: connection-server
-
+    name: websocket-interface-server
   kafka:
     bootstrap-servers: ${spring.environment.stage.host}:9092
     consumer:
       group-id: connection-group
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-  redis:
-    host: ${spring.environment.stage.host}
-    port: 6379
-    password: ssafy
-
-  kurento:
-    server: 3.38.118.187:8888 #${spring.environment.stage.host}:8888
 
   environment:
     local:
@@ -31,6 +25,7 @@ spring:
       host: 52.79.223.21
       port: 6379
       password: ssafy
+
     production:
       host: i6c209.p.ssafy.io
       port: 6379
@@ -43,11 +38,10 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+
 logging:
   level:
     org:
       springframework: INFO
       kurento: INFO
 
-server:
-  port: 8080
