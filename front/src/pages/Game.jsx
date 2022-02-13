@@ -80,15 +80,15 @@ function Game() {
 
     const options = {
       remoteVideo: video,
-      onicecandidate: (candidate) => {
-        console.log("Remote candidate" + JSON.stringify(candidate));
-        const message = {
-          id: "onIceCandidate",
-          candidate: candidate,
-          name: participant.username,
-        };
-        sendMessage(message);
-      },
+      // onicecandidate: (candidate) => {
+      //   console.log("Remote candidate" + JSON.stringify(candidate));
+      //   const message = {
+      //     id: "onIceCandidate",
+      //     candidate: candidate,
+      //     name: participant.username,
+      //   };
+      //   sendMessage(message);
+      // },
       configuration: {
         iceServers: [
           {
@@ -118,7 +118,7 @@ function Game() {
   };
 
   // 처음 사용자가 방에 입장하면 본인을 등록하고 기존 사용자를 등록
-  const onExistingParticipants = async (msg) => {
+  const onExistingParticipants = (msg) => {
     var constraints = {
       audio: false,
       video: {
@@ -157,15 +157,15 @@ function Game() {
     const options = {
       localVideo: video,
       mediaConstraints: constraints,
-      onicecandidate: (candidate) => {
-        console.log("Local candidate" + JSON.stringify(candidate));
-        const message = {
-          id: "onIceCandidate",
-          candidate: candidate,
-          name: msg.user.username,
-        };
-        sendMessage(message);
-      },
+      // onicecandidate: (candidate) => {
+      //   console.log("Local candidate" + JSON.stringify(candidate));
+      //   const message = {
+      //     id: "onIceCandidate",
+      //     candidate: candidate,
+      //     name: msg.user.username,
+      //   };
+      //   sendMessage(message);
+      // },
     };
 
     user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
