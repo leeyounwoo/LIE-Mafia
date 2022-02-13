@@ -53,7 +53,9 @@ public class ClientMessageDto {
                 this.name = data.get("name").asText();
             }
             if(!ObjectUtils.isEmpty(data.get("candidate"))){
-                this.candidate = new CandidateDto(data.get("candidate"),objectMapper);;
+                log.info(data.get("candidate").toString());
+                log.info("candidate not null");
+                this.candidate = new CandidateDto(data.get("candidate"),objectMapper);
             }
 
         } catch (JsonMappingException e) {

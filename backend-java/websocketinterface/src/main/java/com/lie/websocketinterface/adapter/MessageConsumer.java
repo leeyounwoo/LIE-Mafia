@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.listener.ConsumerSeekAware;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -30,8 +31,7 @@ import java.util.concurrent.ExecutionException;
 public class MessageConsumer {
     private final ObjectMapper objectMapper;
     private final SessionService sessionService;
-
-    @KafkaListener(topics={"client.response"}, groupId = "websocket-interface-test-group")
+    @KafkaListener(topics={"client.response"}, groupId = "websocket-interface-test-group-2")
     public void responseConsume(String message){
         log.info(message);
         try {
@@ -43,7 +43,7 @@ public class MessageConsumer {
            log.info(e.getMessage());
         }
     }
-    @KafkaListener(topics={"error"}, groupId = "websocket-interface-test-group")
+    @KafkaListener(topics={"error"}, groupId = "websocket-interface-test-group-2")
     public void errorConsume(String message){
         log.info(message);
         try {

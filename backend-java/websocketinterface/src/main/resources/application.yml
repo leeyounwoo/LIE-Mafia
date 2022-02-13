@@ -7,7 +7,7 @@ spring:
   kafka:
     bootstrap-servers: ${spring.environment.stage.host}:9092
     consumer:
-      group-id: websocket-interface-test-group
+      group-id: websocket-interface-test-group-2
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -18,7 +18,7 @@ spring:
 
   environment:
     local:
-      host: 192.168.3.136
+      host: 192.168.0.2
       port: 6379
       password: ssafy
     stage:

@@ -39,7 +39,7 @@ public class MessageConsumer {
     private final RoomManager roomManager;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @KafkaListener(topics={"connection.create"}, groupId = "connection-group")
+    @KafkaListener(topics={"connection.create"}, groupId = "connection-test-group-3")
     public void createConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
@@ -53,7 +53,7 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics={"connection.join"}, groupId = "connection-group")
+    @KafkaListener(topics={"connection.join"}, groupId = "connection-test-group-3")
     public void joinConsume(String message) throws JsonProcessingException {
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
@@ -68,7 +68,7 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics={"connection.leave"}, groupId = "connection-group")
+    @KafkaListener(topics={"connection.leave"}, groupId = "connection-test-group-3")
     public void leaveConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
@@ -81,7 +81,7 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics={"connection.receiveVideoFrom"}, groupId = "connection-group")
+    @KafkaListener(topics={"connection.receiveVideoFrom"}, groupId = "connection-test-group-3")
     public void receiveVideoFromConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
@@ -101,8 +101,9 @@ public class MessageConsumer {
         }
     }
 
-    @KafkaListener(topics={"connection.onIceCandidate"}, groupId = "connection-group")
+    @KafkaListener(topics={"connection.onIceCandidate"}, groupId = "connection-test-group-3")
     public void onIceCandidatreConsume(String message)throws JsonProcessingException{
+        log.info(message);
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
         log.info(clientMessageDto.toString());

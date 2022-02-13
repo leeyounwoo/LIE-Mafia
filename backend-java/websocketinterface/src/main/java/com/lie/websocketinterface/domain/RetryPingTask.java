@@ -49,7 +49,7 @@ public class RetryPingTask extends TimerTask {
     }
     private void closeClientSession(ClientClosedDataDto clientClosedDataDto){
         try {
-            kafkaProducer.send("connection.leave",objectMapper.writeValueAsString(clientClosedDataDto));
+            //kafkaProducer.send("connection.leave",objectMapper.writeValueAsString(clientClosedDataDto));
             clientSession.close();
         } catch (JsonProcessingException jsonProcessingException){
             log.debug("Error In making json");
