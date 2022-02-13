@@ -149,13 +149,16 @@ const VideoRoom = ({
         return (
           // 사용자 화면 상자 어디를 클릭해도 onVote 함수 호출
           // id를 이용하여 사용자 화면 상자 색상 지정
-          <Container onClick={onVote} id={`userContainerUsual${userIndex}`}>
+          <Container
+            onClick={onVote}
+            id={`userContainerUsual${userIndex}`}
+            key={idx}
+          >
             {/* 비디오 화면을 상자 가운데에 배치 */}
             <Row className="justify-content-md-center">
               <Col md="auto" id={userIndex}>
                 <UserCam
                   index={`video-${userIndex}`}
-                  keys={participantsVideo.id}
                   participant={participantsVideo[idx]}
                   participantName={participantsName[idx]}
                 />

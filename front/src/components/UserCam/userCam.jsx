@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./userCam.module.css";
 
-const UserCam = ({ key, participant, index, participantName }) => {
+const UserCam = ({ participant, index, participantName }) => {
   const videoRef = useRef(null);
   useEffect(() => {
     waitForParticipantAdd(videoRef.current.srcObject, function () {});
