@@ -3,9 +3,9 @@ spring:
     name: connection-server
 
   kafka:
-    bootstrap-servers: ${spring.environment.stage.host}:9092
+    bootstrap-servers: ${spring.environment.local.host}:9092
     consumer:
-      group-id: connection-test-group-3
+      group-id: connection-group
       auto-offset-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer

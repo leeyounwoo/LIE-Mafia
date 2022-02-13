@@ -58,7 +58,7 @@ public class ConnectionServiceImpl implements ConnectionService{
 
         room = roomRepository.save(room);
         JoinEventDto joinEventDto = new JoinEventDto("join", room.getRoomId(), newParticipant);
-        messageInterface.publishEventToKafka("create", objectMapper.writeValueAsString(joinEventDto));
+        messageInterface.publishEventToKafka("join", objectMapper.writeValueAsString(joinEventDto));
     }
 
     @Override

@@ -43,8 +43,6 @@ public class MessageConsumer {
     public void createConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
-        log.info(clientMessageDto.toString());
-        log.info(message);
         try{
             connectionService.createRoom(clientMessageDto.getSessionId(),
                     clientMessageDto.getUsername());
@@ -57,7 +55,6 @@ public class MessageConsumer {
     public void joinConsume(String message) throws JsonProcessingException {
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
-        log.info(clientMessageDto.toString());
         try{
             connectionService.joinRoom(clientMessageDto.getSessionId(),
                     clientMessageDto.getUsername(),
@@ -72,9 +69,7 @@ public class MessageConsumer {
     public void leaveConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
-        log.info(clientMessageDto.toString());
         try{
-            log.info("Client Leaving");
             connectionService.leaveRoom(clientMessageDto.getSessionId());
         }catch (Exception e){
             e.printStackTrace();
@@ -85,7 +80,6 @@ public class MessageConsumer {
     public void receiveVideoFromConsume(String message)throws JsonProcessingException{
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
-        log.info(clientMessageDto.toString());
         final UserConnection user = userConnectionManager.getBySession(clientMessageDto.getSessionId());
 
         final String senderName = clientMessageDto.getSender();
@@ -103,10 +97,8 @@ public class MessageConsumer {
 
     @KafkaListener(topics={"connection.onIceCandidate"}, groupId = "connection-test-group-3")
     public void onIceCandidatreConsume(String message)throws JsonProcessingException{
-        log.info(message);
         JsonNode jsonMessage = objectMapper.readTree(message);
         ClientMessageDto clientMessageDto = new ClientMessageDto(jsonMessage,objectMapper);
-        log.info(clientMessageDto.toString());
         final UserConnection user = userConnectionManager.getBySession(clientMessageDto.getSessionId());
 
         if(user != null){

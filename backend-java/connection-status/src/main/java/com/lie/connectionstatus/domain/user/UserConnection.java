@@ -76,7 +76,7 @@ public class UserConnection implements Closeable {
             log.debug("PARTICIPANT {}: cofiguring loopback", this.username);
             return outgoingMedia;
         }
-        log.debug("PARTICIPANT {}: receiving video from {}", this.username, sender.getUsername());
+        log.info("PARTICIPANT {}: receiving video from {}", this.username, sender.getUsername());
         
         WebRtcEndpoint incoming = incomingMedia.get(sender.getUsername());
         if (incoming == null){
@@ -138,6 +138,8 @@ public class UserConnection implements Closeable {
 
     public void addCandidate(IceCandidate candidate, String username) {
         if (this.username.compareTo(username) == 0) {
+            log.info("Adding "+ username + " to candidates");
+
             outgoingMedia.addIceCandidate(candidate);
         } else {
             WebRtcEndpoint webRtc = incomingMedia.get(username);
