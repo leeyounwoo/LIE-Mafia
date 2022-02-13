@@ -27,7 +27,7 @@ public class ConnectionServiceImpl implements ConnectionService{
     private final ObjectMapper objectMapper;
 
     @Override
-    public void createRoom( String senderSession, String username) throws Exception{
+    public void createRoom( WebSocketSession session, String username) throws Exception{
         //닉네임 랜덤 배정 시 checkUsername 지워도됨
         if(!roomManager.checkIfUsernameExists(username)){
             Room room = roomManager.createRoom();
@@ -35,10 +35,10 @@ public class ConnectionServiceImpl implements ConnectionService{
             roomRepository.save(room);
             roomManager.createMediaPipeline(room);
 
-            User newParticipant = new User(username,senderSession, Authority.LEADER);
+            User newParticipant = new User(username,session.getId(), Authority.LEADER);
 
             //user에게 pipeline 주고, 시스템에 저장해주기
-            room = roomManager.joinRoom(room, newParticipant);
+            room = roomManager.joinRoom(session, room, newParticipant);
 
             room = roomRepository.save(room);
 
@@ -50,11 +50,11 @@ public class ConnectionServiceImpl implements ConnectionService{
     }
 
     @Override
-    public void joinRoom( String sederSession, String username, String roomId) throws Exception{
+    public void joinRoom( WebSocketSession session, String username, String roomId) throws Exception{
         Room room = roomRepository.findById(roomId).orElseThrow();
-        User newParticipant = new User(username, sederSession, Authority.PLAYER);
+        User newParticipant = new User(username, session.getId(), Authority.PLAYER);
 
-        room = roomManager.joinRoom(room, newParticipant);
+        room = roomManager.joinRoom(session, room, newParticipant);
 
         room = roomRepository.save(room);
         JoinEventDto joinEventDto = new JoinEventDto("join", room.getRoomId(), newParticipant);
@@ -62,13 +62,13 @@ public class ConnectionServiceImpl implements ConnectionService{
     }
 
     @Override
-    public void leaveRoom(String senderSession) throws Exception {
-        if(userConnectionManager.checkIfUserDoesNotExists(senderSession)){
+    public void leaveRoom(WebSocketSession session) throws Exception {
+        if(userConnectionManager.checkIfUserDoesNotExists(session.getId())){
            log.info("USER doesn't exist. There is no one to leave");
            return;
         }
 
-        UserConnection participant = userConnectionManager.getBySession(senderSession);
+        UserConnection participant = userConnectionManager.getBySession(session.getId());
         Room room = roomRepository.findById(participant.getRoomId()).orElseThrow();
 
         if(room.checkIfLeader(participant.getUsername())){

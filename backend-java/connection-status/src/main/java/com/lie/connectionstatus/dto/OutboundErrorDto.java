@@ -1,4 +1,4 @@
-package com.lie.websocketinterface.dto;
+package com.lie.connectionstatus.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
