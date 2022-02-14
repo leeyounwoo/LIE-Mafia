@@ -20,14 +20,15 @@ const StyledTimer = styled.div`
   padding-left: 5vw;
 `;
 
-function gameNav() {
+function gameNav({ dateCount }) {
+  console.log("dayCount", dateCount);
   return (
     <StyledNav>
       <div style={{ paddingLeft: "3vw" }}>
         <h3>Lie, Mafia</h3>
       </div>
       <div style={{ textAlign: "center" }}>
-        <h1>DAY 1</h1>
+        <h1>DAY {dateCount}</h1>
       </div>
       <StyledTimer>
         <Timer />
