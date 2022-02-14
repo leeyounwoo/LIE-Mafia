@@ -68,6 +68,14 @@ function Game() {
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   };
+  const sendGameMessage = (message) => {
+    const newMessage = { eventType: "game", data: message };
+    const jsonMessage = JSON.stringify(newMessage);
+    // const jsonMessage = JSON.stringify(message);
+
+    console.log("Sending message: " + jsonMessage);
+    ws.send(jsonMessage);
+  };
 
   // 비디오를 등록하는 함수
   const receiveVideo = (participant) => {
@@ -439,6 +447,36 @@ function Game() {
       !participantsVideo[0].rtcPeer.audioEnabled;
   };
 
+  const onClickReady = () => {
+    let message = "";
+    message = {
+      id: "ready",
+      roomId: roomId,
+      username: participantsName[0],
+    }
+    console.log({
+      id: "ready",
+      roomId: roomId,
+      username: participantsName[0],
+    })
+    sendGameMessage(message);
+  };
+
+  const onClickStart = () => {
+    let message = "";
+    message = {
+      id: "start",
+      roomId: roomId,
+      username: participantsName[0],
+    }
+    console.log({
+      id: "start",
+      roomId: roomId,
+      username: participantsName[0],
+    })
+    sendGameMessage(message);
+  };
+
   return (
     <StyledContainer>
       {!join && <Home onBtnClick={onBtnClick} />}
@@ -501,6 +539,8 @@ function Game() {
                 localUserVideo={participantsVideo[0]}
                 onClickCamera={onClickCamera}
                 onClickMute={onClickMute}
+                onClickStart={onClickStart}
+                onClickReady={onClickReady}
               />
             </div>
           )}
