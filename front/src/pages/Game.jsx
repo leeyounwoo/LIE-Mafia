@@ -3,7 +3,6 @@ import VideoRoom from "../components/VideoRoom/videoRoom";
 import FinalArgument from "../components/VideoRoom/finalArgument";
 import WaitingNav from "../components/Navbar/navbar";
 import GameNav from "../components/Navbar/gameNav";
-import Footer from "../components/Footer/footer";
 // import Chat from "../components/Chat/chat";
 import { WebRtcPeer } from "kurento-utils";
 import styled from "styled-components";
@@ -29,7 +28,10 @@ function Game() {
   const tempParticipantsVideo = participantsVideo;
 
   // 로컬 사용자
-  const username = `User${Math.random().toString(36).substr(2, 11)}`;
+  const [username, setUsername] = useState(
+    `User${Math.random().toString(36).substr(2, 11)}`
+  );
+  console.log("name", username);
   const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
@@ -65,6 +67,13 @@ function Game() {
     const jsonMessage = JSON.stringify(newMessage);
     // const jsonMessage = JSON.stringify(message);
 
+    console.log("Sending message: " + jsonMessage);
+    ws.send(jsonMessage);
+  };
+
+  const sendGameMessage = (message) => {
+    const newMessage = { eventType: "game", data: message };
+    const jsonMessage = JSON.stringify(newMessage);
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   };
@@ -494,14 +503,6 @@ function Game() {
                 </header>
               </Main>
               {/* <Chat /> */}
-              <Footer
-                authority={authority}
-                roomId={roomId}
-                username={username}
-                localUserVideo={participantsVideo[0]}
-                onClickCamera={onClickCamera}
-                onClickMute={onClickMute}
-              />
             </div>
           )}
         </div>
