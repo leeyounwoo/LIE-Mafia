@@ -34,7 +34,6 @@ function Game() {
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
-  // 역할
   const [userRole, setUserRole] = useState("");
 
   // 지목받은 사용자 (최후의 변론)
