@@ -22,11 +22,14 @@ function Game() {
   // const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   // const ws = new WebSocket("ws://52.79.223.21:8001/ws");
   const [socketConnect, setSocketConnect] = useState(false);
-  const webSocketUrl ="ws://52.79.223.21:8001/ws";
+  const webSocketUrl = "ws://52.79.223.21:8001/ws";
   let ws = useRef(null);
   // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
+  const [readyState, setReadyState] = useState({});
+  const tempReadyState = readyState;
+
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
 
@@ -53,6 +56,7 @@ function Game() {
   const [playerName, setPlayerName] = useState(participantsName);
 
   // 투표 가능한 상태
+  // 임시 (원래는 false)
   const [isVotable, setIsVotable] = useState(false);
 
   // 밤투표 상황인지 아닌지
@@ -62,11 +66,16 @@ function Game() {
   const [dateCount, setDateCount] = useState(1);
 
   // 게임 진행 상태
+  // 임시 (원래는 false)
   const [isGameStart, setIsGameStart] = useState(false);
 
+<<<<<<< HEAD
+  const [canStart, setCanStart] = useState(false);
+=======
   const [endTime, setEndTime] = useState('');
 
   const messageRef = useRef('');
+>>>>>>> 16e523f88b5bba5a1ec385aa5c608ae162d84d65
 
   // 서버쪽으로 메세지를 보내는 함수
   const sendConnectionMessage = (message) => {
@@ -77,6 +86,7 @@ function Game() {
     console.log("Sending message: " + jsonMessage);
     ws.current.send(jsonMessage);
   };
+
   const sendGameMessage = (message) => {
     const newMessage = { eventType: "game", data: message };
     const jsonMessage = JSON.stringify(newMessage);
@@ -98,6 +108,7 @@ function Game() {
 
     tempParticipantsName.push(participant.username);
     tempParticipantsVideo.push(user);
+    tempReadyState[participant.username] = false;
 
     var video = document.getElementById(
       `video-${tempParticipantsVideo.length - 1}`
@@ -167,6 +178,8 @@ function Game() {
     tempParticipantsVideo.push(user);
     setRoomId(msg.data.roomId);
 
+    tempReadyState[msg.user.username] = false;
+
     // 임시
     setSelectedUserName(user.name);
     setSelectedUserVideo(user);
@@ -232,14 +245,6 @@ function Game() {
     ].rtcPeer.addIceCandidate(msg.candidate);
   };
 
-  // tempParticipant와 participant 동기화
-  const updateParticipants = () => {
-    setParticipantsName([]);
-    setParticipantsVideo([]);
-    setParticipantsName(tempParticipantsName);
-    setParticipantsVideo(tempParticipantsVideo);
-  };
-
   // 시간 설정
   const setTime = (time) => {
     console.log(time);
@@ -261,7 +266,10 @@ function Game() {
     setEndTime(msg.endTime);
     messageRef.current = (`당신은 ${userRole}입니다.`)
   };
+<<<<<<< HEAD
+=======
   console.log(messageRef);
+>>>>>>> 16e523f88b5bba5a1ec385aa5c608ae162d84d65
 
   // 아침
   // 공지사항 구현 X
@@ -307,25 +315,31 @@ function Game() {
     setEndTime(msg.data.endTime);
     messageRef.current = ('밤이 되었습니다. 마피아는 죽이고 싶은 사람을, 의사는 살리고 싶은 사람을 투표하세요.')
   };
-  
-  let readyCnt = 0;
+
   const onReady = (msg) => {
-    console.log(Object.values(participantsName));
-    console.log(`'${msg.username}'`);
-    // 만약 msg.username 이 participantsName에 있고, ready가 true 이면 cnt +1
-    // cnt 가 participantsname.length와 같으면 스타트버튼 활성화
-    console.log(`'${msg.username}'` in [...participantsName]);
-    // if (((msg.username) in participantsName) && (msg.ready)) {
-    //   readyCnt = readyCnt + 1;
-    // }
-    if (readyCnt === participantsName.length-1) {
-      // 스타트 버튼 활성화시켜
-      console.log("스타트!")
-    } else {
-      console.log(readyCnt)
+    console.log("before", tempReadyState);
+    tempReadyState[msg.username] = msg.ready;
+    updateReadyState();
+    console.log("after", tempReadyState);
+
+    console.log("in onReady", tempReadyState);
+    if (Object.keys(tempReadyState).length >= 4 && msg.ready === true) {
+      let flag = true;
+      Object.entries(tempReadyState).forEach(([key, value]) => {
+        console.log("key", key, participantsName[0]);
+        console.log("value", value);
+        if (key !== participantsName[0] && value === false) {
+          flag = false;
+        }
+      });
+      if (flag === true) {
+        console.log("시작가능");
+        setCanStart(true);
+      }
     }
   };
 
+  console.log("readyState", readyState);
   // 투표 상황을 보여주는 voteState
   // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
   const [voteState, setVoteState] = useState({
@@ -391,11 +405,6 @@ function Game() {
     if (isVotable) {
       // voteState를 갱신시켜줄 newVoteState
       let newVoteState = JSON.parse(JSON.stringify(voteState));
-      console.log(
-        participantsName[0],
-        " vote to ",
-        participantsName[clickIndex]
-      );
 
       // 사용자가 이전에 선택했던 컴포넌트
       const prevChoice = newVoteState[0]["choice"];
@@ -408,6 +417,18 @@ function Game() {
       // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
       newVoteState[clickIndex][0] = true;
       setVoteState(newVoteState);
+      const message = {
+        id: isNight ? "madeNightVote" : "madeMorningVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: participantsName[clickIndex],
+      };
+      sendGameMessage(message);
+      console.log(
+        participantsName[0],
+        " vote to ",
+        participantsName[clickIndex]
+      );
     }
   };
 
@@ -438,10 +459,18 @@ function Game() {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
       let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
-      console.log(participantsName[0], " vote for the approval of death");
       newVoteStateFinal["agree"][0] = true;
       newVoteStateFinal["disagree"][0] = false;
       setVoteStateFinal(newVoteStateFinal);
+      const message = {
+        id: "madeExcutionVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: selectedUserName,
+        agreeToDead: true,
+      };
+      sendGameMessage(message);
+      console.log(participantsName[0], " vote for the approval of death");
     }
   };
 
@@ -451,15 +480,40 @@ function Game() {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
       let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
-      console.log(participantsName[0], " vote for the rejection of death");
       newVoteStateFinal["disagree"][0] = true;
       newVoteStateFinal["agree"][0] = false;
       setVoteStateFinal(newVoteStateFinal);
+      const message = {
+        id: "madeExcutionVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: selectedUserName,
+        agreeToDead: false,
+      };
+      sendGameMessage(message);
+      console.log(participantsName[0], " vote for the rejection of death");
     }
+  };
+
+  // tempParticipant와 participant 동기화
+  const updateParticipants = () => {
+    setParticipantsName([]);
+    setParticipantsVideo([]);
+    setParticipantsName(tempParticipantsName);
+    setParticipantsVideo(tempParticipantsVideo);
   };
 
   useEffect(() => {
     updateParticipants();
+  });
+
+  const updateReadyState = () => {
+    setReadyState({});
+    setReadyState(tempReadyState);
+  };
+
+  useEffect(() => {
+    updateReadyState();
   });
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
@@ -487,11 +541,11 @@ function Game() {
           sendConnectionMessage(message);
         }
       };
-  
+
       ws.current.onmessage = (message) => {
         var parsedMessage = JSON.parse(message.data);
         console.info("Received message: " + message.data);
-  
+
         // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
         // 그 외엔 일반 게임 그리드
         if (
@@ -502,9 +556,10 @@ function Game() {
         } else {
           setIsExecutionGrid(false);
         }
-  
+
         // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
         // 그 외엔 투표 불가능
+        // 임시 (주석처리해둠)
         if (
           parsedMessage.id === "startExecutionVote" ||
           parsedMessage.id === "startMorningVote" ||
@@ -514,7 +569,7 @@ function Game() {
         } else {
           setIsVotable(false);
         }
-  
+
         // 밤투표일 땐 밤
         // 그 외엔 낮
         if (parsedMessage.id === "nightVote") {
@@ -522,86 +577,87 @@ function Game() {
         } else {
           setIsNight(false);
         }
-  
+
         switch (parsedMessage.id) {
           // 새로 방에 참여한 사용자에게 오는 메세지
           // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
           case "existingParticipants":
             onExistingParticipants(parsedMessage);
             break;
-  
+
           // 기존에 있던 사용자에게 오는 메세지
           // 새로 참여한 사용자 정보
           case "newParticipant":
             onNewParticipant(parsedMessage);
             break;
-  
+
           // receive 함수에서 보낸 receiveVideoFrom 메세지에 대한 대답
           case "receiveVideoAnswer":
             onReceiveVideoAnswer(parsedMessage);
             break;
-  
+
           // onIceCandidate 메세지에 대한 대답
           case "iceCandidate":
             onAddIceCandidate(parsedMessage);
             break;
-  
+
+          // 준비
+          case "ready":
+            onReady(parsedMessage);
+            console.log(readyState);
+            break;
+
           // 직업 배정
           case "roleAssign":
             onRoleAssign(parsedMessage);
             setIsGameStart(true);
             break;
-  
+
           // 아침 토론
           case "startMorning":
-            onMorning(parsedMessage);
+            onStartMorning(parsedMessage);
             break;
-  
+
           // 아침 투표
           case "startMorningVote":
             onMorningVote(parsedMessage);
             break;
-  
+
           // 최후의 변론
           case "startFinalSpeech":
             onFinalSpeech(parsedMessage);
             break;
-  
+
           // 사형 투표
           case "startExecutionVote":
             onExecutionVote(parsedMessage);
             break;
-  
+
           // 사형 투표 결과를 어떤 메세지로 보내준다는거지?
-  
+
           // 밤 투표
           case "nightVote":
             onNightVote(parsedMessage);
             break;
-  
-          case "ready":
-            onReady(parsedMessage);
-            break;
-  
+
           default:
             console.error("Unrecognized message", parsedMessage);
         }
       };
-  
+
       ws.current.onerror = (error) => {
         console.log(error);
         alert(error);
       };
-  
+
       ws.current.onclose = (event) => {
         console.log(event);
       };
-  
+
       // 컴포넌트가 파괴될 때 웹소켓 통신 닫음
       return function cleanup() {
         ws.current.close();
       };
-
     }
   }, []);
 
@@ -623,6 +679,8 @@ function Game() {
   };
 
   const onClickReady = () => {
+    tempReadyState[participantsName[0]] = !tempReadyState[participantsName[0]];
+    updateReadyState();
     let message = "";
     message = {
       id: "ready",
@@ -641,6 +699,8 @@ function Game() {
     };
     sendGameMessage(message);
   };
+
+  console.log("participantsName", participantsName);
 
   return (
     <StyledContainer>
@@ -710,8 +770,10 @@ function Game() {
               <Footer
                 authority={authority}
                 roomId={roomId}
-                username={username}
+                username={participantsName[0]}
                 localUserVideo={participantsVideo[0]}
+                canStart={canStart}
+                readyState={readyState}
                 onClickCamera={onClickCamera}
                 onClickMute={onClickMute}
                 onClickStart={onClickStart}
