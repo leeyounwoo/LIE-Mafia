@@ -20,18 +20,22 @@ const Main = styled.div`
 `;
 
 function Game() {
+  // const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
   const ws = new WebSocket("ws://52.79.223.21:8001/ws");
   // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
+
   // 로컬 사용자
   const username = `User${Math.random().toString(36).substr(2, 11)}`;
   const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
+  const [userRole, setUserRole] = useState("");
+
   // 지목받은 사용자 (최후의 변론)
   const [selectedUserName, setSelectedUserName] = useState(participantsName[0]);
   const [selectedUserVideo, setSelectedUserVideo] = useState(
@@ -41,7 +45,7 @@ function Game() {
   const [isExcutionGrid, setIsExcutionGrid] = useState(false);
 
   // 게임 생존자
-  const [votersName, setVotersName] = useState(participantsName);
+  const [playerName, setPlayerName] = useState(participantsName);
 
   // 투표 가능한 상태
   const [isVotable, setIsVotable] = useState(false);
@@ -49,13 +53,18 @@ function Game() {
   // 밤투표 상황인지 아닌지
   const [isNight, setIsNight] = useState(false);
 
+  // 날짜
+  const [dateCount, setDateCount] = useState(0);
+
   // 게임 진행 상태
   const [isGameStart, setIsGameStart] = useState(false);
 
   // 서버쪽으로 메세지를 보내는 함수
-  const sendMessage = (message) => {
+  const sendConnectionMessage = (message) => {
     const newMessage = { eventType: "connection", data: message };
     const jsonMessage = JSON.stringify(newMessage);
+    // const jsonMessage = JSON.stringify(message);
+
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   };
@@ -80,15 +89,15 @@ function Game() {
 
     const options = {
       remoteVideo: video,
-      // onicecandidate: (candidate) => {
-      //   console.log("Remote candidate" + JSON.stringify(candidate));
-      //   const message = {
-      //     id: "onIceCandidate",
-      //     candidate: candidate,
-      //     name: participant.username,
-      //   };
-      //   sendMessage(message);
-      // },
+      onicecandidate: (candidate) => {
+        console.log("Remote candidate" + JSON.stringify(candidate));
+        const message = {
+          id: "onIceCandidate",
+          candidate: candidate,
+          name: participant.username,
+        };
+        sendConnectionMessage(message);
+      },
       configuration: {
         iceServers: [
           {
@@ -112,13 +121,13 @@ function Game() {
           sender: participant.username,
           sdpOffer: offerSdp,
         };
-        sendMessage(msg);
+        sendConnectionMessage(msg);
       });
     });
   };
 
   // 처음 사용자가 방에 입장하면 본인을 등록하고 기존 사용자를 등록
-  const onExistingParticipants = (msg) => {
+  const onExistingParticipants = async (msg) => {
     var constraints = {
       audio: false,
       video: {
@@ -157,15 +166,15 @@ function Game() {
     const options = {
       localVideo: video,
       mediaConstraints: constraints,
-      // onicecandidate: (candidate) => {
-      //   console.log("Local candidate" + JSON.stringify(candidate));
-      //   const message = {
-      //     id: "onIceCandidate",
-      //     candidate: candidate,
-      //     name: msg.user.username,
-      //   };
-      //   sendMessage(message);
-      // },
+      onicecandidate: (candidate) => {
+        console.log("Local candidate" + JSON.stringify(candidate));
+        const message = {
+          id: "onIceCandidate",
+          candidate: candidate,
+          name: msg.user.username,
+        };
+        sendConnectionMessage(message);
+      },
     };
 
     user.rtcPeer = WebRtcPeer.WebRtcPeerSendonly(options, function (error) {
@@ -180,7 +189,7 @@ function Game() {
           sender: msg.user.username,
           sdpOffer: offerSdp,
         };
-        sendMessage(message);
+        sendConnectionMessage(message);
       });
     });
 
@@ -219,18 +228,60 @@ function Game() {
     setParticipantsVideo(tempParticipantsVideo);
   };
 
+  // 시간 설정
+  const setTime = (time) => {
+    console.log(time);
+  };
+
+  // 죽은 사람 처리
+  const updatePlayer = (deadPlayerName) => {
+    setPlayerName(
+      playerName.filter((playerName) => playerName !== deadPlayerName)
+    );
+  };
+
+  // 직업 배정
+  const onRoleAssign = (msg) => {
+    setUserRole(msg.job);
+    setTime(msg.endTime);
+  };
+
+  // 아침
+  // 공지사항 구현 X
+  // - 첫 날인 경우엔 "아침이 되었다" + "토론을 해달라"
+  // - 첫 날이 아닌 경우엔, "밤 사이 ~~ 가 죽었다" or "밤 사이 아무도 죽지 않았다."
+  const onMorning = (msg) => {
+    setDateCount(msg.day);
+    setTime(msg.endTime);
+    if (msg.result !== null) {
+      updatePlayer(msg.result);
+    }
+  };
+
+  // 아침 투표
+  const onMorningVote = (msg) => {
+    setTime(msg.endTime);
+  };
+
   // 최후의 변론
   // 지목된 사용자 지정
   const onFinalSpeech = (msg) => {
     const selectedUserIndex = participantsName.indexOf(msg.result);
     setSelectedUserName(participantsName[selectedUserIndex]);
     setSelectedUserVideo(participantsVideo[selectedUserIndex]);
+    setTime(msg.endTime);
   };
 
   // 사형 투표
-  // 해야 할 일: 타이머 설정
+  // 공지사항 X
   const onExecutionVote = (msg) => {
-    console.log("onExecutionVote");
+    setTime(msg.endTime);
+  };
+
+  // 밤 투표
+  // 공지사항 구현 X
+  const onNightVote = (msg) => {
+    setTime(msg.endTime);
   };
 
   useEffect(() => {
@@ -257,7 +308,7 @@ function Game() {
         };
       }
       if (message !== "") {
-        sendMessage(message);
+        sendConnectionMessage(message);
       }
     };
 
@@ -319,6 +370,21 @@ function Game() {
           onAddIceCandidate(parsedMessage);
           break;
 
+        // 직업 배정
+        case "roleassign":
+          onRoleAssign(parsedMessage);
+          break;
+
+        // 아침 토론
+        case "morning":
+          onMorning(parsedMessage);
+          break;
+
+        // 아침 투표
+        case "morningvote":
+          onMorningVote(parsedMessage);
+          break;
+
         // 최후의 변론
         case "finalspeech":
           onFinalSpeech(parsedMessage);
@@ -327,6 +393,13 @@ function Game() {
         // 사형 투표
         case "executionvote":
           onExecutionVote(parsedMessage);
+          break;
+
+        // 사형 투표 결과를 어떤 메세지로 보내준다는거지?
+
+        // 밤 투표
+        case "nightvote":
+          onNightVote(parsedMessage);
           break;
 
         default:
@@ -374,11 +447,16 @@ function Game() {
           {/* 게임 진행 */}
           {isGameStart && (
             <div>
-              <GameNav />
+              <GameNav
+                // 날짜
+                dateCount={dateCount}
+              />
               <header>
                 {/* 최후의 변론 X */}
                 {!isExcutionGrid && (
                   <VideoRoom
+                    // dateCount에 따라서 공지사항 달라질거 같아서
+                    dateCount={dateCount}
                     isNight={isNight}
                     isVotable={isVotable}
                     participantsVideo={participantsVideo}
@@ -391,7 +469,7 @@ function Game() {
                     isVotable={isVotable}
                     selectedUserName={selectedUserName}
                     selectedUserVideo={selectedUserVideo}
-                    votersName={votersName}
+                    playerName={playerName}
                     participantsName={participantsName}
                     participantsVideo={participantsVideo}
                   />
