@@ -23,6 +23,9 @@ const userColor5 = {
 };
 
 const FinalArgument = ({
+  voteStateFinal,
+  onVoteAgree,
+  onVoteDisAgree,
   selectedUserName,
   selectedUserVideo,
   playerName,
@@ -30,51 +33,12 @@ const FinalArgument = ({
   participantsVideo,
   isVotable,
 }) => {
-  // 투표 상황을 보여주는 voteState
-  // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
-  const [voteState, setVoteState] = useState({
-    agree: {
-      0: false,
-      1: false,
-      2: false,
-      3: false,
-      4: false,
-      5: false,
-    },
-    disagree: {
-      0: false,
-      1: false,
-      2: false,
-      3: false,
-      4: false,
-      5: false,
-    },
-  });
-
-  // 사형에 찬성하는 버튼 클릭시 호출
-  // 서버로 메세지 보내는 부분 구현해야 함
-  const onVoteAgree = () => {
-    // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
-    if (isVotable) {
-      let newVoteState = JSON.parse(JSON.stringify(voteState));
-      console.log(participantsName[0], " vote for the approval of death");
-      newVoteState["agree"][0] = true;
-      newVoteState["disagree"][0] = false;
-      setVoteState(newVoteState);
-    }
+  const onClickAgree = () => {
+    onVoteAgree();
   };
 
-  // 사형에 반대하는 버튼 클릭시 호출
-  // 서버로 메세지 보내는 부분 구현해야 함
-  const onVoteDisAgree = () => {
-    // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
-    if (isVotable) {
-      let newVoteState = JSON.parse(JSON.stringify(voteState));
-      console.log(participantsName[0], " vote for the rejection of death");
-      newVoteState["disagree"][0] = true;
-      newVoteState["agree"][0] = false;
-      setVoteState(newVoteState);
-    }
+  const onClickDisAgree = () => {
+    onVoteDisAgree();
   };
 
   return (
@@ -107,24 +71,24 @@ const FinalArgument = ({
       </Row>
       <Row className="justify-content-md-center">
         <Col>
-          <button onClick={onVoteAgree}>찬성</button>
+          <button onClick={onClickAgree}>찬성</button>
           <ul>
-            {voteState["agree"]["0"] && (
+            {voteStateFinal["agree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
             )}
-            {voteState["agree"]["1"] && (
+            {voteStateFinal["agree"]["1"] && (
               <button style={userColor1}>{participantsName[1]}</button>
             )}
-            {voteState["agree"]["2"] && (
+            {voteStateFinal["agree"]["2"] && (
               <button style={userColor2}>{participantsName[2]}</button>
             )}
-            {voteState["agree"]["3"] && (
+            {voteStateFinal["agree"]["3"] && (
               <button style={userColor3}>{participantsName[3]}</button>
             )}
-            {voteState["agree"]["4"] && (
+            {voteStateFinal["agree"]["4"] && (
               <button style={userColor4}>{participantsName[4]}</button>
             )}
-            {voteState["agree"]["5"] && (
+            {voteStateFinal["agree"]["5"] && (
               <button style={userColor5}>{participantsName[5]}</button>
             )}
           </ul>
@@ -161,24 +125,24 @@ const FinalArgument = ({
           </div>
         </Col>
         <Col>
-          <button onClick={onVoteDisAgree}>반대</button>
+          <button onClick={onClickDisAgree}>반대</button>
           <ul>
-            {voteState["disagree"]["0"] && (
+            {voteStateFinal["disagree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
             )}
-            {voteState["disagree"]["1"] && (
+            {voteStateFinal["disagree"]["1"] && (
               <button style={userColor1}>{participantsName[1]}</button>
             )}
-            {voteState["disagree"]["2"] && (
+            {voteStateFinal["disagree"]["2"] && (
               <button style={userColor2}>{participantsName[2]}</button>
             )}
-            {voteState["disagree"]["3"] && (
+            {voteStateFinal["disagree"]["3"] && (
               <button style={userColor3}>{participantsName[3]}</button>
             )}
-            {voteState["disagree"]["4"] && (
+            {voteStateFinal["disagree"]["4"] && (
               <button style={userColor4}>{participantsName[4]}</button>
             )}
-            {voteState["disagree"]["5"] && (
+            {voteStateFinal["disagree"]["5"] && (
               <button style={userColor5}>{participantsName[5]}</button>
             )}
           </ul>

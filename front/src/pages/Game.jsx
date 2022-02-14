@@ -29,7 +29,10 @@ function Game() {
   const tempParticipantsVideo = participantsVideo;
 
   // 로컬 사용자
-  const username = `User${Math.random().toString(36).substr(2, 11)}`;
+  const [username, setUsername] = useState(
+    `User${Math.random().toString(36).substr(2, 11)}`
+  );
+  console.log("name", username);
   const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
@@ -54,7 +57,7 @@ function Game() {
   const [isNight, setIsNight] = useState(false);
 
   // 날짜
-  const [dateCount, setDateCount] = useState(0);
+  const [dateCount, setDateCount] = useState(1);
 
   // 게임 진행 상태
   const [isGameStart, setIsGameStart] = useState(false);
@@ -63,15 +66,11 @@ function Game() {
   const sendConnectionMessage = (message) => {
     const newMessage = { eventType: "connection", data: message };
     const jsonMessage = JSON.stringify(newMessage);
-    // const jsonMessage = JSON.stringify(message);
-
-    console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
   };
   const sendGameMessage = (message) => {
     const newMessage = { eventType: "game", data: message };
     const jsonMessage = JSON.stringify(newMessage);
-    // const jsonMessage = JSON.stringify(message);
 
     console.log("Sending message: " + jsonMessage);
     ws.send(jsonMessage);
@@ -98,7 +97,6 @@ function Game() {
     const options = {
       remoteVideo: video,
       onicecandidate: (candidate) => {
-        console.log("Remote candidate" + JSON.stringify(candidate));
         const message = {
           id: "onIceCandidate",
           candidate: candidate,
@@ -123,7 +121,6 @@ function Game() {
       }
       this.generateOffer((err, offerSdp, wq) => {
         if (err) return console.err("sdp offer error");
-        console.log("Invoking SDP offer callback function");
         let msg = {
           id: "receiveVideoFrom",
           sender: participant.username,
@@ -175,7 +172,6 @@ function Game() {
       localVideo: video,
       mediaConstraints: constraints,
       onicecandidate: (candidate) => {
-        console.log("Local candidate" + JSON.stringify(candidate));
         const message = {
           id: "onIceCandidate",
           candidate: candidate,
@@ -191,7 +187,6 @@ function Game() {
       }
       this.generateOffer((err, offerSdp, wq) => {
         if (err) return console.err("sdp offer error");
-        console.log("Invoking SDP offer callback function");
         let message = {
           id: "receiveVideoFrom",
           sender: msg.user.username,
@@ -248,23 +243,28 @@ function Game() {
     );
   };
 
-  // 직업 배정
+  // 직업 배정(O)
+  // 게임 시작
+  // 공지사항
   const onRoleAssign = (msg) => {
+    setIsGameStart(true);
     setUserRole(msg.job);
     setTime(msg.endTime);
   };
+  console.log("역할", userRole);
 
   // 아침
   // 공지사항 구현 X
   // - 첫 날인 경우엔 "아침이 되었다" + "토론을 해달라"
   // - 첫 날이 아닌 경우엔, "밤 사이 ~~ 가 죽었다" or "밤 사이 아무도 죽지 않았다."
-  const onMorning = (msg) => {
-    setDateCount(msg.day);
+  const onStartMorning = (msg) => {
+    setDateCount(msg.dayCount);
     setTime(msg.endTime);
     if (msg.result !== null) {
       updatePlayer(msg.result);
     }
   };
+  console.log("datecount in game", dateCount);
 
   // 아침 투표
   const onMorningVote = (msg) => {
@@ -290,6 +290,138 @@ function Game() {
   // 공지사항 구현 X
   const onNightVote = (msg) => {
     setTime(msg.endTime);
+  };
+
+  // 투표 상황을 보여주는 voteState
+  // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
+  const [voteState, setVoteState] = useState({
+    0: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+    1: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+    2: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+    3: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+    4: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+    5: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+      choice: "",
+    },
+  });
+
+  // 투표
+  // 서버로 메세지 보내는거 구현해야 함
+  const onVote = (clickIndex) => {
+    if (isVotable) {
+      // voteState를 갱신시켜줄 newVoteState
+      let newVoteState = JSON.parse(JSON.stringify(voteState));
+      console.log(
+        participantsName[0],
+        " vote to ",
+        participantsName[clickIndex]
+      );
+
+      // 사용자가 이전에 선택했던 컴포넌트
+      const prevChoice = newVoteState[0]["choice"];
+      // 이전에 선택했던 컴포넌트가 있고 그 값이 true 일 경우 false로 바꿔줌
+      if (prevChoice !== "" && newVoteState[prevChoice][0]) {
+        newVoteState[prevChoice][0] = false;
+      }
+      // 사용자가 선택한 값을 선택한 컴포넌트로 갱신
+      newVoteState[0]["choice"] = clickIndex;
+      // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
+      newVoteState[clickIndex][0] = true;
+      setVoteState(newVoteState);
+    }
+  };
+
+  // 투표 상황을 보여주는 voteState
+  // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
+  const [voteStateFinal, setVoteStateFinal] = useState({
+    agree: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+    },
+    disagree: {
+      0: false,
+      1: false,
+      2: false,
+      3: false,
+      4: false,
+      5: false,
+    },
+  });
+
+  // 사형에 찬성하는 버튼 클릭시 호출
+  // 서버로 메세지 보내는 부분 구현해야 함
+  const onVoteAgree = () => {
+    // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
+    if (isVotable) {
+      let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
+      console.log(participantsName[0], " vote for the approval of death");
+      newVoteStateFinal["agree"][0] = true;
+      newVoteStateFinal["disagree"][0] = false;
+      setVoteStateFinal(newVoteStateFinal);
+    }
+  };
+
+  // 사형에 반대하는 버튼 클릭시 호출
+  // 서버로 메세지 보내는 부분 구현해야 함
+  const onVoteDisAgree = () => {
+    // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
+    if (isVotable) {
+      let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
+      console.log(participantsName[0], " vote for the rejection of death");
+      newVoteStateFinal["disagree"][0] = true;
+      newVoteStateFinal["agree"][0] = false;
+      setVoteStateFinal(newVoteStateFinal);
+    }
   };
 
   useEffect(() => {
@@ -322,13 +454,12 @@ function Game() {
 
     ws.onmessage = (message) => {
       var parsedMessage = JSON.parse(message.data);
-      console.info("Received message: " + message.data);
 
       // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
       // 그 외엔 일반 게임 그리드
       if (
-        parsedMessage.id === "finalspeech" ||
-        parsedMessage.id === "executionvote"
+        parsedMessage.id === "startFinalSpeech" ||
+        parsedMessage.id === "startExecutionVote"
       ) {
         setIsExcutionGrid(true);
       } else {
@@ -338,9 +469,9 @@ function Game() {
       // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
       // 그 외엔 투표 불가능
       if (
-        parsedMessage.id === "executionvote" ||
-        parsedMessage.id === "morningvote" ||
-        parsedMessage.id === "nightvote"
+        parsedMessage.id === "startExecutionVote" ||
+        parsedMessage.id === "startMorningVote" ||
+        parsedMessage.id === "nightVote"
       ) {
         setIsVotable(true);
       } else {
@@ -349,7 +480,7 @@ function Game() {
 
       // 밤투표일 땐 밤
       // 그 외엔 낮
-      if (parsedMessage.id === "nightvote") {
+      if (parsedMessage.id === "nightVote") {
         setIsNight(true);
       } else {
         setIsNight(false);
@@ -379,35 +510,41 @@ function Game() {
           break;
 
         // 직업 배정
-        case "roleassign":
-          onRoleAssign(parsedMessage);
+        case "roleAssign":
+          console.log(parsedMessage);
+          onRoleAssign(parsedMessage.data);
           break;
 
         // 아침 토론
-        case "morning":
-          onMorning(parsedMessage);
+        case "startMorning":
+          console.log(parsedMessage);
+          onStartMorning(parsedMessage.data);
           break;
 
         // 아침 투표
-        case "morningvote":
-          onMorningVote(parsedMessage);
+        case "startMorningVote":
+          console.log(parsedMessage);
+          onMorningVote(parsedMessage.data);
           break;
 
         // 최후의 변론
-        case "finalspeech":
-          onFinalSpeech(parsedMessage);
+        case "startFinalSpeech":
+          console.log(parsedMessage);
+          onFinalSpeech(parsedMessage.data);
           break;
 
         // 사형 투표
-        case "executionvote":
-          onExecutionVote(parsedMessage);
+        case "startExecutionVote":
+          console.log(parsedMessage);
+          onExecutionVote(parsedMessage.data);
           break;
 
         // 사형 투표 결과를 어떤 메세지로 보내준다는거지?
 
         // 밤 투표
-        case "nightvote":
-          onNightVote(parsedMessage);
+        case "nightVote":
+          console.log(parsedMessage);
+          onNightVote(parsedMessage.data);
           break;
 
         default:
@@ -453,12 +590,7 @@ function Game() {
       id: "ready",
       roomId: roomId,
       username: participantsName[0],
-    }
-    console.log({
-      id: "ready",
-      roomId: roomId,
-      username: participantsName[0],
-    })
+    };
     sendGameMessage(message);
   };
 
@@ -468,12 +600,7 @@ function Game() {
       id: "start",
       roomId: roomId,
       username: participantsName[0],
-    }
-    console.log({
-      id: "start",
-      roomId: roomId,
-      username: participantsName[0],
-    })
+    };
     sendGameMessage(message);
   };
 
@@ -496,7 +623,8 @@ function Game() {
                     // dateCount에 따라서 공지사항 달라질거 같아서
                     dateCount={dateCount}
                     isNight={isNight}
-                    isVotable={isVotable}
+                    onVote={onVote}
+                    voteState={voteState}
                     participantsVideo={participantsVideo}
                     participantsName={participantsName}
                   />
@@ -504,7 +632,9 @@ function Game() {
                 {/* 최후의 변론 */}
                 {isExcutionGrid && (
                   <FinalArgument
-                    isVotable={isVotable}
+                    voteStateFinal={voteStateFinal}
+                    onVoteAgree={onVoteAgree}
+                    onVoteDisAgree={onVoteDisAgree}
                     selectedUserName={selectedUserName}
                     selectedUserVideo={selectedUserVideo}
                     playerName={playerName}
@@ -523,8 +653,10 @@ function Game() {
                 <header className="App-header">
                   <>
                     <VideoRoom
+                      dateCount={dateCount}
                       isNight={isNight}
-                      isVotable={isVotable}
+                      onVote={onVote}
+                      voteState={voteState}
                       participantsVideo={participantsVideo}
                       participantsName={participantsName}
                     />
