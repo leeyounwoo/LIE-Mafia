@@ -6,12 +6,12 @@ const StyledMsg = styled.div`
   box-sizing: border-box;
   border: 1px solid gray;
   width: 50vw;
-  height: 20vh;
+  height: 30vh;
   text-align: center;
-  line-height: 20vh;
+  line-height: 30vh;
 `;
 
-function Message() {
-  return <StyledMsg>Message</StyledMsg>;
+function Message({ message }) {
+  return <StyledMsg>{message}</StyledMsg>;
 }
 export default Message;

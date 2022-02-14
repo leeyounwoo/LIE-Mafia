@@ -16,21 +16,21 @@ const StyledBar = styled.div`
   grid-column-end: 4;
 `;
 
-const StyledTimer = styled.div`
-  padding-left: 5vw;
-`;
+const StyledTimer = styled.div``;
 
-function gameNav() {
+function gameNav({ dateCount, endTime }) {
+  console.log("dayCount", dateCount);
   return (
     <StyledNav>
       <div style={{ paddingLeft: "3vw" }}>
         <h3>Lie, Mafia</h3>
       </div>
       <div style={{ textAlign: "center" }}>
-        <h1>DAY 1</h1>
+        <h1>DAY {dateCount}</h1>
       </div>
       <StyledTimer>
-        <Timer />
+        <h2>{endTime}</h2>
+        {/* <Timer endTime={endTime} /> */}
       </StyledTimer>
       <StyledBar>
         <ProgressBar animated now={45} />
