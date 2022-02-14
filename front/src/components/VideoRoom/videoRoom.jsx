@@ -11,8 +11,10 @@ const VideoGrid = styled.div`
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
   column-gap: 2vw;
-  row-gap: 15vh;
   padding: 20px 10px;
+`;
+const MessageGrid = styled.div`
+  grid-column: 1/4;
 `;
 
 const buttonColor0 = {
@@ -41,6 +43,8 @@ const VideoRoom = ({
   voteState,
   participantsVideo,
   participantsName,
+  isGameStart,
+  message
 }) => {
   const onClick = (event) => {
     let clickIndex = event.target.id[event.target.id.length - 1];
@@ -116,9 +120,9 @@ const VideoRoom = ({
           </Container>
         );
       })}
-
-      {/* <Message /> */}
-
+      {isGameStart && (<MessageGrid>
+        <Message message={message} />
+      </MessageGrid>)}
       {userIndexArray2.map((userIndex, idx) => {
         return (
           // 사용자 화면 상자 어디를 클릭해도 onVote 함수 호출
