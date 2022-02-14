@@ -29,6 +29,9 @@ function Game() {
   // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
+  const [readyState, setReadyState] = useState({});
+  const tempReadyState = readyState;
+
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
 
@@ -55,6 +58,7 @@ function Game() {
   const [playerName, setPlayerName] = useState(participantsName);
 
   // 투표 가능한 상태
+  // 임시 (원래는 false)
   const [isVotable, setIsVotable] = useState(false);
 
   // 밤투표 상황인지 아닌지
@@ -64,7 +68,10 @@ function Game() {
   const [dateCount, setDateCount] = useState(1);
 
   // 게임 진행 상태
+  // 임시 (원래는 false)
   const [isGameStart, setIsGameStart] = useState(false);
+
+  const [canStart, setCanStart] = useState(false);
 
   // 서버쪽으로 메세지를 보내는 함수
   const sendConnectionMessage = (message) => {
@@ -75,6 +82,7 @@ function Game() {
     console.log("Sending message: " + jsonMessage);
     ws.current.send(jsonMessage);
   };
+
   const sendGameMessage = (message) => {
     const newMessage = { eventType: "game", data: message };
     const jsonMessage = JSON.stringify(newMessage);
@@ -96,6 +104,7 @@ function Game() {
 
     tempParticipantsName.push(participant.username);
     tempParticipantsVideo.push(user);
+    tempReadyState[participant.username] = false;
 
     var video = document.getElementById(
       `video-${tempParticipantsVideo.length - 1}`
@@ -165,6 +174,8 @@ function Game() {
     tempParticipantsVideo.push(user);
     setRoomId(msg.data.roomId);
 
+    tempReadyState[msg.user.username] = false;
+
     // 임시
     setSelectedUserName(user.name);
     setSelectedUserVideo(user);
@@ -230,14 +241,6 @@ function Game() {
     ].rtcPeer.addIceCandidate(msg.candidate);
   };
 
-  // tempParticipant와 participant 동기화
-  const updateParticipants = () => {
-    setParticipantsName([]);
-    setParticipantsVideo([]);
-    setParticipantsName(tempParticipantsName);
-    setParticipantsVideo(tempParticipantsVideo);
-  };
-
   // 시간 설정
   const setTime = (time) => {
     console.log(time);
@@ -258,7 +261,6 @@ function Game() {
     setUserRole(msg.job);
     setTime(msg.endTime);
   };
-  console.log("역할", userRole);
 
   // 아침
   // 공지사항 구현 X
@@ -299,24 +301,30 @@ function Game() {
     setTime(msg.endTime);
   };
 
-  let readyCnt = 0;
   const onReady = (msg) => {
-    console.log(Object.values(participantsName));
-    console.log(`'${msg.username}'`);
-    // 만약 msg.username 이 participantsName에 있고, ready가 true 이면 cnt +1
-    // cnt 가 participantsname.length와 같으면 스타트버튼 활성화
-    console.log(`'${msg.username}'` in [...participantsName]);
-    // if (((msg.username) in participantsName) && (msg.ready)) {
-    //   readyCnt = readyCnt + 1;
-    // }
-    if (readyCnt === participantsName.length - 1) {
-      // 스타트 버튼 활성화시켜
-      console.log("스타트!");
-    } else {
-      console.log(readyCnt);
+    console.log("before", tempReadyState);
+    tempReadyState[msg.username] = msg.ready;
+    updateReadyState();
+    console.log("after", tempReadyState);
+
+    console.log("in onReady", tempReadyState);
+    if (Object.keys(tempReadyState).length >= 4 && msg.ready === true) {
+      let flag = true;
+      Object.entries(tempReadyState).forEach(([key, value]) => {
+        console.log("key", key, participantsName[0]);
+        console.log("value", value);
+        if (key !== participantsName[0] && value === false) {
+          flag = false;
+        }
+      });
+      if (flag === true) {
+        console.log("시작가능");
+        setCanStart(true);
+      }
     }
   };
 
+  console.log("readyState", readyState);
   // 투표 상황을 보여주는 voteState
   // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
   const [voteState, setVoteState] = useState({
@@ -382,11 +390,6 @@ function Game() {
     if (isVotable) {
       // voteState를 갱신시켜줄 newVoteState
       let newVoteState = JSON.parse(JSON.stringify(voteState));
-      console.log(
-        participantsName[0],
-        " vote to ",
-        participantsName[clickIndex]
-      );
 
       // 사용자가 이전에 선택했던 컴포넌트
       const prevChoice = newVoteState[0]["choice"];
@@ -399,6 +402,18 @@ function Game() {
       // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
       newVoteState[clickIndex][0] = true;
       setVoteState(newVoteState);
+      const message = {
+        id: isNight ? "madeNightVote" : "madeMorningVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: participantsName[clickIndex],
+      };
+      sendGameMessage(message);
+      console.log(
+        participantsName[0],
+        " vote to ",
+        participantsName[clickIndex]
+      );
     }
   };
 
@@ -429,10 +444,18 @@ function Game() {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
       let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
-      console.log(participantsName[0], " vote for the approval of death");
       newVoteStateFinal["agree"][0] = true;
       newVoteStateFinal["disagree"][0] = false;
       setVoteStateFinal(newVoteStateFinal);
+      const message = {
+        id: "madeExcutionVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: selectedUserName,
+        agreeToDead: true,
+      };
+      sendGameMessage(message);
+      console.log(participantsName[0], " vote for the approval of death");
     }
   };
 
@@ -442,15 +465,40 @@ function Game() {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
       let newVoteStateFinal = JSON.parse(JSON.stringify(voteStateFinal));
-      console.log(participantsName[0], " vote for the rejection of death");
       newVoteStateFinal["disagree"][0] = true;
       newVoteStateFinal["agree"][0] = false;
       setVoteStateFinal(newVoteStateFinal);
+      const message = {
+        id: "madeExcutionVote",
+        roomId: roomId,
+        username: participantsName[0],
+        select: selectedUserName,
+        agreeToDead: false,
+      };
+      sendGameMessage(message);
+      console.log(participantsName[0], " vote for the rejection of death");
     }
+  };
+
+  // tempParticipant와 participant 동기화
+  const updateParticipants = () => {
+    setParticipantsName([]);
+    setParticipantsVideo([]);
+    setParticipantsName(tempParticipantsName);
+    setParticipantsVideo(tempParticipantsVideo);
   };
 
   useEffect(() => {
     updateParticipants();
+  });
+
+  const updateReadyState = () => {
+    setReadyState({});
+    setReadyState(tempReadyState);
+  };
+
+  useEffect(() => {
+    updateReadyState();
   });
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
@@ -496,6 +544,7 @@ function Game() {
 
         // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
         // 그 외엔 투표 불가능
+        // 임시 (주석처리해둠)
         if (
           parsedMessage.id === "executionvote" ||
           parsedMessage.id === "morningvote" ||
@@ -537,6 +586,12 @@ function Game() {
             onAddIceCandidate(parsedMessage);
             break;
 
+          // 준비
+          case "ready":
+            onReady(parsedMessage);
+            console.log(readyState);
+            break;
+
           // 직업 배정
           case "roleAssign":
             onRoleAssign(parsedMessage);
@@ -568,10 +623,6 @@ function Game() {
           // 밤 투표
           case "nightVote":
             onNightVote(parsedMessage);
-            break;
-
-          case "ready":
-            onReady(parsedMessage);
             break;
 
           default:
@@ -613,6 +664,8 @@ function Game() {
   };
 
   const onClickReady = () => {
+    tempReadyState[participantsName[0]] = !tempReadyState[participantsName[0]];
+    updateReadyState();
     let message = "";
     message = {
       id: "ready",
@@ -631,6 +684,8 @@ function Game() {
     };
     sendGameMessage(message);
   };
+
+  console.log("participantsName", participantsName);
 
   return (
     <StyledContainer>
@@ -695,8 +750,10 @@ function Game() {
               <Footer
                 authority={authority}
                 roomId={roomId}
-                username={username}
+                username={participantsName[0]}
                 localUserVideo={participantsVideo[0]}
+                canStart={canStart}
+                readyState={readyState}
                 onClickCamera={onClickCamera}
                 onClickMute={onClickMute}
                 onClickStart={onClickStart}

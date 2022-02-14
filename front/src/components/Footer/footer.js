@@ -24,12 +24,15 @@ const StyledBtn = styled.div`
 
 function WaitingFooter(props) {
   const handleReady = () => {
+    setReadyFlag(!readyFlag);
     props.onClickReady();
   };
 
   const handleStart = () => {
     props.onClickStart();
   };
+
+  const [readyFlag, setReadyFlag] = useState(true);
 
   const [localCamera, setLocalCamera] = useState(true);
   const [localMute, setLocalMute] = useState(true);
@@ -45,6 +48,7 @@ function WaitingFooter(props) {
     props.onClickMute();
     setLocalMute(!localMute);
   };
+
   return (
     <StyledFooter>
       <StyleCam onClick={handleCameraClick}>
@@ -62,12 +66,24 @@ function WaitingFooter(props) {
         )}
       </div>
       <StyledBtn>
-        {props.authority === "LEADER" ? (
+        {props.authority === "LEADER" && props.canStart && (
           <Button onClick={handleStart} size="lg">
             Start
           </Button>
-        ) : (
+        )}
+        {props.authority === "LEADER" && !props.canStart && (
+          <Button variant="secondary" size="lg">
+            Start
+          </Button>
+        )}
+        {props.authority !== "LEADER" && readyFlag && (
           <Button onClick={handleReady} size="lg">
+            Ready
+          </Button>
+        )}
+
+        {props.authority !== "LEADER" && !readyFlag && (
+          <Button onClick={handleReady} variant="secondary" size="lg">
             Ready
           </Button>
         )}
