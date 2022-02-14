@@ -1,6 +1,6 @@
-package com.lie.connectionstatus.config;
+package com.lie.websocketinterface.config;
 
-import com.lie.connectionstatus.adapter.ConnectionHandler;
+import com.lie.websocketinterface.adapter.WebsocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -10,11 +10,11 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSocket
-public class ConnectionSocketConfig implements WebSocketConfigurer {
-    public final ConnectionHandler connectionHandler;
-
+public class WebsocketConfig implements WebSocketConfigurer {
+    private final WebsocketHandler websocketHandler;
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(connectionHandler, "/connect").setAllowedOrigins("*");
+        registry.addHandler(websocketHandler, "/ws").setAllowedOrigins("*");
+
     }
 }
