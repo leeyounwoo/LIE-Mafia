@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import VideoRoom from "../components/VideoRoom/videoRoom";
 import FinalArgument from "../components/VideoRoom/finalArgument";
 import WaitingNav from "../components/Navbar/navbar";
@@ -9,6 +9,7 @@ import { WebRtcPeer } from "kurento-utils";
 import styled from "styled-components";
 import Home from "../components/Home/home";
 import Chat from "../components/Chat/Chat";
+import Message from "../components/Message/message";
 
 const StyledContainer = styled.div`
   height: 100vh;
@@ -21,7 +22,10 @@ const Main = styled.div`
 
 function Game() {
   // const ws = new WebSocket("ws://i6c209.p.ssafy.io:8080/connect");
-  const ws = new WebSocket("ws://52.79.223.21:8001/ws");
+  // const ws = new WebSocket("ws://52.79.223.21:8001/ws");
+  const [socketConnect, setSocketConnect] = useState(false);
+  const webSocketUrl ="ws://52.79.223.21:8001/ws";
+  let ws = useRef(null);
   // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
   const [participantsVideo, setParticipantsVideo] = useState([]);
@@ -66,7 +70,7 @@ function Game() {
     // const jsonMessage = JSON.stringify(message);
 
     console.log("Sending message: " + jsonMessage);
-    ws.send(jsonMessage);
+    ws.current.send(jsonMessage);
   };
   const sendGameMessage = (message) => {
     const newMessage = { eventType: "game", data: message };
@@ -74,7 +78,7 @@ function Game() {
     // const jsonMessage = JSON.stringify(message);
 
     console.log("Sending message: " + jsonMessage);
-    ws.send(jsonMessage);
+    ws.current.send(jsonMessage);
   };
 
   // 비디오를 등록하는 함수
@@ -250,6 +254,7 @@ function Game() {
 
   // 직업 배정
   const onRoleAssign = (msg) => {
+    console.log(msg)
     setUserRole(msg.job);
     setTime(msg.endTime);
   };
@@ -291,6 +296,24 @@ function Game() {
   const onNightVote = (msg) => {
     setTime(msg.endTime);
   };
+  
+  let readyCnt = 0;
+  const onReady = (msg) => {
+    console.log(Object.values(participantsName));
+    console.log(`'${msg.username}'`);
+    // 만약 msg.username 이 participantsName에 있고, ready가 true 이면 cnt +1
+    // cnt 가 participantsname.length와 같으면 스타트버튼 활성화
+    console.log(`'${msg.username}'` in [...participantsName]);
+    // if (((msg.username) in participantsName) && (msg.ready)) {
+    //   readyCnt = readyCnt + 1;
+    // }
+    if (readyCnt === participantsName.length-1) {
+      // 스타트 버튼 활성화시켜
+      console.log("스타트!")
+    } else {
+      console.log(readyCnt)
+    }
+  };
 
   useEffect(() => {
     updateParticipants();
@@ -298,136 +321,145 @@ function Game() {
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
-    ws.onopen = () => {
-      console.log("연결");
-      let message = "";
-      // 방장일 땐 create 메세지
-      if (roomId === "0") {
-        message = {
-          id: "create",
-          username: username,
-        };
-        // 참여자일 땐 join 메세지
-      } else {
-        message = {
-          id: "join",
-          username: username,
-          roomId: roomId,
-        };
-      }
-      if (message !== "") {
-        sendConnectionMessage(message);
-      }
-    };
+    if (!ws.current) {
+      ws.current = new WebSocket(webSocketUrl);
+      ws.current.onopen = () => {
+        console.log("연결");
+        let message = "";
+        // 방장일 땐 create 메세지
+        if (roomId === "0") {
+          message = {
+            id: "create",
+            username: username,
+          };
+          // 참여자일 땐 join 메세지
+        } else {
+          message = {
+            id: "join",
+            username: username,
+            roomId: roomId,
+          };
+        }
+        if (message !== "") {
+          sendConnectionMessage(message);
+        }
+      };
+  
+      ws.current.onmessage = (message) => {
+        var parsedMessage = JSON.parse(message.data);
+        console.info("Received message: " + message.data);
+  
+        // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
+        // 그 외엔 일반 게임 그리드
+        if (
+          parsedMessage.id === "finalspeech" ||
+          parsedMessage.id === "executionvote"
+        ) {
+          setIsExcutionGrid(true);
+        } else {
+          setIsExcutionGrid(false);
+        }
+  
+        // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
+        // 그 외엔 투표 불가능
+        if (
+          parsedMessage.id === "executionvote" ||
+          parsedMessage.id === "morningvote" ||
+          parsedMessage.id === "nightvote"
+        ) {
+          setIsVotable(true);
+        } else {
+          setIsVotable(false);
+        }
+  
+        // 밤투표일 땐 밤
+        // 그 외엔 낮
+        if (parsedMessage.id === "nightvote") {
+          setIsNight(true);
+        } else {
+          setIsNight(false);
+        }
+  
+        switch (parsedMessage.id) {
+          // 새로 방에 참여한 사용자에게 오는 메세지
+          // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
+          case "existingParticipants":
+            onExistingParticipants(parsedMessage);
+            break;
+  
+          // 기존에 있던 사용자에게 오는 메세지
+          // 새로 참여한 사용자 정보
+          case "newParticipant":
+            onNewParticipant(parsedMessage);
+            break;
+  
+          // receive 함수에서 보낸 receiveVideoFrom 메세지에 대한 대답
+          case "receiveVideoAnswer":
+            onReceiveVideoAnswer(parsedMessage);
+            break;
+  
+          // onIceCandidate 메세지에 대한 대답
+          case "iceCandidate":
+            onAddIceCandidate(parsedMessage);
+            break;
+  
+          // 직업 배정
+          case "roleAssign":
+            onRoleAssign(parsedMessage);
+            setIsGameStart(true);
+            break;
+  
+          // 아침 토론
+          case "startMorning":
+            onMorning(parsedMessage);
+            break;
+  
+          // 아침 투표
+          case "startMorningVote":
+            onMorningVote(parsedMessage);
+            break;
+  
+          // 최후의 변론
+          case "startFinalSpeech":
+            onFinalSpeech(parsedMessage);
+            break;
+  
+          // 사형 투표
+          case "startExecutionVote":
+            onExecutionVote(parsedMessage);
+            break;
+  
+          // 사형 투표 결과를 어떤 메세지로 보내준다는거지?
+  
+          // 밤 투표
+          case "nightVote":
+            onNightVote(parsedMessage);
+            break;
+  
+          case "ready":
+            onReady(parsedMessage);
+            break;
+  
+          default:
+            console.error("Unrecognized message", parsedMessage);
+        }
+      };
+  
+      ws.current.onerror = (error) => {
+        console.log(error);
+        alert(error);
+      };
+  
+      ws.current.onclose = (event) => {
+        console.log(event);
+      };
+  
+      // 컴포넌트가 파괴될 때 웹소켓 통신 닫음
+      return function cleanup() {
+        ws.current.close();
+      };
 
-    ws.onmessage = (message) => {
-      var parsedMessage = JSON.parse(message.data);
-      console.info("Received message: " + message.data);
-
-      // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
-      // 그 외엔 일반 게임 그리드
-      if (
-        parsedMessage.id === "finalspeech" ||
-        parsedMessage.id === "executionvote"
-      ) {
-        setIsExcutionGrid(true);
-      } else {
-        setIsExcutionGrid(false);
-      }
-
-      // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
-      // 그 외엔 투표 불가능
-      if (
-        parsedMessage.id === "executionvote" ||
-        parsedMessage.id === "morningvote" ||
-        parsedMessage.id === "nightvote"
-      ) {
-        setIsVotable(true);
-      } else {
-        setIsVotable(false);
-      }
-
-      // 밤투표일 땐 밤
-      // 그 외엔 낮
-      if (parsedMessage.id === "nightvote") {
-        setIsNight(true);
-      } else {
-        setIsNight(false);
-      }
-
-      switch (parsedMessage.id) {
-        // 새로 방에 참여한 사용자에게 오는 메세지
-        // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
-        case "existingParticipants":
-          onExistingParticipants(parsedMessage);
-          break;
-
-        // 기존에 있던 사용자에게 오는 메세지
-        // 새로 참여한 사용자 정보
-        case "newParticipant":
-          onNewParticipant(parsedMessage);
-          break;
-
-        // receive 함수에서 보낸 receiveVideoFrom 메세지에 대한 대답
-        case "receiveVideoAnswer":
-          onReceiveVideoAnswer(parsedMessage);
-          break;
-
-        // onIceCandidate 메세지에 대한 대답
-        case "iceCandidate":
-          onAddIceCandidate(parsedMessage);
-          break;
-
-        // 직업 배정
-        case "roleassign":
-          onRoleAssign(parsedMessage);
-          break;
-
-        // 아침 토론
-        case "morning":
-          onMorning(parsedMessage);
-          break;
-
-        // 아침 투표
-        case "morningvote":
-          onMorningVote(parsedMessage);
-          break;
-
-        // 최후의 변론
-        case "finalspeech":
-          onFinalSpeech(parsedMessage);
-          break;
-
-        // 사형 투표
-        case "executionvote":
-          onExecutionVote(parsedMessage);
-          break;
-
-        // 사형 투표 결과를 어떤 메세지로 보내준다는거지?
-
-        // 밤 투표
-        case "nightvote":
-          onNightVote(parsedMessage);
-          break;
-
-        default:
-          console.error("Unrecognized message", parsedMessage);
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.log(error);
-      alert(error);
-    };
-
-    ws.onclose = (event) => {
-      console.log(event);
-    };
-
-    // 컴포넌트가 파괴될 때 웹소켓 통신 닫음
-    return function cleanup() {
-      ws.close();
-    };
+    }
   }, []);
 
   const [join, setJoin] = useState(false);
@@ -490,6 +522,7 @@ function Game() {
                 dateCount={dateCount}
               />
               <header>
+                <Message />
                 {/* 최후의 변론 X */}
                 {!isExcutionGrid && (
                   <VideoRoom
@@ -531,7 +564,6 @@ function Game() {
                   </>
                 </header>
               </Main>
-              {/* <Chat /> */}
               <Footer
                 authority={authority}
                 roomId={roomId}
