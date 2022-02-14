@@ -8,8 +8,6 @@ import Footer from "../components/Footer/footer";
 import { WebRtcPeer } from "kurento-utils";
 import styled from "styled-components";
 import Home from "../components/Home/home";
-import Chat from "../components/Chat/Chat";
-import Message from "../components/Message/message";
 
 const StyledContainer = styled.div`
   height: 100vh;
@@ -39,7 +37,7 @@ function Game() {
   const [username, setUsername] = useState(
     `User${Math.random().toString(36).substr(2, 11)}`
   );
-  console.log("name", username);
+  // console.log("name", username);
   const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
@@ -52,7 +50,7 @@ function Game() {
     participantsVideo[0]
   );
   // 최후의 변론 그리드
-  const [isExcutionGrid, setIsExcutionGrid] = useState(false);
+  const [isExecutionGrid, setIsExecutionGrid] = useState(false);
 
   // 게임 생존자
   const [playerName, setPlayerName] = useState(participantsName);
@@ -71,7 +69,13 @@ function Game() {
   // 임시 (원래는 false)
   const [isGameStart, setIsGameStart] = useState(false);
 
+<<<<<<< HEAD
   const [canStart, setCanStart] = useState(false);
+=======
+  const [endTime, setEndTime] = useState('');
+
+  const messageRef = useRef('');
+>>>>>>> 16e523f88b5bba5a1ec385aa5c608ae162d84d65
 
   // 서버쪽으로 메세지를 보내는 함수
   const sendConnectionMessage = (message) => {
@@ -259,25 +263,33 @@ function Game() {
   const onRoleAssign = (msg) => {
     setIsGameStart(true);
     setUserRole(msg.job);
-    setTime(msg.endTime);
+    setEndTime(msg.endTime);
+    messageRef.current = (`당신은 ${userRole}입니다.`)
   };
+<<<<<<< HEAD
+=======
+  console.log(messageRef);
+>>>>>>> 16e523f88b5bba5a1ec385aa5c608ae162d84d65
 
   // 아침
   // 공지사항 구현 X
   // - 첫 날인 경우엔 "아침이 되었다" + "토론을 해달라"
   // - 첫 날이 아닌 경우엔, "밤 사이 ~~ 가 죽었다" or "밤 사이 아무도 죽지 않았다."
-  const onStartMorning = (msg) => {
-    setDateCount(msg.dayCount);
-    setTime(msg.endTime);
-    if (msg.result !== null) {
-      updatePlayer(msg.result);
+  const onMorning = (msg) => {
+    console.log(msg.data);
+    setDateCount(msg.data.dayCount);
+    setEndTime(msg.data.endTime);
+    if (msg.data.result !== null) {
+      updatePlayer(msg.data.result);
     }
+    msg.data.dayCount === 1 ? messageRef.current =('낮이 되었습니다. 2분 동안 마피아가 누구일지 토론하세요.') : messageRef.current = (`낮이 되었습니다. 밤 사이 ${msg.data.result}가 사망했습니다. 2분 동안 마피아가 누구일지 토론하세요.`)
   };
-  console.log("datecount in game", dateCount);
+  // console.log("datecount in game", dateCount);
 
   // 아침 투표
   const onMorningVote = (msg) => {
-    setTime(msg.endTime);
+    setEndTime(msg.data.endTime);
+    messageRef.current = ('90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.')
   };
 
   // 최후의 변론
@@ -286,19 +298,22 @@ function Game() {
     const selectedUserIndex = participantsName.indexOf(msg.result);
     setSelectedUserName(participantsName[selectedUserIndex]);
     setSelectedUserVideo(participantsVideo[selectedUserIndex]);
-    setTime(msg.endTime);
+    setEndTime(msg.data.endTime);
+    messageRef.current = ('지목당한 유저는 30초 간 최후의 변론을 하세요.')
   };
 
   // 사형 투표
   // 공지사항 X
   const onExecutionVote = (msg) => {
-    setTime(msg.endTime);
+    setEndTime(msg.data.endTime);
+    messageRef.current = ('60초 간 유저의 사형에 대해 찬성 or 반대를 투표하세요!')
   };
 
   // 밤 투표
   // 공지사항 구현 X
   const onNightVote = (msg) => {
-    setTime(msg.endTime);
+    setEndTime(msg.data.endTime);
+    messageRef.current = ('밤이 되었습니다. 마피아는 죽이고 싶은 사람을, 의사는 살리고 싶은 사람을 투표하세요.')
   };
 
   const onReady = (msg) => {
@@ -534,21 +549,21 @@ function Game() {
         // 최후의 변론 또는 사형 투표일 땐 사형투표 그리드
         // 그 외엔 일반 게임 그리드
         if (
-          parsedMessage.id === "finalspeech" ||
-          parsedMessage.id === "executionvote"
+          parsedMessage.id === "startFinalSpeech" ||
+          parsedMessage.id === "startExecutionVote"
         ) {
-          setIsExcutionGrid(true);
+          setIsExecutionGrid(true);
         } else {
-          setIsExcutionGrid(false);
+          setIsExecutionGrid(false);
         }
 
         // 아침 투표, 사형 투표, 밤 투표일 땐 투표가능
         // 그 외엔 투표 불가능
         // 임시 (주석처리해둠)
         if (
-          parsedMessage.id === "executionvote" ||
-          parsedMessage.id === "morningvote" ||
-          parsedMessage.id === "nightvote"
+          parsedMessage.id === "startExecutionVote" ||
+          parsedMessage.id === "startMorningVote" ||
+          parsedMessage.id === "nightVote"
         ) {
           setIsVotable(true);
         } else {
@@ -557,7 +572,7 @@ function Game() {
 
         // 밤투표일 땐 밤
         // 그 외엔 낮
-        if (parsedMessage.id === "nightvote") {
+        if (parsedMessage.id === "nightVote") {
           setIsNight(true);
         } else {
           setIsNight(false);
@@ -698,11 +713,12 @@ function Game() {
               <GameNav
                 // 날짜
                 dateCount={dateCount}
+                endTime={endTime}
               />
               <header>
-                <Message />
+                {/* <Message /> */}
                 {/* 최후의 변론 X */}
-                {!isExcutionGrid && (
+                {!isExecutionGrid && (
                   <VideoRoom
                     // dateCount에 따라서 공지사항 달라질거 같아서
                     dateCount={dateCount}
@@ -711,10 +727,12 @@ function Game() {
                     voteState={voteState}
                     participantsVideo={participantsVideo}
                     participantsName={participantsName}
+                    isGameStart={isGameStart}
+                    message={messageRef}
                   />
                 )}
                 {/* 최후의 변론 */}
-                {isExcutionGrid && (
+                {isExecutionGrid && (
                   <FinalArgument
                     voteStateFinal={voteStateFinal}
                     onVoteAgree={onVoteAgree}
@@ -724,6 +742,7 @@ function Game() {
                     playerName={playerName}
                     participantsName={participantsName}
                     participantsVideo={participantsVideo}
+                    
                   />
                 )}
               </header>
@@ -733,7 +752,7 @@ function Game() {
           {!isGameStart && (
             <div>
               <WaitingNav roomId={roomId} />
-              <Main>
+              
                 <header className="App-header">
                   <>
                     <VideoRoom
@@ -743,10 +762,11 @@ function Game() {
                       voteState={voteState}
                       participantsVideo={participantsVideo}
                       participantsName={participantsName}
+                      isGameStart={isGameStart}
                     />
                   </>
                 </header>
-              </Main>
+              
               <Footer
                 authority={authority}
                 roomId={roomId}

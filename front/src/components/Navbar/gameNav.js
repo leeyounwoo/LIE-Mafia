@@ -16,11 +16,9 @@ const StyledBar = styled.div`
   grid-column-end: 4;
 `;
 
-const StyledTimer = styled.div`
-  padding-left: 5vw;
-`;
+const StyledTimer = styled.div``;
 
-function gameNav({ dateCount }) {
+function gameNav({ dateCount, endTime }) {
   console.log("dayCount", dateCount);
   return (
     <StyledNav>
@@ -31,7 +29,8 @@ function gameNav({ dateCount }) {
         <h1>DAY {dateCount}</h1>
       </div>
       <StyledTimer>
-        <Timer />
+        <h2>{endTime}</h2>
+        {/* <Timer endTime={endTime} /> */}
       </StyledTimer>
       <StyledBar>
         <ProgressBar animated now={45} />
