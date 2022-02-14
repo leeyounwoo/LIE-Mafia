@@ -25,7 +25,7 @@ const userColor5 = {
 const FinalArgument = ({
   selectedUserName,
   selectedUserVideo,
-  votersName,
+  playerName,
   participantsName,
   participantsVideo,
   isVotable,
@@ -52,6 +52,7 @@ const FinalArgument = ({
   });
 
   // 사형에 찬성하는 버튼 클릭시 호출
+  // 서버로 메세지 보내는 부분 구현해야 함
   const onVoteAgree = () => {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
@@ -64,6 +65,7 @@ const FinalArgument = ({
   };
 
   // 사형에 반대하는 버튼 클릭시 호출
+  // 서버로 메세지 보내는 부분 구현해야 함
   const onVoteDisAgree = () => {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable) {
@@ -79,19 +81,19 @@ const FinalArgument = ({
     <Container>
       <Row>
         {/* 사형 투표에 참여하는 모든 사용자 */}
-        {votersName.forEach((voter, idx) => {
+        {playerName.forEach((player, idx) => {
           return (
-            <Container id={`userContainer${participantsName.indexOf(voter)}`}>
+            <Container id={`userContainer${participantsName.indexOf(player)}`}>
               <Row className="justify-content-md-center">
-                <Col md="auto" id={participantsName.indexOf(voter)}>
+                <Col md="auto" id={participantsName.indexOf(player)}>
                   <UserCam
-                    index={`video-${participantsName.indexOf(voter)}`}
+                    index={`video-${participantsName.indexOf(player)}`}
                     keys={participantsVideo.id}
                     participant={
-                      participantsVideo[participantsName.indexOf(voter)]
+                      participantsVideo[participantsName.indexOf(player)]
                     }
                     participantName={
-                      participantsName[participantsName.indexOf(voter)]
+                      participantsName[participantsName.indexOf(player)]
                     }
                   />
                 </Col>
