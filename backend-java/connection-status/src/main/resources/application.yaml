@@ -3,7 +3,7 @@ spring:
     name: connection-server
 
   kafka:
-    bootstrap-servers: ${spring.environment.production.host}:9092
+    bootstrap-servers: ${spring.environment.stage.host}:9092
     consumer:
       group-id: connection-group
       auto-offset-reset: latest

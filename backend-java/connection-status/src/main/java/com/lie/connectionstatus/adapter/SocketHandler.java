@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.connectionstatus.domain.user.UserConnection;
 import com.lie.connectionstatus.domain.user.UserConnectionManager;
+import com.lie.connectionstatus.dto.ClientClosedDataDto;
 import com.lie.connectionstatus.dto.EventActionDto;
 import com.lie.connectionstatus.port.ConnectionService;
 import com.lie.connectionstatus.port.MessageInterface;
@@ -79,9 +80,14 @@ public class SocketHandler extends TextWebSocketHandler {
         }
         else{
             log.info(data);
-            messageInterface.sendToService(eventActionDto.getId(), data, session.getId());
+            messageInterface.sendToService(eventActionDto.createTopic(), data, session.getId());
         }
 
 
+    }
+
+    @Override
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        connectionService.leaveRoom(session);
     }
 }

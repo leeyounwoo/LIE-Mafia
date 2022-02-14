@@ -71,8 +71,6 @@ public class MessageConsumer {
         } catch (IOException e){
             log.info(e.getMessage());
         }
-
-
     }
     public OutboundMessageDto makeOutboudMessageDto(String message) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(message.replaceAll("\\n","").replaceAll(" ", ""));

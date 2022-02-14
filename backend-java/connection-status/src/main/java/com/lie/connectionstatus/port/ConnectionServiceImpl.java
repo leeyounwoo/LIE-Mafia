@@ -1,6 +1,8 @@
 package com.lie.connectionstatus.port;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lie.connectionstatus.domain.PingTimer;
+import com.lie.connectionstatus.domain.RetryPingTask;
 import com.lie.connectionstatus.domain.user.Authority;
 import com.lie.connectionstatus.domain.user.User;
 import com.lie.connectionstatus.domain.user.UserConnection;
@@ -12,9 +14,13 @@ import com.lie.connectionstatus.dto.JoinEventDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.socket.PingMessage;
 import org.springframework.web.socket.WebSocketSession;
+
+import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor @Service
@@ -94,5 +100,26 @@ public class ConnectionServiceImpl implements ConnectionService{
         Room room = roomRepository.findById(roomId).orElseThrow();
 
         return room.checkIfUserExists(username);
+    }
+
+    @Scheduled(fixedDelay=40000)
+    private void sendPingMessageToClients(){
+        PingMessage pingMessage = new PingMessage();
+        userConnectionManager.getUsersBySessionId().values().stream().forEach(session -> {
+            try{
+                session.getSession().sendMessage(pingMessage);
+                log.info(userConnectionManager.getUsersBySessionId().size()+" "+"healthy clients left");
+                return;
+            } catch (IOException e) {
+                log.info("PING MESSAGE OUT ERROR");
+            } catch (Exception e) {
+                log.info("UNEXPECTED ERROR");
+
+                PingTimer pingTimer = new PingTimer();
+                RetryPingTask retryPing = new RetryPingTask(userConnectionManager,  objectMapper, this);
+                retryPing.setClientSession(session.getSession());
+                pingTimer.schedule(retryPing, 40000);
+            }
+        });
     }
 }
