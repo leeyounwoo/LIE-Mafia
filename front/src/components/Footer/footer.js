@@ -2,40 +2,49 @@ import React, { useState, useEffect, useRef } from "react";
 import { useHistory } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import styled from "styled-components";
+import { BsFillCameraVideoOffFill } from "react-icons/bs";
+import { BsFillCameraVideoFill } from "react-icons/bs";
+import { BsFillMicMuteFill } from "react-icons/bs";
+import { BsFillMicFill } from "react-icons/bs";
 
 const StyledFooter = styled.div`
+  display: grid;
   border: 1px solid;
   padding: 20px;
   box-sizing: border-box;
-  button {
-    display: block;
-    margin: auto;
-  }
+  grid-template-columns: 10% 10% 20% 20% 20% 10% 10%;
+`;
+const StyleCam = styled.div`
+  margin: auto;
+`;
+const StyledBtn = styled.div`
+  grid-column: 4 / 5;
+  margin: auto;
 `;
 
 function WaitingFooter(props) {
   const [socketConnect, setSocketConnect] = useState(false);
   const [sendMsg, setSendMsg] = useState(false);
-  const changePage = useRef("");
   let history = useHistory();
 
-  const webSocketUrl = "ws://i6c209.p.ssafy.io:8081/game";
-  let ws = useRef(null);
+  // const webSocketUrl = "ws://i6c209.p.ssafy.io:8081/game";
+  const webSocketUrl = "ws://52.79.223.21:8001/ws";
+  let game = useRef(null);
 
   useEffect(() => {
-    if (!ws.current) {
-      ws.current = new WebSocket(webSocketUrl);
-      ws.current.onopen = () => {
+    if (!game.current) {
+      game.current = new WebSocket(webSocketUrl);
+      game.current.onopen = () => {
         console.log("게임");
         setSocketConnect(true);
       };
-      ws.current.onclose = (error) => {
+      game.current.onclose = error => {
         console.log("disconnect", error);
       };
-      ws.current.onerror = (error) => {
+      game.current.onerror = error => {
         console.log("error", error);
       };
-      ws.current.onmessage = (e) => {
+      game.current.onmessage = e => {
         console.log(JSON.parse(e.data));
       };
     }
@@ -50,21 +59,27 @@ function WaitingFooter(props) {
 
   const onClickReady = () => {
     if (socketConnect) {
-      ws.current.send(
+      game.current.send(
         JSON.stringify({
-          id: "ready",
-          roomId: props.roomId,
-          username: props.username,
+          eventType: "game",
+          data: {
+            id: "ready",
+            roomId: props.roomId,
+            username: props.username,
+          },
         })
       );
       console.log(
         JSON.stringify({
-          id: "ready",
-          roomId: props.roomId,
-          username: props.username,
+          eventType: "game",
+          data: {
+            id: "ready",
+            roomId: props.roomId,
+            username: props.username,
+          },
         })
       );
-      ws.current.onmessage = (e) => {
+      game.current.onmessage = e => {
         console.log(JSON.parse(e.data));
       };
     }
@@ -72,22 +87,29 @@ function WaitingFooter(props) {
 
   const onClickStart = () => {
     if (socketConnect) {
-      ws.current.send(
+      console.log(props.username);
+      game.current.send(
         JSON.stringify({
-          id: "start",
-          roomId: props.roomId,
-          username: props.username,
+          eventType: "game",
+          data: {
+            id: "start",
+            roomId: props.roomId,
+            username: props.username,
+          },
         })
       );
-      setSendMsg(true);
+      // setSendMsg(true);
       console.log(
         JSON.stringify({
-          id: "start",
-          roomId: props.roomId,
-          username: props.username,
+          eventType: "game",
+          data: {
+            id: "start",
+            roomId: props.roomId,
+            username: props.username,
+          },
         })
       );
-      ws.current.onmessage = (e) => {
+      game.current.onmessage = e => {
         // console.log(JSON.parse(e.data));
         console.log(e.data);
       };
@@ -110,17 +132,31 @@ function WaitingFooter(props) {
   };
   return (
     <StyledFooter>
-      <button onClick={handleCameraClick}>
-        {localCamera ? "화면 끄기" : "화면 켜기"}
-      </button>
-      <button onClick={handleMuteClick}>
-        {localMute ? "음성 끄기" : "음성 켜기"}
-      </button>
-      {props.authority === "LEADER" ? (
-        <Button onClick={onClickStart}>Start</Button>
-      ) : (
-        <Button onClick={onClickReady}>Ready</Button>
-      )}
+      <StyleCam onClick={handleCameraClick}>
+        {localCamera ? (
+          <BsFillCameraVideoOffFill size="50" />
+        ) : (
+          <BsFillCameraVideoFill size="50" />
+        )}
+      </StyleCam>
+      <div onClick={handleMuteClick}>
+        {localMute ? (
+          <BsFillMicMuteFill size="50" />
+        ) : (
+          <BsFillMicFill size="50" />
+        )}
+      </div>
+      <StyledBtn>
+        {props.authority === "LEADER" ? (
+          <Button onClick={onClickStart} size="lg">
+            Start
+          </Button>
+        ) : (
+          <Button onClick={onClickReady} size="lg">
+            Ready
+          </Button>
+        )}
+      </StyledBtn>
     </StyledFooter>
   );
 }
