@@ -27,12 +27,14 @@ function Game() {
   const [participantsVideo, setParticipantsVideo] = useState([]);
   const tempParticipantsName = participantsName;
   const tempParticipantsVideo = participantsVideo;
+
   // 로컬 사용자
   const username = `User${Math.random().toString(36).substr(2, 11)}`;
   const [authority, setAuthority] = useState([]);
   const [roomId, setRoomId] = useState(
     window.location.pathname.split("/").pop()
   );
+  // 역할
   const [userRole, setUserRole] = useState("");
 
   // 지목받은 사용자 (최후의 변론)
