@@ -20,18 +20,23 @@ const StyledBtn = styled.div`
   margin: 10px 20px 10px 0;
 `;
 
-
 function GameResult() {
   let history = useHistory();
 
   return (
     <div>
       <StyledBtn>
-        <Button onClick={()=>{history.push("/room/0")}}>다시하기</Button>
+        <Button
+          onClick={() => {
+            history.push("/room/0");
+          }}
+        >
+          다시하기
+        </Button>
       </StyledBtn>
       <StyledMsg>MAFIA 승리!</StyledMsg>
       <WaitingGrid />
     </div>
-  )
+  );
 }
 export default GameResult;
