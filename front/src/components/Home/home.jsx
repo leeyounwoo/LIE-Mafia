@@ -20,6 +20,7 @@ function Home({ join, onBtnClick }) {
   return (
     <Container>
       <img alt="logo" src="/img/logo.png" />
+      {/* <img alt="logo" src="/img/image.png" /> */}
       <StyledBtn>
         {window.location.pathname.split("/").pop() === "0" ? (
           <Button onClick={onNewBtnClick}>방 만들기</Button>

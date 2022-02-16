@@ -1220,6 +1220,7 @@ function Game() {
                 {/* 최후의 변론 */}
                 {isExecutionGrid && (
                   <FinalArgument
+                    isVotable={isVotable}
                     voteStateFinal={voteStateFinal}
                     onVoteAgree={onVoteAgree}
                     onVoteDisAgree={onVoteDisAgree}
