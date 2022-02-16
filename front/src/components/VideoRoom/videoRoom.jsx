@@ -76,7 +76,7 @@ const VideoRoom = ({
   const userIndexArray2 = ["3", "4", "5"];
 
   return (
-    <VideoGrid>
+    <VideoGrid style={ isNight ? {backgroundColor: '#a0a0a0'} : null }>
       {/* 사용자 인덱스 배열 순회하면서 사용자 비디오 컴포넌트 렌더링 */}
       {userIndexArray1.map((userIndex, idx) => {
         return (

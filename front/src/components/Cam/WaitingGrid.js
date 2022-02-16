@@ -8,7 +8,7 @@ const Container = styled.div`
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
   column-gap: 2vw;
-  row-gap: 15vh;
+  row-gap: 10vh;
   padding: 20px 10px;
 `;
 const StyledCam1 = styled.div`
