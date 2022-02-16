@@ -1,7 +1,6 @@
 package com.lie.gamelogic.port;
 
 import com.lie.gamelogic.domain.ExecutionVote;
-import com.lie.gamelogic.domain.Vote;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

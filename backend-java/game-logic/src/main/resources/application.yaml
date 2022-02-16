@@ -2,7 +2,7 @@ spring:
   application:
     name: gameservice
   kafka:
-    bootstrap-servers: ${spring.environment.production.host}:9092
+    bootstrap-servers: ${spring.environment.work.host}:9092
 
     consumer:
       group-id: game-group
@@ -19,16 +19,20 @@ spring:
       host: 192.168.0.2
       port: 6379
     stage:
-      host: 2k2lc1p.iptime.org
+      host: 52.78.84.125
       port: 6379
       password: ssafy
     production:
       host: i6c209.p.ssafy.io
       port: 6379
       password: ssafy
+    work:
+      host: 52.79.223.21
+      port: 6379
+      password: ssafy
 
 server:
-  port: 8081
+  port: 8082
 #eureka:
 #  client:
 #    register-with-eureka: true
