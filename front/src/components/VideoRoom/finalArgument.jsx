@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import UserCam from "../UserCam/userCam";
 import { Container, Row, Col } from "react-bootstrap";
 import styles from "./finalArgument.css";
+import Message from "../Message/message";
+import { BsFillHandThumbsUpFill } from "react-icons/bs";
+import { BsFillHandThumbsDownFill } from "react-icons/bs";
 
 const userColor0 = {
   background: "red",
@@ -32,6 +35,7 @@ const FinalArgument = ({
   participantsName,
   participantsVideo,
   isVotable,
+  message
 }) => {
   const onClickAgree = () => {
     onVoteAgree();
@@ -67,11 +71,12 @@ const FinalArgument = ({
         })}
       </Row>
       <Row>
-        <h1>메세지 공간</h1>
+        {/* <h1>메세지 공간</h1> */}
+        <Message message={message} />
       </Row>
       <Row className="justify-content-md-center">
         <Col>
-          <button onClick={onClickAgree}>찬성</button>
+          <BsFillHandThumbsUpFill size="50" onClick={onClickAgree}>찬성</BsFillHandThumbsUpFill>
           <ul>
             {voteStateFinal["agree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
@@ -125,7 +130,7 @@ const FinalArgument = ({
           </div>
         </Col>
         <Col>
-          <button onClick={onClickDisAgree}>반대</button>
+          <BsFillHandThumbsDownFill size="50" onClick={onClickDisAgree}>반대</BsFillHandThumbsDownFill>
           <ul>
             {voteStateFinal["disagree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>

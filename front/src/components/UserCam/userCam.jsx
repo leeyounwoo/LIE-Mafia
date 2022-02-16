@@ -35,7 +35,8 @@ const UserCam = ({ participant, index, participantName }) => {
         autoPlay
         width={420}
         height={370}
-        poster="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
+        // poster="https://is5-ssl.mzstatic.com/image/thumb/Purple114/v4/55/a1/80/55a180c1-dcd7-c318-4940-2041af92dd71/source/512x512bb.jpg"
+        poster="/img/image.png"
       ></video>
     </div>
   );
