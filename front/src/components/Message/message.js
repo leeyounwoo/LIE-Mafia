@@ -9,6 +9,8 @@ const StyledMsg = styled.div`
   height: 30vh;
   text-align: center;
   line-height: 30vh;
+  font-size: xx-large;
+  font-weight: bold;
 `;
 
 function Message({ message }) {

@@ -9,8 +9,7 @@ const Container = styled.div`
   margin-top: 5vh;
 `;
 const StyledBtn = styled.div`
-  width: 10vw;
-  padding-top: 55vh;
+  margin-top: 55vh;
 `;
 
 function Home({ join, onBtnClick }) {

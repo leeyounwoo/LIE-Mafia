@@ -44,7 +44,7 @@ const VideoRoom = ({
   participantsVideo,
   participantsName,
   isGameStart,
-  message
+  message,
 }) => {
   const onClick = (event) => {
     let clickIndex = event.target.id[event.target.id.length - 1];
@@ -76,7 +76,7 @@ const VideoRoom = ({
   const userIndexArray2 = ["3", "4", "5"];
 
   return (
-    <VideoGrid>
+    <VideoGrid style={isNight ? { backgroundColor: "#a0a0a0" } : null}>
       {/* 사용자 인덱스 배열 순회하면서 사용자 비디오 컴포넌트 렌더링 */}
       {userIndexArray1.map((userIndex, idx) => {
         return (
@@ -120,9 +120,11 @@ const VideoRoom = ({
           </Container>
         );
       })}
-      {isGameStart && (<MessageGrid>
-        <Message message={message} />
-      </MessageGrid>)}
+      {isGameStart && (
+        <MessageGrid>
+          <Message message={message} />
+        </MessageGrid>
+      )}
       {userIndexArray2.map((userIndex, idx) => {
         return (
           // 사용자 화면 상자 어디를 클릭해도 onVote 함수 호출
