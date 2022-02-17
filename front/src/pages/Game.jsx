@@ -14,8 +14,9 @@ const StyledContainer = styled.div`
 `;
 
 function Game() {
-  // const webSocketUrl = "ws://i6c209.p.ssafy.io:8001/ws";
+  // git
   const webSocketUrl = "wss://lie-mafia.site/ws";
+  // const webSocketUrl = "ws://i6c209.p.ssafy.io:8001/ws";
   let ws = useRef(null);
   // 게임 참여자
   const [participantsName, setParticipantsName] = useState([]);
@@ -157,7 +158,7 @@ function Game() {
   // 로컬 사용자가 사망했는지
   const [isDeadPlayer, setIsDeadPlayer] = useState(false);
 
-  const [gameResult, setGameResult] = useState("CIVILIAN");
+  const [gameWinner, setGameWinner] = useState("CITIZEN");
 
   const [message, setMessage] = useState("Game Start");
 
@@ -240,7 +241,9 @@ function Game() {
   // 처음 사용자가 방에 입장하면 본인을 등록하고 기존 사용자를 등록
   const onExistingParticipants = async (msg) => {
     var constraints = {
+      // git
       audio: true,
+      // audio: false,
       video: {
         mandatory: {
           maxWidth: 320,
@@ -381,38 +384,23 @@ function Game() {
     sendGameMessage(message);
   };
 
-  // 시간 설정
-  const setTime = (endTime) => {
-    let today = new Date();
-    const stringEndTime = String(endTime);
-    const gameTime =
-      Number(stringEndTime.slice(11, 13)) * 360 +
-      Number(stringEndTime.slice(14, 16)) * 60 +
-      Number(stringEndTime.slice(17, 19)) -
-      (today.getHours() * 360 + today.getMinutes() * 60 + today.getSeconds());
-    setEndTime(gameTime);
-  };
-
-  // 죽은 사람 처리
   const treatDeadPerson = async (deadPlayerName) => {
     if (deadPlayerName === participantsName[0]) {
       setIsDeadPlayer(true);
       participantsVideo[0].rtcPeer.videoEnabled = false;
       participantsVideo[0].rtcPeer.audioEnabled = false;
     }
-    setParticipantsName((prevParticipantsName) => {
-      return [
-        prevParticipantsName.map((playerName, idx) =>
-          playerName === deadPlayerName ? "사망자" : participantsName
-        ),
-      ];
-    });
+    setParticipantsName(
+      participantsName.map((playerName, idx) =>
+        playerName === deadPlayerName ? "사망자" : playerName
+      )
+    );
   };
 
   // 직업 배정
   const onRoleAssign = (msg) => {
     setUserRole(msg.job);
-    setTime(msg.endTime);
+    setEndTime(15);
     setMessage(`당신은 ${msg.job}입니다.`);
     setIsGameStart(true);
   };
@@ -488,25 +476,25 @@ function Game() {
       };
     });
 
-    setTime(msg.endTime);
+    setEndTime(120);
     if (msg.dayCount === 1) {
       console.log("아침 시작");
       setMessage(`낮이 되었습니다. 
       2분 동안 마피아가 누구일지 토론하세요.`);
     } else {
       if (msg.result === null) {
-        setMessage(`낮이 되었습니다. 밤 사이 아무도 죽지않았습니다.
+        setMessage(`낮이 되었습니다. 밤 사이 아무도 죽지 않았습니다.
         2분 동안 마피아가 누구일지 토론하세요.`);
       } else {
-        setMessage(`낮이 되었습니다. 밤 사이 ${msg.result}가 사망했습니다. 
-        2분 동안 마피아가 누구일지 토론하세요.`);
+        setMessage(`낮이 되었습니다. 밤 사이 ${msg.result}가 죽었했습니다. 
+          2분 동안 마피아가 누구일지 토론하세요.`);
       }
     }
   };
 
   // 아침 투표 시작
   const onStartMorningVote = (msg) => {
-    setTime(msg.endTime);
+    setEndTime(90);
     setMessage(`90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`);
   };
 
@@ -608,10 +596,6 @@ function Game() {
     );
   };
 
-  // useEffect(() => {
-  //   console.log("voteState", voteState);
-  // }, [voteState]);
-
   // 최후의 변론 시작
   const onStartFinalSpeech = (msg) => {
     const selectedUserIndex = participantsName.indexOf(msg.pointedUser);
@@ -621,7 +605,7 @@ function Game() {
     setPlayerName(
       participantsName.filter((playerName) => playerName !== msg.pointedUser)
     );
-    setTime(msg.endTime);
+    setEndTime(30);
     setMessage(
       `낮 투표 결과 지목된 ${msg.pointedUser}는 30초간 최후의 변론을 해주세요.`
     );
@@ -632,7 +616,7 @@ function Game() {
     if (msg.pointedUser === participantsName[0]) {
       setIsVotable(false);
     }
-    setTime(msg.endTime);
+    setEndTime(60);
     setMessage(
       `60초 동안 ${msg.pointedUser} 을 살릴지(왼쪽) or 죽일지(오른쪽) 투표하세요!`
     );
@@ -643,8 +627,10 @@ function Game() {
   const onStartNightVote = (msg) => {
     participantsVideo[0].rtcPeer.videoEnabled = false;
     participantsVideo[0].rtcPeer.audioEnabled = false;
-    setTime(msg.endTime);
-    if (msg.result === "" || msg.result === null) {
+    setEndTime(90);
+    if (msg.result === "") {
+      setMessage(`밤이 되었습니다. 마피아와 의사는 투표해주세요.`);
+    } else if (msg.result === null) {
       setMessage(
         `밤이 되었습니다. 사형 투표 결과 아무도 죽지 않았습니다. 마피아와 의사는 투표해주세요.`
       );
@@ -754,6 +740,11 @@ function Game() {
     );
   };
 
+  const onEnd = async (msg) => {
+    await setGameWinner(msg);
+    setIsGameEnd(true);
+  };
+
   // tempParticipant와 participant 동기화
   const updateParticipants = () => {
     setParticipantsName([]);
@@ -853,15 +844,13 @@ function Game() {
           if (
             parsedMessage.id === "startNightVote" ||
             (parsedMessage.id === "citizenVote" &&
-              parsedMessage.data.id === "NightVote")
+              parsedMessage.data.id === "NightVote") ||
+            parsedMessage.id === "NightVote"
           ) {
             setIsNight(true);
           } else {
             setIsNight(false);
           }
-          // if (parsedMessage.actionType === "end") {
-          //   setGameResult(parsedMessage.result.winner.job);
-          // }
           switch (parsedMessage.id) {
             // 새로 방에 참여한 사용자에게 오는 메세지
             // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
@@ -1135,8 +1124,10 @@ function Game() {
 
             // 게임 종료
             case "end":
-              setIsGameEnd(true);
-              setGameResult(parsedMessage.data.result.winner.job);
+              const winnerJob = parsedMessage.data.result.winner.job;
+              console.log("winnerJob", winnerJob);
+              onEnd(winnerJob);
+              console.log("gameWinner", gameWinner);
               break;
 
             default:
@@ -1172,8 +1163,16 @@ function Game() {
       {!join && <Home onBtnClick={onBtnClick} />}
       {join && (
         <div>
+          {isGameEnd && (
+            <GameResult
+              participantsVideo={participantsVideo}
+              participantsName={participantsName}
+              gameWinner={gameWinner}
+            />
+          )}
+
           {/* 게임 진행 */}
-          {isGameStart && (
+          {!isGameEnd && isGameStart && (
             <div>
               <GameNav
                 // 날짜
@@ -1187,7 +1186,6 @@ function Game() {
               <header>
                 {!isExecutionGrid && (
                   <VideoRoom
-                    // dateCount에 따라서 공지사항 달라질거 같아서
                     dateCount={dateCount}
                     isNight={isNight}
                     onVote={onVote}
@@ -1218,16 +1216,9 @@ function Game() {
               </header>
             </div>
           )}
-          {isGameEnd && (
-            <GameResult
-              participantsVideo={participantsVideo}
-              participantsName={participantsName}
-              gameResult={gameResult}
-            />
-          )}
 
           {/* 게임 진행 X (게임 시작 전) */}
-          {!isGameStart && (
+          {!isGameEnd && !isGameStart && (
             <div>
               <WaitingNav roomId={roomId} clickClose={clickClose} />
 
