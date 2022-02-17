@@ -14,11 +14,6 @@ const StyledContainer = styled.div`
   height: 100vh;
 `;
 
-const Main = styled.div`
-  display: flex;
-  flex-wrap: nowrap;
-`;
-
 function Game() {
   const [socketConnect, setSocketConnect] = useState(false);
   const webSocketUrl = "ws://i6c209.p.ssafy.io:8001/ws";
@@ -162,6 +157,8 @@ function Game() {
 
   // 로컬 사용자가 사망했는지
   const [isDeadPlayer, setIsDeadPlayer] = useState(false);
+
+  const [gameResult, setGameResult] = useState("CIVILIAN");
 
   const messageRef = useRef("Game Start!");
 
@@ -902,6 +899,9 @@ function Game() {
           } else {
             setIsNight(false);
           }
+          // if (parsedMessage.actionType === "end") {
+          //   setGameResult(parsedMessage.result.winner.job);
+          // }
           switch (parsedMessage.id) {
             // 새로 방에 참여한 사용자에게 오는 메세지
             // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
