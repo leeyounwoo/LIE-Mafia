@@ -24,13 +24,7 @@ function WaitingNav(props) {
         <h4>초대링크 : localhost:3000/room/{props.roomId}</h4>
       </div>
       <div style={{ paddingRight: "2vw" }}>
-        <Button
-          onClick={() => {
-            history.push("/");
-          }}
-        >
-          방 나가기
-        </Button>
+        <Button onClick={props.clickClose}>방 나가기</Button>
       </div>
     </StyledNav>
   );

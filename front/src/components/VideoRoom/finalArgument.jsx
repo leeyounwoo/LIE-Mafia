@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import UserCam from "../UserCam/userCam";
 import { Container, Row, Col } from "react-bootstrap";
 import styles from "./finalArgument.css";
+import Message from "../Message/message";
+import { BsFillHandThumbsUpFill } from "react-icons/bs";
+import { BsFillHandThumbsDownFill } from "react-icons/bs";
 
 const userColor0 = {
   background: "red",
@@ -32,6 +35,8 @@ const FinalArgument = ({
   participantsName,
   participantsVideo,
   isVotable,
+  message,
+  isDeadPlayer,
 }) => {
   const onClickAgree = () => {
     onVoteAgree();
@@ -45,33 +50,34 @@ const FinalArgument = ({
     <Container>
       <Row>
         {/* 사형 투표에 참여하는 모든 사용자 */}
-        {playerName.forEach((player, idx) => {
+        {playerName.map((player, idx) => {
           return (
-            <Container id={`userContainer${participantsName.indexOf(player)}`}>
-              <Row className="justify-content-md-center">
-                <Col md="auto" id={participantsName.indexOf(player)}>
-                  <UserCam
-                    index={`video-${participantsName.indexOf(player)}`}
-                    keys={participantsVideo.id}
-                    participant={
-                      participantsVideo[participantsName.indexOf(player)]
-                    }
-                    participantName={
-                      participantsName[participantsName.indexOf(player)]
-                    }
-                  />
-                </Col>
-              </Row>
-            </Container>
+            <div id={`userContainer${participantsName.indexOf(player)}`}>
+              <Col md="auto" id={participantsName.indexOf(player)} key={idx}>
+                <UserCam
+                  index={`video-${participantsName.indexOf(player)}`}
+                  participant={
+                    participantsVideo[participantsName.indexOf(player)]
+                  }
+                  participantName={
+                    participantsName[participantsName.indexOf(player)]
+                  }
+                />
+              </Col>
+            </div>
           );
         })}
       </Row>
       <Row>
-        <h1>메세지 공간</h1>
+        <Message message={message} />
       </Row>
       <Row className="justify-content-md-center">
         <Col>
-          <button onClick={onClickAgree}>찬성</button>
+          {isVotable && (
+            <BsFillHandThumbsUpFill size="50" onClick={onClickDisAgree}>
+              찬성
+            </BsFillHandThumbsUpFill>
+          )}
           <ul>
             {voteStateFinal["agree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
@@ -125,7 +131,11 @@ const FinalArgument = ({
           </div>
         </Col>
         <Col>
-          <button onClick={onClickDisAgree}>반대</button>
+          {isVotable && (
+            <BsFillHandThumbsDownFill size="50" onClick={onClickAgree}>
+              반대
+            </BsFillHandThumbsDownFill>
+          )}
           <ul>
             {voteStateFinal["disagree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>

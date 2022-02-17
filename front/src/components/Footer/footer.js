@@ -53,16 +53,16 @@ function WaitingFooter(props) {
     <StyledFooter>
       <StyleCam onClick={handleCameraClick}>
         {localCamera ? (
-          <BsFillCameraVideoOffFill size="50" />
-        ) : (
           <BsFillCameraVideoFill size="50" />
+        ) : (
+          <BsFillCameraVideoOffFill size="50" />
         )}
       </StyleCam>
       <div onClick={handleMuteClick}>
         {localMute ? (
-          <BsFillMicMuteFill size="50" />
-        ) : (
           <BsFillMicFill size="50" />
+        ) : (
+          <BsFillMicMuteFill size="50" />
         )}
       </div>
       <StyledBtn>

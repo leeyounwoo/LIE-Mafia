@@ -9,8 +9,7 @@ const Container = styled.div`
   margin-top: 5vh;
 `;
 const StyledBtn = styled.div`
-  width: 10vw;
-  padding-top: 55vh;
+  margin-top: 55vh;
 `;
 
 function Home({ join, onBtnClick }) {
@@ -21,6 +20,7 @@ function Home({ join, onBtnClick }) {
   return (
     <Container>
       <img alt="logo" src="/img/logo.png" />
+      {/* <img alt="logo" src="/img/image.png" /> */}
       <StyledBtn>
         {window.location.pathname.split("/").pop() === "0" ? (
           <Button onClick={onNewBtnClick}>방 만들기</Button>
