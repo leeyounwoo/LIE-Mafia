@@ -74,7 +74,7 @@ const FinalArgument = ({
       <Row className="justify-content-md-center">
         <Col>
           {isVotable && (
-            <BsFillHandThumbsUpFill size="50" onClick={onClickAgree}>
+            <BsFillHandThumbsUpFill size="50" onClick={onClickDisAgree}>
               찬성
             </BsFillHandThumbsUpFill>
           )}
@@ -132,7 +132,7 @@ const FinalArgument = ({
         </Col>
         <Col>
           {isVotable && (
-            <BsFillHandThumbsDownFill size="50" onClick={onClickDisAgree}>
+            <BsFillHandThumbsDownFill size="50" onClick={onClickAgree}>
               반대
             </BsFillHandThumbsDownFill>
           )}
