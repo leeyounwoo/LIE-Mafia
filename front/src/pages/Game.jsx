@@ -14,11 +14,6 @@ const StyledContainer = styled.div`
   height: 100vh;
 `;
 
-const Main = styled.div`
-  display: flex;
-  flex-wrap: nowrap;
-`;
-
 function Game() {
   const [socketConnect, setSocketConnect] = useState(false);
   const webSocketUrl = "ws://i6c209.p.ssafy.io:8001/ws";
@@ -164,6 +159,8 @@ function Game() {
 
   // 로컬 사용자가 사망했는지
   const [isDeadPlayer, setIsDeadPlayer] = useState(false);
+
+  const [gameResult, setGameResult] = useState('CIVILIAN');
 
   const messageRef = useRef("Game Start!");
 
@@ -436,7 +433,7 @@ function Game() {
   const onRoleAssign = (msg) => {
     setUserRole(msg.job);
     setTime(msg.endTime);
-    messageRef.current = `당신은 ${msg.job}입니다.`;
+    messageRef.current = `당신은 ${msg.job}입니다. 낮이되었습니다. 토론하여 마피아를 찾으세요.`;
     setIsGameStart(true);
   };
 
@@ -521,15 +518,13 @@ function Game() {
     setTime(msg.endTime);
     console.log("msg.dayCount Type is ", typeof msg.dayCount);
     if (msg.dayCount === 1) {
-      messageRef.current = `낮이 되었습니다. 
-          2분 동안 마피아가 누구일지 토론하세요.`;
+      messageRef.current = `90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
     } else {
-      if (msg.result === "") {
-        messageRef.current = `낮이 되었습니다. 
-          2분 동안 마피아가 누구일지 토론하세요.`;
+      if (msg.result === null) {
+        messageRef.current = `90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
       } else {
-        messageRef.current = `낮이 되었습니다. 밤 사이 ${msg.result}가 사망했습니다. 
-      2분 동안 마피아가 누구일지 토론하세요.`;
+        messageRef.current = `${msg.result}가 사망했습니다. 
+        90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
       }
     }
     // msg.dayCount === 1
@@ -671,7 +666,7 @@ function Game() {
       participantsName.filter((playerName) => playerName !== msg.pointedUser)
     );
     setTime(msg.endTime);
-    messageRef.current = "지목당한 유저는 30초 간 최후의 변론을 하세요.";
+    messageRef.current = `지목당한 유저는 30초 간 최후의 변론을 하세요.`;
   };
 
   // 사형 투표 시작
@@ -685,7 +680,7 @@ function Game() {
     setTime(msg.endTime);
     // 이거는 최후의변론 그리드 메세지에 넣어줘야함
     messageRef.current =
-      "60초 간 유저의 사형에 대해 찬성 or 반대를 투표하세요!";
+    "60초 간 유저의 사형에 대해 찬성 or 반대를 투표하세요!";
   };
 
   // 밤 투표 시작
@@ -788,10 +783,9 @@ function Game() {
   //   setVoteStateFinal({})
   //   setVoteStateFinal(tempVoteStateFinal)
   // }
-
-  const onGameEnd = (msg) => {
-    let winner = msg.result.winner.job;
-  };
+  useEffect(()=>{
+    console.log('공지사항')
+  },[messageRef])
 
   useEffect(() => {
     updateParticipants();
@@ -895,6 +889,9 @@ function Game() {
           } else {
             setIsNight(false);
           }
+          // if (parsedMessage.actionType === "end") {
+          //   setGameResult(parsedMessage.result.winner.job);
+          // }
           switch (parsedMessage.id) {
             // 새로 방에 참여한 사용자에게 오는 메세지
             // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
@@ -1153,7 +1150,7 @@ function Game() {
 
             // 게임 종료
             case "end":
-              onGameEnd(parsedMessage);
+              setGameResult(parsedMessage.result.winner.job);
               break;
 
             default:
@@ -1237,8 +1234,9 @@ function Game() {
           )}
           {isGameEnd && (
             <GameResult
-              participantsVideo={participantsVideo}
-              participantsName={participantsName}
+            participantsVideo={participantsVideo}
+            participantsName={participantsName}
+            gameResult={gameResult}
             />
           )}
 

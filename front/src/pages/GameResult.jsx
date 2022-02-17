@@ -1,5 +1,6 @@
 import React from "react";
 import WaitingGrid from "../components/Cam/WaitingGrid";
+import VideoRoom from "../components/VideoRoom/videoRoom";
 import styled from "styled-components";
 import { Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
@@ -20,9 +21,13 @@ const StyledBtn = styled.div`
   margin: 10px 20px 10px 0;
 `;
 
-function GameResult() {
+function GameResult({
+  participantsVideo,
+  participantsName,
+  GameResult
+  }) {
   let history = useHistory();
-
+  console.log('결과' + GameResult);
   return (
     <div>
       <StyledBtn>
@@ -34,8 +39,11 @@ function GameResult() {
           다시하기
         </Button>
       </StyledBtn>
-      <StyledMsg>MAFIA 승리!</StyledMsg>
-      <WaitingGrid />
+      <StyledMsg>{GameResult} 승리!</StyledMsg>
+      <VideoRoom             
+        participantsVideo={participantsVideo}
+        participantsName={participantsName}
+       />
     </div>
   );
 }
