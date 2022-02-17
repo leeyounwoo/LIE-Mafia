@@ -1173,6 +1173,7 @@ function Game() {
 
             // 게임 종료
             case "end":
+              setIsGameEnd(true);
               setGameResult(parsedMessage.result.winner.job);
               break;
 
