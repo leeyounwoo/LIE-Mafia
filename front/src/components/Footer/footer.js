@@ -23,98 +23,16 @@ const StyledBtn = styled.div`
 `;
 
 function WaitingFooter(props) {
-  const [socketConnect, setSocketConnect] = useState(false);
-  const [sendMsg, setSendMsg] = useState(false);
-  let history = useHistory();
-
-  // const webSocketUrl = "ws://i6c209.p.ssafy.io:8081/game";
-  const webSocketUrl = "ws://52.79.223.21:8001/ws";
-  let game = useRef(null);
-
-  useEffect(() => {
-    if (!game.current) {
-      game.current = new WebSocket(webSocketUrl);
-      game.current.onopen = () => {
-        console.log("게임");
-        setSocketConnect(true);
-      };
-      game.current.onclose = error => {
-        console.log("disconnect", error);
-      };
-      game.current.onerror = error => {
-        console.log("error", error);
-      };
-      game.current.onmessage = e => {
-        console.log(JSON.parse(e.data));
-      };
-    }
-  }, []);
-
-  useEffect(() => {
-    if (sendMsg === true) {
-      console.log(sendMsg);
-      history.push(`/start/${props.roomId}`);
-    }
-  }, [sendMsg]);
-
-  const onClickReady = () => {
-    if (socketConnect) {
-      game.current.send(
-        JSON.stringify({
-          eventType: "game",
-          data: {
-            id: "ready",
-            roomId: props.roomId,
-            username: props.username,
-          },
-        })
-      );
-      console.log(
-        JSON.stringify({
-          eventType: "game",
-          data: {
-            id: "ready",
-            roomId: props.roomId,
-            username: props.username,
-          },
-        })
-      );
-      game.current.onmessage = e => {
-        console.log(JSON.parse(e.data));
-      };
-    }
+  const handleReady = () => {
+    setReadyFlag(!readyFlag);
+    props.onClickReady();
   };
 
-  const onClickStart = () => {
-    if (socketConnect) {
-      console.log(props.username);
-      game.current.send(
-        JSON.stringify({
-          eventType: "game",
-          data: {
-            id: "start",
-            roomId: props.roomId,
-            username: props.username,
-          },
-        })
-      );
-      // setSendMsg(true);
-      console.log(
-        JSON.stringify({
-          eventType: "game",
-          data: {
-            id: "start",
-            roomId: props.roomId,
-            username: props.username,
-          },
-        })
-      );
-      game.current.onmessage = e => {
-        // console.log(JSON.parse(e.data));
-        console.log(e.data);
-      };
-    }
+  const handleStart = () => {
+    props.onClickStart();
   };
+
+  const [readyFlag, setReadyFlag] = useState(true);
 
   const [localCamera, setLocalCamera] = useState(true);
   const [localMute, setLocalMute] = useState(true);
@@ -130,6 +48,7 @@ function WaitingFooter(props) {
     props.onClickMute();
     setLocalMute(!localMute);
   };
+
   return (
     <StyledFooter>
       <StyleCam onClick={handleCameraClick}>
@@ -147,12 +66,24 @@ function WaitingFooter(props) {
         )}
       </div>
       <StyledBtn>
-        {props.authority === "LEADER" ? (
-          <Button onClick={onClickStart} size="lg">
+        {props.authority === "LEADER" && props.canStart && (
+          <Button onClick={handleStart} size="lg">
             Start
           </Button>
-        ) : (
-          <Button onClick={onClickReady} size="lg">
+        )}
+        {props.authority === "LEADER" && !props.canStart && (
+          <Button variant="secondary" size="lg">
+            Start
+          </Button>
+        )}
+        {props.authority !== "LEADER" && readyFlag && (
+          <Button onClick={handleReady} size="lg">
+            Ready
+          </Button>
+        )}
+
+        {props.authority !== "LEADER" && !readyFlag && (
+          <Button onClick={handleReady} variant="secondary" size="lg">
             Ready
           </Button>
         )}

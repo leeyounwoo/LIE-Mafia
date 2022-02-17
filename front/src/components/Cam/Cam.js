@@ -9,14 +9,6 @@ const User = styled.div`
 `;
 
 function Cam(props) {
-  return (
-    <User
-      onClick={() => {
-        console.log(props.name);
-      }}
-    >
-      {props.name}
-    </User>
-  );
+  return <User onClick={() => {}}>{props.name}</User>;
 }
 export default Cam;
