@@ -79,22 +79,22 @@ const FinalArgument = ({
             </BsFillHandThumbsUpFill>
           )}
           <ul>
-            {voteStateFinal["agree"]["0"] && (
+            {voteStateFinal["disagree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
             )}
-            {voteStateFinal["agree"]["1"] && (
+            {voteStateFinal["disagree"]["1"] && (
               <button style={userColor1}>{participantsName[1]}</button>
             )}
-            {voteStateFinal["agree"]["2"] && (
+            {voteStateFinal["disagree"]["2"] && (
               <button style={userColor2}>{participantsName[2]}</button>
             )}
-            {voteStateFinal["agree"]["3"] && (
+            {voteStateFinal["disagree"]["3"] && (
               <button style={userColor3}>{participantsName[3]}</button>
             )}
-            {voteStateFinal["agree"]["4"] && (
+            {voteStateFinal["disagree"]["4"] && (
               <button style={userColor4}>{participantsName[4]}</button>
             )}
-            {voteStateFinal["agree"]["5"] && (
+            {voteStateFinal["disagree"]["5"] && (
               <button style={userColor5}>{participantsName[5]}</button>
             )}
           </ul>
@@ -137,22 +137,22 @@ const FinalArgument = ({
             </BsFillHandThumbsDownFill>
           )}
           <ul>
-            {voteStateFinal["disagree"]["0"] && (
+            {voteStateFinal["agree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
             )}
-            {voteStateFinal["disagree"]["1"] && (
+            {voteStateFinal["agree"]["1"] && (
               <button style={userColor1}>{participantsName[1]}</button>
             )}
-            {voteStateFinal["disagree"]["2"] && (
+            {voteStateFinal["agree"]["2"] && (
               <button style={userColor2}>{participantsName[2]}</button>
             )}
-            {voteStateFinal["disagree"]["3"] && (
+            {voteStateFinal["agree"]["3"] && (
               <button style={userColor3}>{participantsName[3]}</button>
             )}
-            {voteStateFinal["disagree"]["4"] && (
+            {voteStateFinal["agree"]["4"] && (
               <button style={userColor4}>{participantsName[4]}</button>
             )}
-            {voteStateFinal["disagree"]["5"] && (
+            {voteStateFinal["agree"]["5"] && (
               <button style={userColor5}>{participantsName[5]}</button>
             )}
           </ul>
