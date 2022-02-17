@@ -14,11 +14,6 @@ const StyledContainer = styled.div`
   height: 100vh;
 `;
 
-const Main = styled.div`
-  display: flex;
-  flex-wrap: nowrap;
-`;
-
 function Game() {
   const [socketConnect, setSocketConnect] = useState(false);
   const webSocketUrl = "ws://i6c209.p.ssafy.io:8001/ws";
@@ -162,6 +157,8 @@ function Game() {
 
   // 로컬 사용자가 사망했는지
   const [isDeadPlayer, setIsDeadPlayer] = useState(false);
+
+  const [gameResult, setGameResult] = useState('CIVILIAN');
 
   const messageRef = useRef("Game Start!");
 
@@ -676,7 +673,7 @@ function Game() {
     setTime(msg.endTime);
     // 이거는 최후의변론 그리드 메세지에 넣어줘야함
     messageRef.current =
-      "60초 간 유저의 사형에 대해 찬성 or 반대를 투표하세요!";
+    "60초 간 유저의 사형에 대해 찬성 or 반대를 투표하세요!";
   };
 
   // 밤 투표 시작
@@ -902,6 +899,9 @@ function Game() {
           } else {
             setIsNight(false);
           }
+          // if (parsedMessage.actionType === "end") {
+          //   setGameResult(parsedMessage.result.winner.job);
+          // }
           switch (parsedMessage.id) {
             // 새로 방에 참여한 사용자에게 오는 메세지
             // 새로 참여한 사용자 정보 + 기존에 있던 사용자 정보 + 방 정보
