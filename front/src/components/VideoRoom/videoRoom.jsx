@@ -45,6 +45,7 @@ const VideoRoom = ({
   participantsName,
   isGameStart,
   message,
+  isDeadPlayer,
 }) => {
   const onClick = (event) => {
     let clickIndex = event.target.id[event.target.id.length - 1];

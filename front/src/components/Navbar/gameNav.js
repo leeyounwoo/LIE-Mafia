@@ -48,17 +48,16 @@ function GameNav({ dateCount, endTime, clickClose, isNight, isVotable }) {
           <h1>DAY {dateCount}</h1>
         </div>
       )}
-      <StyledTimer>
-        {/* <h2>{endTime}</h2> */}
-        <Timer endTime={endTime} />
-      </StyledTimer>
-      <StyledBar>
+      {/* <StyledTimer> */}
+      {/* <Timer endTime={endTime} /> */}
+      {/* </StyledTimer> */}
+      {/* <StyledBar>
         <progress
           style={{ width: "80%", justifyContent: "center" }}
           value={value}
           max={endTime}
         />
-      </StyledBar>
+      </StyledBar> */}
       <div style={{ paddingRight: "2vw" }}>
         <Button
           // onClick={() => {

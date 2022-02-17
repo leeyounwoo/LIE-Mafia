@@ -36,6 +36,7 @@ const FinalArgument = ({
   participantsVideo,
   isVotable,
   message,
+  isDeadPlayer,
 }) => {
   const onClickAgree = () => {
     onVoteAgree();
@@ -45,25 +46,25 @@ const FinalArgument = ({
     onVoteDisAgree();
   };
 
-  console.log(playerName);
-
   return (
     <Container>
       <Row>
         {/* 사형 투표에 참여하는 모든 사용자 */}
         {playerName.map((player, idx) => {
           return (
-            <Col md="auto" id={participantsName.indexOf(player)} key={idx}>
-              <UserCam
-                index={`video-${participantsName.indexOf(player)}`}
-                participant={
-                  participantsVideo[participantsName.indexOf(player)]
-                }
-                participantName={
-                  participantsName[participantsName.indexOf(player)]
-                }
-              />
-            </Col>
+            <div id={`userContainer${participantsName.indexOf(player)}`}>
+              <Col md="auto" id={participantsName.indexOf(player)} key={idx}>
+                <UserCam
+                  index={`video-${participantsName.indexOf(player)}`}
+                  participant={
+                    participantsVideo[participantsName.indexOf(player)]
+                  }
+                  participantName={
+                    participantsName[participantsName.indexOf(player)]
+                  }
+                />
+              </Col>
+            </div>
           );
         })}
       </Row>
@@ -72,9 +73,11 @@ const FinalArgument = ({
       </Row>
       <Row className="justify-content-md-center">
         <Col>
-          <BsFillHandThumbsUpFill size="50" onClick={onClickAgree}>
-            찬성
-          </BsFillHandThumbsUpFill>
+          {isVotable && (
+            <BsFillHandThumbsUpFill size="50" onClick={onClickAgree}>
+              찬성
+            </BsFillHandThumbsUpFill>
+          )}
           <ul>
             {voteStateFinal["agree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>
@@ -128,9 +131,11 @@ const FinalArgument = ({
           </div>
         </Col>
         <Col>
-          <BsFillHandThumbsDownFill size="50" onClick={onClickDisAgree}>
-            반대
-          </BsFillHandThumbsDownFill>
+          {isVotable && (
+            <BsFillHandThumbsDownFill size="50" onClick={onClickDisAgree}>
+              반대
+            </BsFillHandThumbsDownFill>
+          )}
           <ul>
             {voteStateFinal["disagree"]["0"] && (
               <button style={userColor0}>{participantsName[0]}</button>

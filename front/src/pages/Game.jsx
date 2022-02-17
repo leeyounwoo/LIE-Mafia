@@ -90,7 +90,6 @@ function Game() {
       choice: "",
     },
   });
-  const tempVoteState = voteState;
 
   // 투표 상황을 보여주는 voteState
   // 투표 상황이 True가 될 때 마다 초기화해줘야 함 (아직 구현 X)
@@ -112,7 +111,6 @@ function Game() {
       5: false,
     },
   });
-  // const tempVoteStateFinal = voteStateFinal;
 
   // 로컬 사용자 닉네임
   const [username, setUsername] = useState(
@@ -166,6 +164,8 @@ function Game() {
   const [isDeadPlayer, setIsDeadPlayer] = useState(false);
 
   const messageRef = useRef("Game Start!");
+
+  const [gameResult, setGameResult] = useState("CIVILIAN");
 
   const clickClose = () => {
     ws.current.close();
@@ -249,7 +249,7 @@ function Game() {
   // 처음 사용자가 방에 입장하면 본인을 등록하고 기존 사용자를 등록
   const onExistingParticipants = async (msg) => {
     var constraints = {
-      audio: false,
+      audio: true,
       video: {
         mandatory: {
           maxWidth: 320,
@@ -344,14 +344,11 @@ function Game() {
     if (Object.keys(tempReadyState).length >= 4 && msg.ready === true) {
       let flag = true;
       Object.entries(tempReadyState).forEach(([key, value]) => {
-        console.log("key", key, participantsName[0]);
-        console.log("value", value);
         if (key !== participantsName[0] && value === false) {
           flag = false;
         }
       });
       if (flag === true) {
-        console.log("시작가능");
         setCanStart(true);
       }
     }
@@ -403,28 +400,29 @@ function Game() {
       Number(stringEndTime.slice(17, 19)) -
       (today.getHours() * 360 + today.getMinutes() * 60 + today.getSeconds());
     setEndTime(gameTime);
-    console.log(gameTime);
   };
 
   // 죽은 사람 처리
   // 게임 참여자 배열 수정
   // 로컬 사용자가 사망한 경우 isDeadPlayer = true
   // 로컬 사용자 카메라, 음성 끄기
-  const treatDeadPerson = (deadPlayerName) => {
+  const treatDeadPerson = async (deadPlayerName) => {
     if (deadPlayerName === participantsName[0]) {
       setIsDeadPlayer(true);
       participantsVideo[0].rtcPeer.videoEnabled = false;
       participantsVideo[0].rtcPeer.audioEnabled = false;
     }
-    let copyParticipantsName = JSON.parse(JSON.stringify(participantsName));
-    copyParticipantsName[copyParticipantsName.indexOf(deadPlayerName)] =
-      "사망자";
-    console.log(
-      "copyParticipantsName",
-      copyParticipantsName,
-      typeof copyParticipantsName
-    );
-    setParticipantsName(copyParticipantsName);
+    setParticipantsName((prevParticipantsName) => {
+      return [
+        prevParticipantsName.map((playerName, idx) =>
+          playerName === deadPlayerName ? "사망자" : participantsName
+        ),
+      ];
+    });
+
+    // tempParticipantsName[tempParticipantsName.indexof(deadPlayerName)] =
+    //   "사망자";
+    // updateParticipants();
   };
 
   // id: "roleAssign",
@@ -436,7 +434,7 @@ function Game() {
   const onRoleAssign = (msg) => {
     setUserRole(msg.job);
     setTime(msg.endTime);
-    messageRef.current = `당신은 ${msg.job}입니다.`;
+    messageRef.current = `당신은 ${msg.job}입니다. 낮이되었습니다. 토론하여 마피아를 찾으세요.`;
     setIsGameStart(true);
   };
 
@@ -462,85 +460,76 @@ function Game() {
     if (msg.result !== null) {
       treatDeadPerson(msg.result);
     }
-    setVoteState({
-      0: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
-      1: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
-      2: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
-      3: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
-      4: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
-      5: {
-        0: false,
-        1: false,
-        2: false,
-        3: false,
-        4: false,
-        5: false,
-        choice: "",
-      },
+    setVoteState((prevVoteState) => {
+      return {
+        0: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+        1: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+        2: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+        3: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+        4: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+        5: {
+          0: false,
+          1: false,
+          2: false,
+          3: false,
+          4: false,
+          5: false,
+          choice: "",
+        },
+      };
     });
+
     setTime(msg.endTime);
-    console.log("msg.dayCount Type is ", typeof msg.dayCount);
     if (msg.dayCount === 1) {
-      messageRef.current = `낮이 되었습니다. 
-          2분 동안 마피아가 누구일지 토론하세요.`;
+      messageRef.current = `90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
     } else {
-      if (msg.result === "") {
-        messageRef.current = `낮이 되었습니다. 
-          2분 동안 마피아가 누구일지 토론하세요.`;
+      if (msg.result === null) {
+        messageRef.current = `90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
       } else {
-        messageRef.current = `낮이 되었습니다. 밤 사이 ${msg.result}가 사망했습니다. 
-      2분 동안 마피아가 누구일지 토론하세요.`;
+        messageRef.current = `${msg.result}가 사망했습니다. 
+        90초 동안 마피아로 생각되는 사람을 찾아 투표해주세요.`;
       }
     }
-    // msg.dayCount === 1
-    //   ? (messageRef.current = `낮이 되었습니다.
-    //       2분 동안 마피아가 누구일지 토론하세요.`)
-    //   : // 띄어쓰기
-    //   msg.result === "null"
-    //   ? (messageRef.current = `낮이 되었습니다. 밤 사이 아무도 죽지않았습니다.
-    //   2분 동안 마피아가 누구일지 토론하세요.`)
-    //   : (messageRef.current = `낮이 되었습니다. 밤 사이 ${msg.result}가 사망했습니다.
-    //   2분 동안 마피아가 누구일지 토론하세요.`);
   };
 
   // roomId: roomId,
@@ -558,20 +547,25 @@ function Game() {
     if (isVotable && !isDeadPlayer) {
       if (isNight === true) {
         if (userRole === "MAFIA" || userRole === "DOCTOR") {
-          // voteState를 갱신시켜줄 newVoteState
-          let newVoteState = JSON.parse(JSON.stringify(voteState));
-
-          // 사용자가 이전에 선택했던 컴포넌트
-          const prevChoice = newVoteState[0]["choice"];
-          // 이전에 선택했던 컴포넌트가 있고 그 값이 true 일 경우 false로 바꿔줌
-          if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-            newVoteState[prevChoice][0] = false;
-          }
-          // 사용자가 선택한 값을 선택한 컴포넌트로 갱신
-          newVoteState[0]["choice"] = clickIndex;
-          // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
-          newVoteState[clickIndex][0] = true;
-          setVoteState((prevVoteState) => newVoteState);
+          const numClickIndex = Number(clickIndex);
+          console.log("clickIndex", clickIndex, typeof clickIndex);
+          setVoteState((prevVoteState) => {
+            return {
+              ...prevVoteState,
+              0: {
+                ...prevVoteState[0],
+                choice: [numClickIndex],
+              },
+              [numClickIndex]: {
+                ...prevVoteState[numClickIndex],
+                0: true,
+              },
+              // [Number(prevVoteState[0].choice)]: {
+              //   ...prevVoteState[prevVoteState[0].choice],
+              //   0: false
+              // },
+            };
+          });
           const message = {
             id: "nightVote",
             roomId: roomId,
@@ -586,24 +580,25 @@ function Game() {
           );
         }
       } else {
-        // console.log("voteState before", voteState);
-        let newVoteState = JSON.parse(JSON.stringify(voteState));
-        // console.log("newVoteState before", newVoteStateDay);
-
-        // 사용자가 이전에 선택했던 컴포넌트
-        const prevChoice = newVoteState[0]["choice"];
-        // 이전에 선택했던 컴포넌트가 있고 그 값이 true 일 경우 false로 바꿔줌
-        if (prevChoice !== "" && newVoteState[prevChoice][0]) {
-          newVoteState[prevChoice][0] = false;
-        }
-        // 사용자가 선택한 값을 선택한 컴포넌트로 갱신
-        newVoteState[0]["choice"] = clickIndex;
-        // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
-        newVoteState[clickIndex][0] = true;
-        // console.log("newVoteState after", tempVoteState);
-        setVoteState((prevVoteState) => newVoteState);
-        // console.log("voteState after", voteState);
-
+        const numClickIndex = Number(clickIndex);
+        console.log("clickIndex", clickIndex, typeof clickIndex);
+        setVoteState((prevVoteState) => {
+          return {
+            ...prevVoteState,
+            0: {
+              ...prevVoteState[0],
+              choice: [numClickIndex],
+            },
+            [numClickIndex]: {
+              ...prevVoteState[numClickIndex],
+              0: true,
+            },
+            // [Number(prevVoteState[0].choice)]: {
+            //   ...prevVoteState[prevVoteState[0].choice],
+            //   0: false
+            // },
+          };
+        });
         const message = {
           id: "citizenVote",
           roomId: roomId,
@@ -625,37 +620,33 @@ function Game() {
   // username:"User7nkkemygf2",
   // select:"Userythxmxv8bzk"
   const onVoteFromServer = (msg) => {
-    // voteState를 갱신시켜줄 newVoteState
-    // console.log("voteState before from Server", voteState);
-    let newVoteState = JSON.parse(JSON.stringify(voteState));
-    console.log("newVoteState before from Server", newVoteState);
-
     const userIndex = participantsName.indexOf(msg.username);
     const selectIndex = participantsName.indexOf(msg.select);
+    console.log("userIndex", userIndex, typeof userIndex);
+    console.log("selectIndex", selectIndex, typeof selectIndex);
 
-    console.log("userIndex", userIndex, "selectIndex", selectIndex);
-
-    // 사용자가 이전에 선택했던 컴포넌트
-    const prevChoice = newVoteState[userIndex]["choice"];
-    // 이전에 선택했던 컴포넌트가 있고 그 값이 true 일 경우 false로 바꿔줌
-    if (prevChoice !== "" && newVoteState[prevChoice][userIndex]) {
-      newVoteState[prevChoice][userIndex] = false;
-    }
-    // 사용자가 선택한 값을 선택한 컴포넌트로 갱신
-    newVoteState[userIndex]["choice"] = selectIndex;
-    // 해당 컴포넌트의 사용자 이름 보일 수 있도록 true로 바꿔줌
-    newVoteState[selectIndex][userIndex] = true;
-    console.log("newVoteState after from Server", newVoteState);
-    setVoteState(newVoteState);
-    // console.log("voteState after from Server", voteState);
+    setVoteState((prevVoteState) => {
+      return {
+        ...prevVoteState,
+        [userIndex]: {
+          ...prevVoteState[userIndex],
+          choice: [selectIndex],
+        },
+        [selectIndex]: {
+          ...prevVoteState[selectIndex],
+          [userIndex]: true,
+        },
+      };
+    });
     console.log(
       participantsName[userIndex],
       " vote to ",
       participantsName[selectIndex]
     );
   };
+
   useEffect(() => {
-    console.log(voteState);
+    console.log("voteState", voteState);
   }, [voteState]);
 
   // 최후의 변론 시작
@@ -671,7 +662,7 @@ function Game() {
       participantsName.filter((playerName) => playerName !== msg.pointedUser)
     );
     setTime(msg.endTime);
-    messageRef.current = "지목당한 유저는 30초 간 최후의 변론을 하세요.";
+    messageRef.current = `지목당한 유저는 30초 간 최후의 변론을 하세요.`;
   };
 
   // 사형 투표 시작
@@ -703,15 +694,24 @@ function Game() {
 
   // 사형에 찬성하는 버튼 클릭시 호출
   // 서버로 메세지 보내는 부분 구현해야 함
-  const onVoteAgree = () => {
+  const onVoteAgree = async () => {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable && !isDeadPlayer) {
-      let newVoteStateFinalAgree = JSON.parse(JSON.stringify(voteStateFinal));
-      newVoteStateFinalAgree["agree"][0] = true;
-      newVoteStateFinalAgree["disagree"][0] = false;
-      setVoteStateFinal(newVoteStateFinalAgree);
+      setVoteStateFinal((prevVoteStateFinal) => {
+        return {
+          ...prevVoteStateFinal,
+          agree: {
+            ...prevVoteStateFinal.agree,
+            0: true,
+          },
+          disagree: {
+            ...prevVoteStateFinal.disagree,
+            0: false,
+          },
+        };
+      });
       const message = {
-        id: "madeVote",
+        id: "executionVote",
         phase: "citizenVote",
         roomId: roomId,
         username: participantsName[0],
@@ -723,31 +723,44 @@ function Game() {
     }
   };
 
-  const onVoteAgreeFromServer = (msg) => {
-    let newVoteStateFinalAgreeServer = JSON.parse(
-      JSON.stringify(voteStateFinal)
-    );
-    const userIndex = participantsName.indexOf(msg.username);
-
-    newVoteStateFinalAgreeServer["agree"][userIndex] = true;
-    newVoteStateFinalAgreeServer["disagree"][userIndex] = false;
-    setVoteStateFinal(newVoteStateFinalAgreeServer);
+  const onVoteAgreeFromServer = async (msg) => {
+    const userIndex = Number(participantsName.indexOf(msg.username));
+    setVoteStateFinal((prevVoteStateFinal) => {
+      return {
+        ...prevVoteStateFinal,
+        agree: {
+          ...prevVoteStateFinal.agree,
+          [userIndex]: true,
+        },
+        disagree: {
+          ...prevVoteStateFinal.disagree,
+          [userIndex]: false,
+        },
+      };
+    });
     console.log(participantsName[userIndex], " vote for the approval of death");
   };
 
   // 사형에 반대하는 버튼 클릭시 호출
   // 서버로 메세지 보내는 부분 구현해야 함
-  const onVoteDisAgree = () => {
+  const onVoteDisAgree = async () => {
     // 본인이 사형 투표 당사자면 투표 못하게 하는 코드 추가해야 함
     if (isVotable && !isDeadPlayer) {
-      let newVoteStateFinalDisAgree = JSON.parse(
-        JSON.stringify(voteStateFinal)
-      );
-      newVoteStateFinalDisAgree["disagree"][0] = true;
-      newVoteStateFinalDisAgree["agree"][0] = false;
-      setVoteStateFinal(newVoteStateFinalDisAgree);
+      setVoteStateFinal((prevVoteStateFinal) => {
+        return {
+          ...prevVoteStateFinal,
+          agree: {
+            ...prevVoteStateFinal.agree,
+            0: false,
+          },
+          disagree: {
+            ...prevVoteStateFinal.disagree,
+            0: true,
+          },
+        };
+      });
       const message = {
-        id: "madeVote",
+        id: "executionVote",
         phase: "citizenVote",
         roomId: roomId,
         username: participantsName[0],
@@ -759,16 +772,25 @@ function Game() {
     }
   };
 
-  const onVoteDisAgreeFromServer = (msg) => {
-    let newVoteStateFinalDisAgreeServer = JSON.parse(
-      JSON.stringify(voteStateFinal)
+  const onVoteDisAgreeFromServer = async (msg) => {
+    const userIndex = Number(participantsName.indexOf(msg.username));
+    setVoteStateFinal((prevVoteStateFinal) => {
+      return {
+        ...prevVoteStateFinal,
+        agree: {
+          ...prevVoteStateFinal.agree,
+          [userIndex]: false,
+        },
+        disagree: {
+          ...prevVoteStateFinal.disagree,
+          [userIndex]: true,
+        },
+      };
+    });
+    console.log(
+      participantsName[userIndex],
+      " vote for the rejection of death"
     );
-    const userIndex = participantsName.indexOf(msg.username);
-
-    newVoteStateFinalDisAgreeServer["disagree"][userIndex] = true;
-    newVoteStateFinalDisAgreeServer["agree"][userIndex] = false;
-    setVoteStateFinal(newVoteStateFinalDisAgreeServer);
-    console.log(participantsName[userIndex], " vote for the approval of death");
   };
 
   // tempParticipant와 participant 동기화
@@ -779,19 +801,9 @@ function Game() {
     setParticipantsVideo(tempParticipantsVideo);
   };
 
-  const updateVoteState = () => {
-    setVoteState({});
-    setVoteState(tempVoteState);
-  };
-
-  // const updateVoteStateFinal = () =>{
-  //   setVoteStateFinal({})
-  //   setVoteStateFinal(tempVoteStateFinal)
-  // }
-
-  const onGameEnd = (msg) => {
-    let winner = msg.result.winner.job;
-  };
+  useEffect(() => {
+    console.log("공지사항");
+  }, [messageRef]);
 
   useEffect(() => {
     updateParticipants();
@@ -805,14 +817,6 @@ function Game() {
   useEffect(() => {
     updateReadyState();
   });
-
-  useEffect(() => {
-    updateVoteState();
-  });
-
-  // useEffect(() => {
-  //   updateVoteStateFinal()
-  // })
 
   // 컴포넌트가 처음 렌더링 됐을 때만 웹소켓 연결
   useEffect(() => {
@@ -864,7 +868,9 @@ function Game() {
           // 그 외엔 일반 게임 그리드
           if (
             parsedMessage.id === "startFinalSpeech" ||
-            parsedMessage.id === "startExecutionVote"
+            parsedMessage.id === "startExecutionVote" ||
+            (parsedMessage.id === "madeVote" &&
+              parsedMessage.data.id === "executionVote")
           ) {
             setIsExecutionGrid(true);
           } else {
@@ -877,7 +883,8 @@ function Game() {
             parsedMessage.id === "startExecutionVote" ||
             parsedMessage.id === "startMorningVote" ||
             parsedMessage.id === "startNightVote" ||
-            parsedMessage.id === "citizenVote"
+            parsedMessage.id === "citizenVote" ||
+            parsedMessage.id === "madeVote"
           ) {
             setIsVotable(true);
           } else {
@@ -931,61 +938,63 @@ function Game() {
             // 아침 토론
             case "startMorning":
               // 밤 투표 결과 초기화
-              setVoteState({
-                0: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                1: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                2: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                3: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                4: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                5: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
+              setVoteState((prevVoteState) => {
+                return {
+                  0: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  1: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  2: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  3: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  4: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  5: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                };
               });
               onStartMorning(parsedMessage.data);
               break;
@@ -1006,61 +1015,63 @@ function Game() {
             // 최후의 변론
             case "startFinalSpeech":
               // 아침 투표 결과 초기화
-              setVoteState({
-                0: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                1: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                2: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                3: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                4: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                5: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
+              setVoteState((prevVoteState) => {
+                return {
+                  0: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  1: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  2: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  3: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  4: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  5: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                };
               });
               onStartFinalSpeech(parsedMessage.data);
               break;
@@ -1071,89 +1082,100 @@ function Game() {
               break;
 
             // 사형 투표 전달
+            case "madeVote":
+              if (parsedMessage.data.agreeToDead === true) {
+                onVoteAgreeFromServer(parsedMessage.data);
+              } else {
+                onVoteDisAgreeFromServer(parsedMessage.data);
+              }
+              break;
 
             // 밤 투표
             case "startNightVote":
-              setVoteState({
-                0: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                1: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                2: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                3: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                4: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
-                5: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                  choice: "",
-                },
+              setVoteState((prevVoteState) => {
+                return {
+                  0: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  1: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  2: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  3: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  4: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                  5: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                    choice: "",
+                  },
+                };
               });
-              setVoteStateFinal({
-                agree: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                },
-                disagree: {
-                  0: false,
-                  1: false,
-                  2: false,
-                  3: false,
-                  4: false,
-                  5: false,
-                },
+              setVoteStateFinal((prevVoteStateFinal) => {
+                return {
+                  agree: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                  },
+                  disagree: {
+                    0: false,
+                    1: false,
+                    2: false,
+                    3: false,
+                    4: false,
+                    5: false,
+                  },
+                };
               });
               onStartNightVote(parsedMessage.data);
               break;
 
             // 게임 종료
             case "end":
-              onGameEnd(parsedMessage);
+              setGameResult(parsedMessage.result.winner.job);
               break;
 
             default:
@@ -1184,8 +1206,6 @@ function Game() {
     setJoin(true);
   };
 
-  console.log("participantsName", participantsName);
-
   return (
     <StyledContainer>
       {!join && <Home onBtnClick={onBtnClick} />}
@@ -1215,6 +1235,7 @@ function Game() {
                     participantsName={participantsName}
                     isGameStart={isGameStart}
                     message={messageRef.current}
+                    isDeadPlayer={isDeadPlayer}
                   />
                 )}
                 {/* 최후의 변론 */}
@@ -1230,6 +1251,7 @@ function Game() {
                     participantsName={participantsName}
                     participantsVideo={participantsVideo}
                     message={messageRef.current}
+                    isDeadPlayer={isDeadPlayer}
                   />
                 )}
               </header>
@@ -1239,6 +1261,7 @@ function Game() {
             <GameResult
               participantsVideo={participantsVideo}
               participantsName={participantsName}
+              gameResult={gameResult}
             />
           )}
 
