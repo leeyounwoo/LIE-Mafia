@@ -162,8 +162,6 @@ function Game() {
 
   const messageRef = useRef("Game Start!");
 
-  const [gameResult, setGameResult] = useState("CIVILIAN");
-
   const clickClose = () => {
     ws.current.close();
   };
