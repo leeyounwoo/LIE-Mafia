@@ -17,7 +17,7 @@ public class UserConnectionManager {
 
     public void connectUser(UserConnection user){
         usersByUsername.put(user.getUsername(), user);
-        usersBySessionId.put(user.getSessionId(), user);
+        usersBySessionId.put(user.getSession().getId(), user);
     }
 
     public UserConnection getByUsername(String username){ return usersByUsername.get(username); }

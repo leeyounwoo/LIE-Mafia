@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.kurento.client.*;
 import org.kurento.jsonrpc.JsonUtils;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -20,21 +22,19 @@ public class UserConnection implements Closeable {
     private String username;
     private String roomId;
 
-    private final String sessionId;
+    private final WebSocketSession session;
 
     private final MediaPipeline mediaPipeline;
     private final WebRtcEndpoint outgoingMedia;
     private final ConcurrentMap<String, WebRtcEndpoint> incomingMedia = new ConcurrentHashMap<>();
-    private final MessageInterface messageInterface;
 
     public UserConnection(final String username, final String roomId,
-                          final MediaPipeline mediaPipeline, final String sessionId, final MessageInterface messageInterface){
+                          final MediaPipeline mediaPipeline, final WebSocketSession session){
 
         this.mediaPipeline = mediaPipeline;
         this.username = username;
-        this.sessionId = sessionId;
+        this.session = session;
         this.roomId = roomId;
-        this.messageInterface = messageInterface;
 
         this.outgoingMedia = new WebRtcEndpoint.Builder(mediaPipeline).build();
         this.outgoingMedia.addIceCandidateFoundListener(new EventListener<IceCandidateFoundEvent>() {
@@ -45,8 +45,12 @@ public class UserConnection implements Closeable {
                 response.addProperty("id", "iceCandidate");
                 response.addProperty("name", username);
                 response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-                synchronized (messageInterface) {
-                    messageInterface.broadCastToClient("client.response", sessionId,response.toString());
+                synchronized (session) {
+                    try {
+                        session.sendMessage(new TextMessage(response.toString()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
             }
@@ -76,7 +80,7 @@ public class UserConnection implements Closeable {
             log.debug("PARTICIPANT {}: cofiguring loopback", this.username);
             return outgoingMedia;
         }
-        log.debug("PARTICIPANT {}: receiving video from {}", this.username, sender.getUsername());
+        log.info("PARTICIPANT {}: receiving video from {}", this.username, sender.getUsername());
         
         WebRtcEndpoint incoming = incomingMedia.get(sender.getUsername());
         if (incoming == null){
@@ -91,8 +95,12 @@ public class UserConnection implements Closeable {
                     response.addProperty("id", "iceCandidate");
                     response.addProperty("name", sender.getUsername());
                     response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
-                    synchronized (messageInterface) {
-                        messageInterface.broadCastToClient("client.response", sessionId, response.toString());
+                    synchronized (session) {
+                        try {
+                            session.sendMessage(new TextMessage(response.toString()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
@@ -106,9 +114,12 @@ public class UserConnection implements Closeable {
     }
     public void sendMessage(JsonObject message) throws IOException {
         log.debug("USER {}: Sending message {}", username, message);
-        synchronized (messageInterface) {
-            messageInterface.broadCastToClient("client.response", sessionId, message.toString());
-        }
+        synchronized (session) {
+            try {
+                session.sendMessage(new TextMessage(message.toString()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }        }
     }
 
     public void cancelVideoFrom(final UserConnection sender) {
@@ -138,6 +149,8 @@ public class UserConnection implements Closeable {
 
     public void addCandidate(IceCandidate candidate, String username) {
         if (this.username.compareTo(username) == 0) {
+            log.info("Adding "+ username + " to candidates");
+
             outgoingMedia.addIceCandidate(candidate);
         } else {
             WebRtcEndpoint webRtc = incomingMedia.get(username);

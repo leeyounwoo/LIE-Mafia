@@ -20,7 +20,7 @@ public class MessageInterface {
     private final MessageProducer messageProducer;
     private final ObjectMapper objectMapper;
 
-    public void sendToService(String topic, String data, String sessionId) throws ExecutionException, InterruptedException, IOException {
+    public void sendToService(String topic, String data, String sessionId) throws IOException {
         OutboundToServiceMessageDto outboundToServiceMessageDto = new OutboundToServiceMessageDto(sessionId,data);
         messageProducer.publishOnKafka(topic, objectMapper.writeValueAsString(outboundToServiceMessageDto));
     }

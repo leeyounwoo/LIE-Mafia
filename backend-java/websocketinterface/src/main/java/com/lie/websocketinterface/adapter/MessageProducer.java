@@ -3,6 +3,8 @@ package com.lie.websocketinterface.adapter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lie.websocketinterface.config.ServiceClient;
+import com.lie.websocketinterface.domain.PingTimer;
+import com.lie.websocketinterface.domain.RetryPingTask;
 import com.lie.websocketinterface.domain.SessionManager;
 import com.lie.websocketinterface.dto.ClientClosedDataDto;
 import com.lie.websocketinterface.dto.InboundMessageDto;
@@ -26,28 +28,10 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class MessageProducer {
     private final ObjectMapper objectMapper;
-    @Qualifier("connectionServiceSession")
-    private final WebSocketSession connectionServiceSession;
-    @Qualifier("gameServiceSession")
-    private final WebSocketSession gameServiceSession;
     private final SessionManager sessionManager;
     private final KafkaTemplate<String, String> kafkaProducer;
     public void publishOnKafka(String topic, String message){
         kafkaProducer.send(topic, message);
-    }
-
-    public void sendToService(String service, String data, String sessionId) throws ExecutionException, InterruptedException, IOException {
-        OutboundToServiceMessageDto outboundToServiceMessageDto = new OutboundToServiceMessageDto(sessionId,data);
-        switch (service){
-            case "connection":
-
-
-                connectionServiceSession.sendMessage(new TextMessage(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outboundToServiceMessageDto)));
-                break;
-            case "game":
-                gameServiceSession.sendMessage(new TextMessage(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(outboundToServiceMessageDto)));
-                break;
-        }
     }
 
     public void sendToParticipants(List<WebSocketSession> participants, String message){
@@ -65,30 +49,20 @@ public class MessageProducer {
         sessionManager.getSessionBySessionId().values().stream().forEach(session -> {
             try{
                 session.sendMessage(pingMessage);
+                log.info(sessionManager.getSessionBySessionId().size()+" "+"healthy clients left");
+                return;
             } catch (IOException e) {
-                log.info("PING ERROR");
-            } catch (Exception e){
+                log.info("PING MESSAGE OUT ERROR");
+            } catch (Exception e) {
                 log.info("UNEXPECTED ERROR");
 
-                sessionManager.removeBySession(session);
-                ClientClosedDataDto clientClosedDataDto = new ClientClosedDataDto("leave", session.getId());
+                PingTimer pingTimer = new PingTimer();
+                RetryPingTask retryPing = new RetryPingTask(sessionManager, kafkaProducer, objectMapper);
 
-                try {
-                    sendToService("connection",objectMapper.writeValueAsString(clientClosedDataDto),session.getId());
-                    session.close();
-                } catch (JsonProcessingException jsonProcessingException){
-                    log.info("json parsing error");
-                }
-                catch (IOException ex) {
-                    log.info("error closing session");
-                } catch (ExecutionException ex) {
-                    log.info("json parsing error");
-                } catch (InterruptedException ex) {
-                    log.info("interrupt");
-                }
+                retryPing.setClientSession(session);
+                pingTimer.schedule(retryPing, 40000);
             }
         });
-        log.info(sessionManager.getSessionBySessionId().size()+" "+"healthy clients left");
     }
 }
 

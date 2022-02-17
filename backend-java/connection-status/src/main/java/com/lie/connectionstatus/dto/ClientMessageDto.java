@@ -26,34 +26,36 @@ public class ClientMessageDto {
     private String id;
     private String roomId;
     private String username;
-    private String sessionId;
+   // private String sessionId;
     private String sender;
     private String sdpOffer;
     private CandidateDto candidate;
     private String name;
 
     public ClientMessageDto(JsonNode jsonMessage,ObjectMapper objectMapper){
-        this.sessionId = jsonMessage.get("sessionId").asText();
+        //this.sessionId = jsonMessage.get("sessionId").asText();
         try{
-            JsonNode data = objectMapper.readTree(jsonMessage.get("data").asText());
-            this.id = data.get("id").asText();
+            JsonNode data = objectMapper.readTree(jsonMessage.get("data").toString());
+            this.id = data.get("id").toString();
             if(!ObjectUtils.isEmpty(data.get("username"))){
-                this.username = data.get("username").asText();
+                this.username = data.get("username").toString();
             }
             if(!ObjectUtils.isEmpty(data.get("roomId"))){
-                this.roomId = data.get("roomId").asText();
+                this.roomId = data.get("roomId").toString();
             }
             if(!ObjectUtils.isEmpty(data.get("sender"))){
-                this.sender = data.get("sender").asText();
+                this.sender = data.get("sender").toString();
             }
             if(!ObjectUtils.isEmpty(data.get("sdpOffer"))){
-                this.sdpOffer = data.get("sdpOffer").asText();
+                this.sdpOffer = data.get("sdpOffer").toString();
             }
             if(!ObjectUtils.isEmpty(data.get("name"))){
-                this.name = data.get("name").asText();
+                this.name = data.get("name").toString();
             }
             if(!ObjectUtils.isEmpty(data.get("candidate"))){
-                this.candidate = new CandidateDto(data.get("candidate"),objectMapper);;
+                log.info(data.get("candidate").toString());
+                log.info("candidate not null");
+                this.candidate = new CandidateDto(data.get("candidate"),objectMapper);
             }
 
         } catch (JsonMappingException e) {
