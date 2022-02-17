@@ -18,7 +18,7 @@ function WaitingNav(props) {
         <h3>Lie, Mafia</h3>
       </div>
       <div>
-        <h4>초대링크 : lie-mafia.site:3000/room/{props.roomId}</h4>
+        <h4>초대링크 : lie-mafia.site/room/{props.roomId}</h4>
       </div>
       <div style={{ paddingRight: "2vw" }}>
         <Button onClick={props.clickClose}>방 나가기</Button>

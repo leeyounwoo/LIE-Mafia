@@ -11,6 +11,11 @@ const Container = styled.div`
 const StyledBtn = styled.div`
   margin-top: 55vh;
 `;
+const StyledMsg = styled.div`
+  margin-bottom: 20vh;
+  font-size: 10vh;
+  font-weight: bold;
+`;
 
 function Home({ join, onBtnClick }) {
   const onNewBtnClick = () => {
@@ -19,8 +24,7 @@ function Home({ join, onBtnClick }) {
 
   return (
     <Container>
-      <img alt="logo" src="/img/logo.png" />
-      {/* <img alt="logo" src="/img/image.png" /> */}
+      <StyledMsg>Lie, Mafia</StyledMsg>
       <StyledBtn>
         {window.location.pathname.split("/").pop() === "0" ? (
           <Button onClick={onNewBtnClick}>방 만들기</Button>
