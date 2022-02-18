@@ -75,7 +75,7 @@ const FinalArgument = ({
         <Col>
           {isVotable && (
             <BsFillHandThumbsUpFill size="50" onClick={onClickDisAgree}>
-              찬성
+              살림
             </BsFillHandThumbsUpFill>
           )}
           <ul>
@@ -133,7 +133,7 @@ const FinalArgument = ({
         <Col>
           {isVotable && (
             <BsFillHandThumbsDownFill size="50" onClick={onClickAgree}>
-              반대
+              죽임
             </BsFillHandThumbsDownFill>
           )}
           <ul>

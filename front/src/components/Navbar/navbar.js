@@ -1,5 +1,4 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
 import styled from "styled-components";
 import { Button } from "react-bootstrap";
 
@@ -13,15 +12,13 @@ const StyledNav = styled.div`
 `;
 
 function WaitingNav(props) {
-  let history = useHistory();
-
   return (
     <StyledNav>
       <div style={{ paddingLeft: "2vw" }}>
         <h3>Lie, Mafia</h3>
       </div>
       <div>
-        <h4>초대링크 : localhost:3000/room/{props.roomId}</h4>
+        <h4>초대링크 : lie-mafia.site/room/{props.roomId}</h4>
       </div>
       <div style={{ paddingRight: "2vw" }}>
         <Button onClick={props.clickClose}>방 나가기</Button>

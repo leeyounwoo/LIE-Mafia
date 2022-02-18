@@ -22,6 +22,10 @@ function GameNav({ dateCount, endTime, clickClose, isNight, isVotable }) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
+    setValue(0);
+  }, [endTime]);
+
+  useEffect(() => {
     const countup = setInterval(() => {
       if (parseInt(value) < endTime) {
         setValue(parseInt(value) + 1);
@@ -48,25 +52,18 @@ function GameNav({ dateCount, endTime, clickClose, isNight, isVotable }) {
           <h1>DAY {dateCount}</h1>
         </div>
       )}
-      {/* <StyledTimer> */}
-      {/* <Timer endTime={endTime} /> */}
-      {/* </StyledTimer> */}
-      {/* <StyledBar>
+      <StyledTimer>
+        <Timer endTime={endTime} />
+      </StyledTimer>
+      <StyledBar>
         <progress
           style={{ width: "80%", justifyContent: "center" }}
           value={value}
           max={endTime}
         />
-      </StyledBar> */}
+      </StyledBar>
       <div style={{ paddingRight: "2vw" }}>
-        <Button
-          // onClick={() => {
-          //   history.push("/");
-          // }}
-          onClick={clickClose}
-        >
-          방 나가기
-        </Button>
+        <Button onClick={clickClose}>방 나가기</Button>
       </div>
     </StyledNav>
   );

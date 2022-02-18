@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 
 function Timer({ endTime }) {
   const [seconds, setSeconds] = useState(endTime);
+  useEffect(() => {
+    setSeconds(endTime);
+  }, [endTime]);
 
   useEffect(() => {
     const countdown = setInterval(() => {

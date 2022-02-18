@@ -2,8 +2,6 @@ import React from "react";
 import WaitingGrid from "../components/Cam/WaitingGrid";
 import VideoRoom from "../components/VideoRoom/videoRoom";
 import styled from "styled-components";
-import { Button } from "react-bootstrap";
-import { useHistory } from "react-router-dom";
 
 const StyledMsg = styled.div`
   background-color: #f5f5f5;
@@ -15,35 +13,12 @@ const StyledMsg = styled.div`
   font-size: xx-large;
   font-weight: bold;
 `;
-const StyledBtn = styled.div`
-  display: flex;
-  justify-content: right;
-  margin: 10px 20px 10px 0;
-`;
 
-function GameResult({
-  participantsVideo,
-  participantsName,
-  GameResult
-  }) {
-  let history = useHistory();
-  console.log('결과' + GameResult);
+function GameResult({ participantsVideo, participantsName, gameWinner }) {
+  console.log("결과" + gameWinner);
   return (
     <div>
-      <StyledBtn>
-        <Button
-          onClick={() => {
-            history.push("/room/0");
-          }}
-        >
-          다시하기
-        </Button>
-      </StyledBtn>
-      <StyledMsg>{GameResult} 승리!</StyledMsg>
-      <VideoRoom             
-        participantsVideo={participantsVideo}
-        participantsName={participantsName}
-       />
+      <StyledMsg>{gameWinner} 승리!</StyledMsg>
     </div>
   );
 }
